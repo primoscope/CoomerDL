@@ -1,3 +1,13 @@
+"""SimpCity downloader.
+
+This module follows the refactored downloader architecture that uses
+:class:`~downloader.base.BaseDownloader` and a registration-based factory.
+
+It also provides backward-compatible aliases for older imports.
+"""
+
+from __future__ import annotations
+
 import os
 import json
 import re
@@ -10,8 +20,15 @@ import cloudscraper
 from concurrent.futures import ThreadPoolExecutor
 
 from downloader.base import BaseDownloader, DownloadResult, DownloadOptions
+from downloader.factory import DownloaderFactory
 
-class SimpCityDownloader(BaseDownloader):
+
+@DownloaderFactory.register
+class SimpCity(BaseDownloader):
+    """Downloader for simpcity.su threads."""
+    
+    name = "simpcity"
+    
     def __init__(self, download_folder, max_workers=5, log_callback=None, enable_widgets_callback=None, update_progress_callback=None, update_global_progress_callback=None, tr=None, options=None, **kwargs):
         # Initialize base class
         super().__init__(
@@ -46,9 +63,11 @@ class SimpCityDownloader(BaseDownloader):
         self.cookies_path = "resources/config/cookies/simpcity.json"
         self.set_cookies()
 
-    def supports_url(self, url: str) -> bool:
+    @classmethod
+    def supports_url(cls, url: str) -> bool:
         """Check if this downloader supports the given URL."""
-        return 'simpcity' in url.lower()
+        # Keep the broader check from main to avoid missing alternative paths.
+        return 'simpcity' in (url or "").lower()
 
     def get_site_name(self) -> str:
         """Return the site name."""
@@ -199,5 +218,10 @@ class SimpCityDownloader(BaseDownloader):
         self.process_page(url)
         self.log(self.tr("Descarga completada.") if self.tr else "Descarga completada.")
 
-# Backward compatibility alias
-SimpCity = SimpCityDownloader
+
+# ---------------------------------------------------------------------------
+# Backward compatibility
+# ---------------------------------------------------------------------------
+# Some parts of the codebase (or external integrations) may still import the
+# old class name. Keep these aliases.
+SimpCityDownloader = SimpCity

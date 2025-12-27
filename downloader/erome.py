@@ -20,7 +20,10 @@ except ImportError:
     simpledialog = None
 
 from downloader.base import BaseDownloader, DownloadResult, DownloadOptions
+from downloader.factory import DownloaderFactory
 
+
+@DownloaderFactory.register
 class EromeDownloader(BaseDownloader):
     def __init__(self, root=None, log_callback=None, enable_widgets_callback=None, update_progress_callback=None, update_global_progress_callback=None, download_images=True, download_videos=True, headers=None, language="en", is_profile_download=False, direct_download=False, tr=None, max_workers=5, download_folder=".", options=None, **kwargs):
         # Initialize base class

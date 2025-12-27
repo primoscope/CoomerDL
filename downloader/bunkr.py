@@ -10,7 +10,10 @@ import re
 import threading
 
 from downloader.base import BaseDownloader, DownloadResult, DownloadOptions
+from downloader.factory import DownloaderFactory
 
+
+@DownloaderFactory.register
 class BunkrDownloader(BaseDownloader):
     def __init__(self, download_folder, log_callback=None, enable_widgets_callback=None, update_progress_callback=None, update_global_progress_callback=None, headers=None, max_workers=5, translations=None, options=None, **kwargs):
         # Initialize base class
