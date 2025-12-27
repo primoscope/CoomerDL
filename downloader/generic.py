@@ -37,6 +37,14 @@ class GenericDownloader(BaseDownloader):
         self.video_extensions = {'.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv'}
         self.media_extensions = self.image_extensions | self.video_extensions
     
+    @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """
+        Generic downloader is a fallback - always returns False for routing.
+        The factory explicitly uses GenericDownloader when no other matches.
+        """
+        return False
+    
     def supports_url(self, url: str) -> bool:
         """
         Generic downloader supports any URL as a last resort.

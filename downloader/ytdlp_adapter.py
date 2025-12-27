@@ -466,15 +466,15 @@ class YtDlpDownloader(BaseDownloader):
             return None
 
     @classmethod
-    def check_url_supported(cls, url: str) -> bool:
+    def can_handle(cls, url: str) -> bool:
         """
-        Static check if URL is potentially supported by yt-dlp.
-
-        This is a lightweight check that doesn't import yt-dlp.
-
+        Lightweight class-level check if URL is potentially supported by yt-dlp.
+        
+        This is used by the factory for efficient routing without instantiation.
+        
         Args:
             url: URL to check.
-
+            
         Returns:
             True if URL might be supported.
         """
@@ -498,3 +498,19 @@ class YtDlpDownloader(BaseDownloader):
 
         except Exception:
             return False
+
+    @classmethod
+    def check_url_supported(cls, url: str) -> bool:
+        """
+        Static check if URL is potentially supported by yt-dlp.
+
+        This is a lightweight check that doesn't import yt-dlp.
+        Alias for can_handle() for backward compatibility.
+
+        Args:
+            url: URL to check.
+
+        Returns:
+            True if URL might be supported.
+        """
+        return cls.can_handle(url)

@@ -64,10 +64,14 @@ class SimpCity(BaseDownloader):
         self.set_cookies()
 
     @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """Lightweight check if this downloader supports the given URL."""
+        return 'simpcity' in (url or "").lower()
+
+    @classmethod
     def supports_url(cls, url: str) -> bool:
         """Check if this downloader supports the given URL."""
-        # Keep the broader check from main to avoid missing alternative paths.
-        return 'simpcity' in (url or "").lower()
+        return cls.can_handle(url)
 
     def get_site_name(self) -> str:
         """Return the site name."""

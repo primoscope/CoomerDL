@@ -9,9 +9,14 @@ from downloader.factory import DownloaderFactory
 class DummyDownloader(BaseDownloader):
     """Dummy downloader for testing factory."""
     
+    @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """Lightweight check - supports URLs containing 'dummy'."""
+        return 'dummy' in url.lower()
+    
     def supports_url(self, url: str) -> bool:
         """Supports URLs containing 'dummy'."""
-        return 'dummy' in url.lower()
+        return self.can_handle(url)
     
     def get_site_name(self) -> str:
         """Returns test site name."""
@@ -25,9 +30,14 @@ class DummyDownloader(BaseDownloader):
 class AnotherDummyDownloader(BaseDownloader):
     """Another dummy downloader for testing."""
     
+    @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """Lightweight check - supports URLs containing 'another'."""
+        return 'another' in url.lower()
+    
     def supports_url(self, url: str) -> bool:
         """Supports URLs containing 'another'."""
-        return 'another' in url.lower()
+        return self.can_handle(url)
     
     def get_site_name(self) -> str:
         """Returns test site name."""

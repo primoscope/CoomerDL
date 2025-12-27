@@ -125,10 +125,31 @@ class BaseDownloader(ABC):
         self.failed_files: List[str] = []
         self.skipped_files: List[str] = []
     
+    @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """
+        Lightweight class-level check if this downloader can handle the given URL.
+        
+        This method should NOT require instantiation and should be fast.
+        Override this in subclasses for efficient URL routing in the factory.
+        
+        Args:
+            url: The URL to check
+            
+        Returns:
+            True if this downloader supports the URL, False otherwise
+        """
+        # Default implementation returns False; subclasses should override
+        return False
+    
     @abstractmethod
     def supports_url(self, url: str) -> bool:
         """
         Check if this downloader can handle the given URL.
+        
+        Note: Prefer implementing can_handle() classmethod for factory routing
+        to avoid expensive instantiation. This instance method is kept for
+        backward compatibility.
         
         Args:
             url: The URL to check

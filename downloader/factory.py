@@ -14,6 +14,9 @@ class DownloaderFactory:
     2. yt-dlp Universal downloader (for 1000+ sites)
     3. Generic HTML scraper (last resort fallback)
     
+    URL routing uses lightweight classmethod can_handle() to avoid
+    expensive instantiation of downloaders just for URL checking.
+    
     Usage:
         factory = DownloaderFactory()
         factory.register(CoomerDownloader)
@@ -56,9 +59,12 @@ class DownloaderFactory:
         Get appropriate downloader for the given URL.
         
         Priority:
-        1. Native downloaders (specialized, faster)
+        1. Native downloaders (specialized, faster) - uses can_handle() classmethod
         2. yt-dlp downloader (universal, supports 1000+ sites)
         3. Generic HTML scraper (last resort)
+        
+        Note: URL routing uses lightweight classmethod can_handle() to avoid
+        expensive instantiation. Only the selected downloader is instantiated.
         
         Args:
             url: The URL to find a downloader for
@@ -73,29 +79,29 @@ class DownloaderFactory:
             Appropriate downloader instance, or None if no match
         """
         # Try specific/native downloaders first (highest priority)
+        # Use can_handle() classmethod for lightweight URL checking
         for downloader_class in cls._downloader_classes:
-            # Create temporary instance to check URL support
-            instance = downloader_class(
-                download_folder=download_folder,
-                options=options,
-                **kwargs
-            )
-            if instance.supports_url(url):
-                return instance
+            if downloader_class.can_handle(url):
+                # Only instantiate the matching downloader
+                return downloader_class(
+                    download_folder=download_folder,
+                    options=options,
+                    **kwargs
+                )
         
         # Try yt-dlp universal downloader (second priority)
         if use_ytdlp_fallback:
             try:
                 from downloader.ytdlp_adapter import YtDlpDownloader
                 
-                ytdlp_instance = YtDlpDownloader(
-                    download_folder=download_folder,
-                    options=options,
-                    ytdlp_options=ytdlp_options,
-                    **kwargs
-                )
-                if ytdlp_instance.supports_url(url):
-                    return ytdlp_instance
+                # Use classmethod for lightweight check
+                if YtDlpDownloader.can_handle(url):
+                    return YtDlpDownloader(
+                        download_folder=download_folder,
+                        options=options,
+                        ytdlp_options=ytdlp_options,
+                        **kwargs
+                    )
             except ImportError:
                 # yt-dlp not installed, fall through to generic
                 pass
@@ -119,6 +125,9 @@ class DownloaderFactory:
     def get_supported_sites(cls) -> List[str]:
         """
         Get list of all supported site names.
+        
+        Note: This method does instantiate downloaders to get site names,
+        but it's only called for UI display, not during routing.
         
         Returns:
             List of site names from registered downloaders
