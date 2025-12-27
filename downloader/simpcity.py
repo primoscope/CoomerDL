@@ -3,27 +3,50 @@ import json
 import re
 import queue
 import threading
+import time
 from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import cloudscraper
 from concurrent.futures import ThreadPoolExecutor
+from typing import Optional
+from downloader.base import BaseDownloader, DownloadOptions, DownloadResult
+from downloader.factory import DownloaderFactory
 
-class SimpCity:
-    def __init__(self, download_folder, max_workers=5, log_callback=None, enable_widgets_callback=None, update_progress_callback=None, update_global_progress_callback=None, tr=None):
-        self.download_folder = download_folder
+@DownloaderFactory.register
+class SimpCity(BaseDownloader):
+    """SimpCity downloader - inherits from BaseDownloader."""
+    
+    def __init__(
+        self, 
+        download_folder: str, 
+        options: Optional[DownloadOptions] = None,
+        log_callback=None, 
+        enable_widgets_callback=None, 
+        progress_callback=None,
+        global_progress_callback=None,
+        tr=None,
+        max_workers=5
+    ):
+        # Call parent constructor
+        super().__init__(
+            download_folder=download_folder,
+            options=options,
+            log_callback=log_callback,
+            progress_callback=progress_callback,
+            global_progress_callback=global_progress_callback,
+            enable_widgets_callback=enable_widgets_callback,
+            tr=tr
+        )
+        
         self.max_workers = max_workers
         self.descargadas = set()
-        self.log_callback = log_callback
-        self.enable_widgets_callback = enable_widgets_callback
-        self.update_progress_callback = update_progress_callback
-        self.update_global_progress_callback = update_global_progress_callback
-        self.cancel_event = threading.Event()  # Thread-safe cancellation event
-        self.total_files = 0
-        self.completed_files = 0
         self.download_queue = queue.Queue()
         self.scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False})
-        self.tr = tr
+        
+        # For backward compatibility with old UI callback signature
+        self.update_progress_callback = progress_callback
+        self.update_global_progress_callback = global_progress_callback
 
         # Selectors from original crawler
         self.title_selector = "h1[class=p-title-value]"
@@ -37,15 +60,50 @@ class SimpCity:
         self.next_page_selector = "a[class*=pageNav-jump--next]"
         self.cookies_path = "resources/config/cookies/simpcity.json"
         self.set_cookies()
-
-    def log(self, message):
-        if self.log_callback:
-            self.log_callback(message)
-
-    def request_cancel(self):
-        self.cancel_event.set()
-        msg = "Download cancellation requested."
-        self.log(self.tr(msg) if self.tr else msg)
+    
+    def supports_url(self, url: str) -> bool:
+        """Check if this downloader can handle SimpCity URLs."""
+        return "simpcity.cr" in url.lower() or "simpcity.su" in url.lower()
+    
+    def get_site_name(self) -> str:
+        """Return the site name."""
+        return "SimpCity"
+    
+    def download(self, url: str) -> DownloadResult:
+        """
+        Main download method following BaseDownloader interface.
+        
+        Args:
+            url: The SimpCity thread URL to download
+            
+        Returns:
+            DownloadResult with statistics
+        """
+        start_time = time.time()
+        self.reset()
+        
+        try:
+            self.download_images_from_simpcity(url)
+            
+            return DownloadResult(
+                success=not self.is_cancelled() and len(self.failed_files) == 0,
+                total_files=self.total_files,
+                completed_files=self.completed_files,
+                failed_files=self.failed_files,
+                skipped_files=self.skipped_files,
+                elapsed_seconds=time.time() - start_time
+            )
+        except Exception as e:
+            self.log(self.tr(f"Error during download: {e}"))
+            return DownloadResult(
+                success=False,
+                total_files=self.total_files,
+                completed_files=self.completed_files,
+                failed_files=self.failed_files,
+                skipped_files=self.skipped_files,
+                error_message=str(e),
+                elapsed_seconds=time.time() - start_time
+            )
 
     def sanitize_folder_name(self, name):
         return re.sub(r'[<>:"/\\|?*]', '_', name)
@@ -75,43 +133,48 @@ class SimpCity:
             return None
 
     def save_file(self, file_url, path):
-        if self.cancel_event.is_set():
+        if self.is_cancelled():
             return
         os.makedirs(os.path.dirname(path), exist_ok=True)
         response = self.scraper.get(file_url, stream=True)
         if response.status_code == 200:
             with open(path, 'wb') as file:
                 for chunk in response.iter_content(1024):
-                    if self.cancel_event.is_set():
+                    if self.is_cancelled():
                         return
                     file.write(chunk)
             self.log(self.tr(f"Archivo descargado: {path}"))
+            self.completed_files += 1
+            self.report_global_progress()
         else:
             self.log(self.tr(f"Error al descargar {file_url}: {response.status_code}"))
+            self.failed_files.append(file_url)
 
     def process_post(self, post_content, download_folder):
-        if self.cancel_event.is_set():
+        if self.is_cancelled():
             return
         # Procesar imágenes
         images = post_content.select(self.images_selector)
         for img in images:
-            if self.cancel_event.is_set():
+            if self.is_cancelled():
                 return
             src = img.get('src')
             if src:
                 file_name = os.path.basename(urlparse(src).path)
                 file_path = os.path.join(download_folder, file_name)
+                self.total_files += 1
                 self.save_file(src, file_path)
 
         # Procesar videos
         videos = post_content.select(self.videos_selector)
         for video in videos:
-            if self.cancel_event.is_set():
+            if self.is_cancelled():
                 return
             src = video.get('src')
             if src:
                 file_name = os.path.basename(urlparse(src).path)
                 file_path = os.path.join(download_folder, file_name)
+                self.total_files += 1
                 self.save_file(src, file_path)
 
         # Procesar archivos adjuntos
@@ -119,16 +182,17 @@ class SimpCity:
         if attachments_block:
             attachments = attachments_block.select(self.attachments_selector)
             for attachment in attachments:
-                if self.cancel_event.is_set():
+                if self.is_cancelled():
                     return
                 href = attachment.get('href')
                 if href:
                     file_name = os.path.basename(urlparse(href).path)
                     file_path = os.path.join(download_folder, file_name)
+                    self.total_files += 1
                     self.save_file(href, file_path)
 
     def process_page(self, url):
-        if self.cancel_event.is_set():
+        if self.is_cancelled():
             return
         soup = self.fetch_page(url)
         if not soup:
@@ -141,14 +205,14 @@ class SimpCity:
 
         message_inners = soup.select(self.posts_selector)
         for post in message_inners:
-            if self.cancel_event.is_set():
+            if self.is_cancelled():
                 return
             post_content = post.select_one(self.post_content_selector)
             if post_content:
                 self.process_post(post_content, download_folder)
 
         next_page = soup.select_one(self.next_page_selector)
-        if next_page and not self.cancel_event.is_set():
+        if next_page and not self.is_cancelled():
             next_page_url = next_page.get('href')
             if next_page_url:
                 self.process_page(self.base_url + next_page_url)
