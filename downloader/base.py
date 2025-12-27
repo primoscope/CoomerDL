@@ -36,6 +36,7 @@ class DownloadOptions:
     max_file_size: int = 0  # bytes, 0 = no maximum
     date_from: Optional[str] = None  # ISO format YYYY-MM-DD
     date_to: Optional[str] = None  # ISO format YYYY-MM-DD
+    excluded_extensions: set = field(default_factory=set)  # Set of extensions to skip, e.g. {'.webm', '.gif'}
 
 
 @dataclass
@@ -250,6 +251,78 @@ class BaseDownloader(ABC):
         
         return True
     
+    def should_skip_file(self, url: str, filename: str = None, post_date: str = None) -> tuple[bool, str]:
+        """
+        Check if a file should be skipped based on advanced filters.
+        Performs HEAD request to check file size if size filtering is enabled.
+        
+        Args:
+            url: The file URL
+            filename: Optional filename for extension checking
+            post_date: Optional post date (ISO format YYYY-MM-DD) for date filtering
+            
+        Returns:
+            Tuple of (should_skip: bool, reason: str)
+        """
+        # Check extension blacklist if provided
+        if hasattr(self.options, 'excluded_extensions') and self.options.excluded_extensions:
+            if filename:
+                ext = '.' + filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+                if ext in self.options.excluded_extensions:
+                    return True, f"Extension {ext} is blacklisted"
+        
+        # Check date range if provided
+        if post_date and (self.options.date_from or self.options.date_to):
+            try:
+                from datetime import datetime
+                post_dt = datetime.fromisoformat(post_date)
+                
+                if self.options.date_from:
+                    date_from = datetime.fromisoformat(self.options.date_from)
+                    if post_dt < date_from:
+                        return True, f"Post date {post_date} is before {self.options.date_from}"
+                
+                if self.options.date_to:
+                    date_to = datetime.fromisoformat(self.options.date_to)
+                    if post_dt > date_to:
+                        return True, f"Post date {post_date} is after {self.options.date_to}"
+            except (ValueError, AttributeError):
+                pass  # Ignore date parsing errors
+        
+        # Check file size if size filtering is enabled
+        if self.options.min_file_size > 0 or self.options.max_file_size > 0:
+            file_size = self.get_file_size_head(url)
+            if file_size:
+                if self.options.min_file_size > 0 and file_size < self.options.min_file_size:
+                    size_mb = file_size / (1024 * 1024)
+                    min_mb = self.options.min_file_size / (1024 * 1024)
+                    return True, f"File size {size_mb:.2f}MB is below minimum {min_mb:.2f}MB"
+                
+                if self.options.max_file_size > 0 and file_size > self.options.max_file_size:
+                    size_mb = file_size / (1024 * 1024)
+                    max_mb = self.options.max_file_size / (1024 * 1024)
+                    return True, f"File size {size_mb:.2f}MB exceeds maximum {max_mb:.2f}MB"
+        
+        return False, ""
+    
+    def get_file_size_head(self, url: str) -> Optional[int]:
+        """
+        Get file size using HEAD request without downloading the file.
+        
+        Args:
+            url: The file URL
+            
+        Returns:
+            File size in bytes, or None if cannot be determined
+        """
+        try:
+            response = self.safe_request(url, method='HEAD')
+            if response and 'Content-Length' in response.headers:
+                return int(response.headers['Content-Length'])
+        except (ValueError, KeyError, Exception):
+            pass
+        return None
+    
     @staticmethod
     def sanitize_filename(filename: str) -> str:
         """
@@ -262,3 +335,94 @@ class BaseDownloader(ABC):
             Sanitized filename safe for all platforms
         """
         return re.sub(r'[<>:"/\\|?*]', '_', filename)
+    
+    def safe_request(self, url: str, method: str = 'GET', **kwargs):
+        """
+        Perform a safe HTTP request with retries and error handling.
+        
+        Args:
+            url: The URL to request
+            method: HTTP method ('GET', 'HEAD', etc.)
+            **kwargs: Additional arguments passed to requests
+            
+        Returns:
+            Response object, or None if request fails
+        """
+        import requests
+        
+        retries = self.options.max_retries
+        timeout = self.options.timeout
+        
+        for attempt in range(retries):
+            try:
+                if method == 'HEAD':
+                    response = requests.head(url, timeout=timeout, **kwargs)
+                else:
+                    response = requests.get(url, timeout=timeout, **kwargs)
+                
+                response.raise_for_status()
+                return response
+                
+            except requests.exceptions.RequestException as e:
+                if attempt < retries - 1:
+                    import time
+                    time.sleep(self.options.retry_interval)
+                else:
+                    self.log(self.tr(f"Request failed after {retries} attempts: {e}"))
+                    return None
+        
+        return None
+    
+    def download_file(self, url: str, filepath: str, chunk_size: int = None) -> bool:
+        """
+        Download a file from URL to filepath.
+        
+        Args:
+            url: The file URL
+            filepath: Local path to save the file
+            chunk_size: Chunk size for download (uses options.chunk_size if None)
+            
+        Returns:
+            True if download successful, False otherwise
+        """
+        if self.is_cancelled():
+            return False
+        
+        try:
+            import os
+            
+            chunk_size = chunk_size or self.options.chunk_size
+            
+            response = self.safe_request(url, stream=True)
+            if not response:
+                return False
+            
+            # Create directory if needed
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            
+            # Download file in chunks
+            with open(filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=chunk_size):
+                    if self.is_cancelled():
+                        # Delete partial file
+                        try:
+                            f.close()
+                            os.remove(filepath)
+                        except:
+                            pass
+                        return False
+                    
+                    if chunk:
+                        f.write(chunk)
+            
+            return True
+            
+        except Exception as e:
+            self.log(self.tr(f"Error downloading file: {e}"))
+            # Try to clean up partial file
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            except:
+                pass
+            return False
