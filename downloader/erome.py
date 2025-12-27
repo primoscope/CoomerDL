@@ -55,9 +55,20 @@ class EromeDownloader(BaseDownloader):
         self.update_progress_callback = update_progress_callback
         self.update_global_progress_callback = update_global_progress_callback
 
+    @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """Lightweight check if this downloader supports Erome URLs."""
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url.lower())
+            domain = parsed.netloc.lstrip('www.')
+            return domain == 'erome.com'
+        except Exception:
+            return False
+
     def supports_url(self, url: str) -> bool:
         """Check if this downloader supports the given URL."""
-        return 'erome.com' in url.lower()
+        return self.can_handle(url)
 
     def get_site_name(self) -> str:
         """Return the site name."""

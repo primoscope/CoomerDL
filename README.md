@@ -1,22 +1,42 @@
 ![Windows Compatibility](https://img.shields.io/badge/Windows-10%2C%2011-blue)
 ![Downloads](https://img.shields.io/github/downloads/emy69/CoomerDL/total)
 
-# Coomer Downloader App
+# CoomerDL - Universal Media Archiver
 
-**Coomer Downloader App** is a Python-based desktop application that simplifies downloading images and videos from various URLs. With an intuitive GUI, you can paste a link and let the app handle the rest.
+**CoomerDL** is a Python-based desktop application that has evolved into a **Universal Media Archiver**. It supports downloading images, videos, and galleries from **1000+ websites** through integrated engines (yt-dlp, gallery-dl) while maintaining specialized, high-speed scrapers for sites like Coomer, Kemono, and SimpCity.
 
 ---
 
 ## 📋 Quick Summary (for AI Agents)
 
-**What**: Multi-threaded downloader for adult content sites (coomer, kemono, erome, bunkr, simpcity, jpg5)  
-**Tech Stack**: Python 3.8+, CustomTkinter (GUI), SQLite (download tracking), requests (HTTP)  
+**What**: Universal media archiver with three engines:
+1. **Native Engine** (specialized): Coomer, Kemono, Bunkr, Erome, SimpCity, jpg5 (fast, purpose-built)
+2. **Universal Video Engine** (yt-dlp): YouTube, Twitter/X, Reddit, TikTok, Instagram, Twitch, and 1000+ sites
+3. **Universal Gallery Engine** (gallery-dl): DeviantArt, Pixiv, image boards, and galleries
+
+**Tech Stack**: Python 3.8+, CustomTkinter (GUI), SQLite (download tracking + job history), yt-dlp, gallery-dl, requests (HTTP)
+
 **Architecture**: 
 - `app/` - UI components (CustomTkinter)
-- `downloader/` - Site-specific downloaders (threading-based)
+- `downloader/` - Multi-engine download system
+  - `base.py` - BaseDownloader abstract class with standardized interface
+  - `factory.py` - Smart URL routing with `can_handle()` classmethod pattern
+  - `ytdlp_adapter.py` - yt-dlp integration (1000+ sites)
+  - `gallery.py` - gallery-dl integration (image galleries)
+  - `queue.py` - Unified job queue manager with event callbacks
+  - `history.py` - SQLite persistence for jobs and events
+  - `models.py` - JobStatus, ItemStatus, DownloadEvent dataclasses
+  - `policies.py` - RetryPolicy, DomainPolicy for "press & forget" automation
+  - `ratelimiter.py` - Per-domain concurrency and rate limiting
 - `resources/config/` - Settings JSON, SQLite DB, cookies
 
 **Key Features**:
+- ✅ **Universal Mode**: Support for 1000+ sites via yt-dlp and gallery-dl
+- ✅ **Smart Routing**: Factory pattern with 4-tier fallback (native → gallery → yt-dlp → generic)
+- ✅ **Job Queue System**: Persistent job history, crash recovery, event-driven UI
+- ✅ **Press & Forget**: Exponential backoff + jitter, per-domain rate limiting, auto-retry
+- ✅ **Browser Cookie Import**: Automatic authentication from Chrome/Firefox/Edge
+- ✅ **FFmpeg Integration**: Video/audio merging, format conversion, metadata embedding
 - ✅ Thread-safe cancellation with `threading.Event()`
 - ✅ Progress tracking with throttled callbacks (10 FPS)
 - ✅ SQLite caching for duplicate detection (indexed queries)
@@ -27,11 +47,13 @@
 - Startup: <1s (with indexed DB queries)
 - Memory: ~25MB baseline (no cache preload)
 - Concurrent downloads: 5-20 threads (configurable)
+- Per-domain rate limiting: 2 concurrent requests, 1s minimum interval
 
 **For Development**:
 - See `ROADMAP.md` for tasks and priorities
+- See `tests/CONTRACTS.md` for system behavior contracts
 - See `AI_AGENT_WORKFLOW.md` for development workflows
-- See `.github/agents/` for specialized AI agents
+- Run tests: `pytest tests/` (241 tests, all offline/deterministic)
 - Use `python main.py` to run the application
 
 ---
@@ -48,6 +70,25 @@ If you find this tool helpful, please consider supporting my efforts:
 
 ## Features
 
+### 🌍 Universal Mode (NEW)
+- **1000+ Supported Sites**: YouTube, Twitter/X, Reddit, TikTok, Instagram, Twitch, and more via yt-dlp
+- **Gallery Support**: DeviantArt, Pixiv, image boards via gallery-dl
+- **Smart Format Selection**: Best video+audio merge, audio-only, low quality modes
+- **Browser Cookie Import**: Auto-authenticate from Chrome, Firefox, or Edge
+- **Metadata Embedding**: Thumbnails, subtitles, and video metadata
+
+### 🤖 Press & Forget Automation (NEW)
+- **Auto-Retry**: Exponential backoff with jitter (1s → 2s → 4s → 8s, max 30s)
+- **Rate Limiting**: Per-domain concurrency caps and minimum request intervals
+- **Crash Recovery**: Jobs resume from where they stopped after app restart
+- **Duplicate Prevention**: URL-based and hash-based duplicate detection
+
+### 📦 Job Queue System (NEW)
+- **Persistent History**: All jobs and events stored in SQLite database
+- **Event-Driven UI**: Backend emits events (JOB_ADDED, JOB_PROGRESS, JOB_DONE, etc.)
+- **Cancellation**: Clean stop within 2 seconds, partial file cleanup
+- **Status Tracking**: PENDING → RUNNING → COMPLETED/FAILED/CANCELLED
+
 ### Download Images and Videos
 - **Multithreaded Downloads**: Boosts download speed by utilizing multiple threads.
 - **Progress Feedback**: Real-time progress updates during downloads.
@@ -61,14 +102,27 @@ If you find this tool helpful, please consider supporting my efforts:
 
 ---
 
-## Supported Pages
+## Supported Sites
 
+### 🏠 Native Scrapers (Optimized)
 - [coomer.su](https://coomer.su/)  
 - [kemono.su](https://kemono.su/)  
 - [erome.com](https://www.erome.com/)  
-- [bunkr.albums.io](https://bunkr-albums.io/)  
+- [bunkr-albums.io](https://bunkr-albums.io/)  
 - [simpcity.su](https://simpcity.su/)  
 - [jpg5.su](https://jpg5.su/)  
+
+### 🎬 Universal Video Engine (yt-dlp) - 1000+ Sites
+- **Video Platforms**: YouTube, Vimeo, Dailymotion, Twitch, etc.
+- **Social Media**: Twitter/X, Reddit, TikTok, Instagram, Facebook, etc.
+- **Adult Sites**: (yt-dlp supported sites)
+- **And many more**: [Full yt-dlp supported sites list](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)
+
+### 🖼️ Universal Gallery Engine (gallery-dl) - 100+ Sites
+- **Art Platforms**: DeviantArt, Pixiv, ArtStation
+- **Image Boards**: Various supported boards
+- **Social**: Tumblr, Pinterest, etc.
+- **And more**: [Full gallery-dl supported sites list](https://github.com/mikf/gallery-dl/blob/master/docs/supportedsites.md)  
 
 ---
 
@@ -136,10 +190,25 @@ Then install the required dependencies:
 ```sh
 pip install -r requirements.txt
 ```
+
+### Optional: Install FFmpeg (Recommended for Universal Mode)
+FFmpeg is required for video/audio merging in Universal Mode:
+- **Windows**: Download from [ffmpeg.org](https://ffmpeg.org/download.html) or use `winget install ffmpeg`
+- **macOS**: `brew install ffmpeg`
+- **Linux**: `sudo apt install ffmpeg` or equivalent
+
+The app will show FFmpeg status in the Universal (yt-dlp) settings tab.
+
 ### Run the Application
 Once everything is installed, you can start the application with:
 ```sh
 python main.py
+```
+
+### Run Tests
+To run the test suite (241 tests, all offline):
+```sh
+pytest tests/
 ```
 
 ---

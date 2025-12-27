@@ -42,9 +42,21 @@ class BunkrDownloader(BaseDownloader):
         self.update_progress_callback = update_progress_callback
         self.update_global_progress_callback = update_global_progress_callback
 
+    @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """Lightweight check if this downloader supports Bunkr URLs."""
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url.lower())
+            domain = parsed.netloc.lstrip('www.')
+            # Bunkr uses various domains
+            return any(d in domain for d in ('bunkr.', 'bunkrr.'))
+        except Exception:
+            return False
+
     def supports_url(self, url: str) -> bool:
         """Check if this downloader supports the given URL."""
-        return 'bunkr' in url.lower() or 'bunkrr' in url.lower()
+        return self.can_handle(url)
 
     def get_site_name(self) -> str:
         """Return the site name."""

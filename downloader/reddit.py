@@ -32,9 +32,20 @@ class RedditDownloader(BaseDownloader):
             **kwargs
         )
     
+    @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """Lightweight check if this downloader can handle Reddit URLs."""
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url.lower())
+            domain = parsed.netloc.lstrip('www.')
+            return domain in ('reddit.com', 'redd.it', 'old.reddit.com', 'new.reddit.com')
+        except Exception:
+            return False
+    
     def supports_url(self, url: str) -> bool:
         """Check if this downloader can handle Reddit URLs."""
-        return 'reddit.com' in url.lower() or 'redd.it' in url.lower()
+        return self.can_handle(url)
     
     def get_site_name(self) -> str:
         """Return the site name."""

@@ -9,6 +9,15 @@ class DownloaderFactory:
     """
     Factory class for creating appropriate downloader based on URL.
     
+    Priority order:
+    1. Native/specialized downloaders (Coomer, Kemono, SimpCity, Bunkr, Erome, etc.)
+    2. Gallery engine (gallery-dl) for image boards and galleries
+    3. Universal video engine (yt-dlp) for video sites
+    4. Generic HTML scraper (last resort fallback)
+    
+    URL routing uses lightweight classmethod can_handle() to avoid
+    expensive instantiation of downloaders just for URL checking.
+    
     Usage:
         factory = DownloaderFactory()
         factory.register(CoomerDownloader)
@@ -43,35 +52,85 @@ class DownloaderFactory:
         download_folder: str,
         options: Optional[DownloadOptions] = None,
         use_generic_fallback: bool = True,
+        use_ytdlp_fallback: bool = True,
+        use_gallery_fallback: bool = True,
+        ytdlp_options=None,
+        gallery_options=None,
         **kwargs
     ) -> Optional[BaseDownloader]:
         """
         Get appropriate downloader for the given URL.
         
+        Priority:
+        1. Native downloaders (specialized, faster) - uses can_handle() classmethod
+        2. Gallery downloader (gallery-dl) for image boards/galleries
+        3. Universal downloader (yt-dlp) for video sites
+        4. Generic HTML scraper (last resort)
+        
+        Note: URL routing uses lightweight classmethod can_handle() to avoid
+        expensive instantiation. Only the selected downloader is instantiated.
+        
         Args:
             url: The URL to find a downloader for
             download_folder: Path to save downloaded files
             options: Download configuration options
-            use_generic_fallback: If True, use GenericDownloader as fallback
+            use_generic_fallback: If True, use GenericDownloader as last resort
+            use_ytdlp_fallback: If True, use YtDlpDownloader for video sites
+            use_gallery_fallback: If True, use GalleryDownloader for image galleries
+            ytdlp_options: Optional YtDlpOptions for yt-dlp configuration
+            gallery_options: Optional GalleryOptions for gallery-dl configuration
             **kwargs: Additional arguments passed to downloader constructor
             
         Returns:
             Appropriate downloader instance, or None if no match
         """
-        # Try specific downloaders first
+        # 1. Try specific/native downloaders first (highest priority)
+        # Use can_handle() classmethod for lightweight URL checking
         for downloader_class in cls._downloader_classes:
-            # Create temporary instance to check URL support
-            instance = downloader_class(
-                download_folder=download_folder,
-                options=options,
-                **kwargs
-            )
-            if instance.supports_url(url):
-                return instance
+            if downloader_class.can_handle(url):
+                # Only instantiate the matching downloader
+                return downloader_class(
+                    download_folder=download_folder,
+                    options=options,
+                    **kwargs
+                )
         
-        # If no specific downloader found and generic fallback enabled
+        # 2. Try gallery-dl for image galleries (second priority)
+        if use_gallery_fallback:
+            try:
+                from downloader.gallery import GalleryDownloader
+                
+                # Use can_handle() classmethod for lightweight check
+                if GalleryDownloader.can_handle(url):
+                    return GalleryDownloader(
+                        download_folder=download_folder,
+                        options=options,
+                        gallery_options=gallery_options,
+                        **kwargs
+                    )
+            except ImportError:
+                # gallery-dl not installed, fall through
+                pass
+        
+        # 3. Try yt-dlp universal downloader (third priority)
+        if use_ytdlp_fallback:
+            try:
+                from downloader.ytdlp_adapter import YtDlpDownloader
+                
+                # Use can_handle() classmethod for lightweight check
+                if YtDlpDownloader.can_handle(url):
+                    return YtDlpDownloader(
+                        download_folder=download_folder,
+                        options=options,
+                        ytdlp_options=ytdlp_options,
+                        **kwargs
+                    )
+            except ImportError:
+                # yt-dlp not installed, fall through to generic
+                pass
+        
+        # 4. Generic HTML scraper as last resort (lowest priority)
         if use_generic_fallback:
-            # Try to import and use GenericDownloader
             try:
                 from downloader.generic import GenericDownloader
                 return GenericDownloader(
@@ -89,6 +148,9 @@ class DownloaderFactory:
         """
         Get list of all supported site names.
         
+        Note: This method does instantiate downloaders to get site names,
+        but it's only called for UI display, not during routing.
+        
         Returns:
             List of site names from registered downloaders
         """
@@ -97,6 +159,21 @@ class DownloaderFactory:
             # Create minimal instance to get site name
             instance = downloader_class(download_folder="")
             sites.append(instance.get_site_name())
+        
+        # Add gallery-dl support indicator
+        try:
+            from downloader.gallery import GalleryDownloader
+            sites.append("Gallery (gallery-dl) - 100+ image sites")
+        except ImportError:
+            pass
+        
+        # Add yt-dlp universal support indicator
+        try:
+            from downloader.ytdlp_adapter import YtDlpDownloader
+            sites.append("Universal (yt-dlp) - 1000+ sites")
+        except ImportError:
+            pass
+        
         return sites
     
     @classmethod

@@ -95,6 +95,8 @@ class BaseDownloader(ABC):
         global_progress_callback: Optional[Callable[[int, int], None]] = None,
         enable_widgets_callback: Optional[Callable[[bool], None]] = None,
         tr: Optional[Callable[[str], str]] = None,
+        domain_limiter: Optional[Any] = None,
+        retry_policy: Optional[Any] = None,
     ):
         """
         Initialize the downloader.
@@ -107,6 +109,8 @@ class BaseDownloader(ABC):
             global_progress_callback: Function to call with overall progress (completed, total)
             enable_widgets_callback: Function to enable/disable UI widgets
             tr: Translation function for internationalization
+            domain_limiter: Optional DomainLimiter for rate limiting
+            retry_policy: Optional RetryPolicy for retry behavior
         """
         self.download_folder = download_folder
         self.options = options or DownloadOptions()
@@ -115,6 +119,8 @@ class BaseDownloader(ABC):
         self.global_progress_callback = global_progress_callback
         self.enable_widgets_callback = enable_widgets_callback
         self.tr = tr or (lambda x: x)  # Default to identity function if no translation
+        self.domain_limiter = domain_limiter
+        self.retry_policy = retry_policy
         
         # Cancellation mechanism - use Event for thread safety
         self.cancel_event = threading.Event()
@@ -125,10 +131,31 @@ class BaseDownloader(ABC):
         self.failed_files: List[str] = []
         self.skipped_files: List[str] = []
     
+    @classmethod
+    def can_handle(cls, url: str) -> bool:
+        """
+        Lightweight class-level check if this downloader can handle the given URL.
+        
+        This method should NOT require instantiation and should be fast.
+        Override this in subclasses for efficient URL routing in the factory.
+        
+        Args:
+            url: The URL to check
+            
+        Returns:
+            True if this downloader supports the URL, False otherwise
+        """
+        # Default implementation returns False; subclasses should override
+        return False
+    
     @abstractmethod
     def supports_url(self, url: str) -> bool:
         """
         Check if this downloader can handle the given URL.
+        
+        Note: Prefer implementing can_handle() classmethod for factory routing
+        to avoid expensive instantiation. This instance method is kept for
+        backward compatibility.
         
         Args:
             url: The URL to check
@@ -184,7 +211,23 @@ class BaseDownloader(ABC):
             self.log_callback(message)
     
     def report_progress(self, downloaded: int, total: int, **kwargs) -> None:
-        """Report per-file download progress."""
+        """
+        Report per-file download progress.
+        
+        Standard metadata fields (recommended for consistent event handling):
+            file_id: Stable unique identifier for the file within this job
+            file_path: Local path where the file is being saved
+            filename: Just the filename (if file_path not known)
+            url: Source URL of the file
+            status: Current status string (e.g., "Downloading", "Processing")
+            speed: Download speed in bytes/second
+            eta: Estimated time remaining in seconds
+        
+        Args:
+            downloaded: Bytes downloaded so far for current file.
+            total: Total bytes for current file (0 if unknown).
+            **kwargs: Additional metadata fields.
+        """
         if self.progress_callback:
             self.progress_callback(downloaded, total, kwargs)
     
@@ -336,9 +379,50 @@ class BaseDownloader(ABC):
         """
         return re.sub(r'[<>:"/\\|?*]', '_', filename)
     
+    @staticmethod
+    def canonicalize_url(url: str) -> str:
+        """
+        Canonicalize a URL for deduplication.
+        
+        Strips fragments, normalizes some query parameters.
+        
+        Args:
+            url: URL to canonicalize.
+            
+        Returns:
+            Canonical URL string.
+        """
+        from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
+        
+        try:
+            parsed = urlparse(url)
+            
+            # Remove fragment
+            parsed = parsed._replace(fragment='')
+            
+            # Sort query parameters for consistency
+            if parsed.query:
+                params = parse_qs(parsed.query, keep_blank_values=True)
+                # Sort and flatten
+                sorted_params = sorted(
+                    (k, v[0] if len(v) == 1 else v)
+                    for k, v in params.items()
+                )
+                parsed = parsed._replace(query=urlencode(sorted_params, doseq=True))
+            
+            return urlunparse(parsed)
+        except Exception:
+            return url
+    
     def safe_request(self, url: str, method: str = 'GET', **kwargs):
         """
-        Perform a safe HTTP request with retries and error handling.
+        Perform a safe HTTP request with retries, backoff, and rate limiting.
+        
+        Features:
+        - Exponential backoff with jitter (if retry_policy is set)
+        - Per-domain rate limiting (if domain_limiter is set)
+        - Cancellation check between retries
+        - Special handling for 429 rate limit responses
         
         Args:
             url: The URL to request
@@ -349,29 +433,109 @@ class BaseDownloader(ABC):
             Response object, or None if request fails
         """
         import requests
+        import time
+        from urllib.parse import urlparse
         
-        retries = self.options.max_retries
-        timeout = self.options.timeout
+        # Use retry policy if available, otherwise fall back to options
+        if self.retry_policy:
+            max_attempts = self.retry_policy.max_attempts
+        else:
+            max_attempts = self.options.max_retries
         
-        for attempt in range(retries):
+        timeout = kwargs.pop('timeout', self.options.timeout)
+        
+        # Extract domain for rate limiting
+        domain = urlparse(url).netloc.lower()
+        
+        for attempt in range(max_attempts):
+            # Check cancellation
+            if self.is_cancelled():
+                return None
+            
             try:
-                if method == 'HEAD':
-                    response = requests.head(url, timeout=timeout, **kwargs)
-                else:
-                    response = requests.get(url, timeout=timeout, **kwargs)
+                # Apply domain rate limiting if available
+                if self.domain_limiter:
+                    self.domain_limiter.acquire(domain)
                 
-                response.raise_for_status()
-                return response
+                try:
+                    if method.upper() == 'HEAD':
+                        response = requests.head(url, timeout=timeout, **kwargs)
+                    else:
+                        response = requests.get(url, timeout=timeout, **kwargs)
+                    
+                    # Check for rate limiting
+                    if response.status_code == 429:
+                        retry_after = response.headers.get('Retry-After')
+                        if retry_after:
+                            try:
+                                wait_time = int(retry_after)
+                            except ValueError:
+                                wait_time = 30
+                        else:
+                            wait_time = self._compute_backoff(attempt)
+                        
+                        self.log(self.tr(f"Rate limited (429). Waiting {wait_time:.1f}s..."))
+                        time.sleep(wait_time)
+                        continue
+                    
+                    # Check for other retryable status codes
+                    if self.retry_policy and self.retry_policy.is_retryable_status(response.status_code):
+                        if attempt < max_attempts - 1:
+                            wait_time = self._compute_backoff(attempt)
+                            self.log(self.tr(f"Server error ({response.status_code}). Retrying in {wait_time:.1f}s..."))
+                            time.sleep(wait_time)
+                            continue
+                    
+                    response.raise_for_status()
+                    return response
+                    
+                finally:
+                    # Release domain slot
+                    if self.domain_limiter:
+                        self.domain_limiter.release(domain)
                 
             except requests.exceptions.RequestException as e:
-                if attempt < retries - 1:
-                    import time
-                    time.sleep(self.options.retry_interval)
+                should_retry = False
+                
+                if self.retry_policy:
+                    should_retry = self.retry_policy.is_retryable_exception(e)
                 else:
-                    self.log(self.tr(f"Request failed after {retries} attempts: {e}"))
+                    # Default: retry on common transient errors
+                    should_retry = isinstance(e, (
+                        requests.exceptions.ConnectionError,
+                        requests.exceptions.Timeout,
+                    ))
+                
+                if should_retry and attempt < max_attempts - 1:
+                    wait_time = self._compute_backoff(attempt)
+                    self.log(self.tr(f"Request failed: {e}. Retrying in {wait_time:.1f}s..."))
+                    time.sleep(wait_time)
+                else:
+                    self.log(self.tr(f"Request failed after {attempt + 1} attempts: {e}"))
                     return None
         
         return None
+    
+    def _compute_backoff(self, attempt: int) -> float:
+        """
+        Compute backoff delay for retry attempt.
+        
+        Args:
+            attempt: Retry attempt number (0-indexed).
+            
+        Returns:
+            Delay in seconds.
+        """
+        if self.retry_policy:
+            from downloader.policies import compute_backoff
+            return compute_backoff(attempt, self.retry_policy)
+        else:
+            # Simple exponential backoff with cap
+            import random
+            delay = min(self.options.retry_interval * (2 ** attempt), 30.0)
+            # Add small jitter
+            delay = delay * (1 + random.uniform(-0.1, 0.1))
+            return delay
     
     def download_file(self, url: str, filepath: str, chunk_size: int = None) -> bool:
         """
