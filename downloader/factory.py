@@ -42,6 +42,7 @@ class DownloaderFactory:
         url: str,
         download_folder: str,
         options: Optional[DownloadOptions] = None,
+        use_generic_fallback: bool = True,
         **kwargs
     ) -> Optional[BaseDownloader]:
         """
@@ -51,11 +52,13 @@ class DownloaderFactory:
             url: The URL to find a downloader for
             download_folder: Path to save downloaded files
             options: Download configuration options
+            use_generic_fallback: If True, use GenericDownloader as fallback
             **kwargs: Additional arguments passed to downloader constructor
             
         Returns:
             Appropriate downloader instance, or None if no match
         """
+        # Try specific downloaders first
         for downloader_class in cls._downloader_classes:
             # Create temporary instance to check URL support
             instance = downloader_class(
@@ -65,6 +68,20 @@ class DownloaderFactory:
             )
             if instance.supports_url(url):
                 return instance
+        
+        # If no specific downloader found and generic fallback enabled
+        if use_generic_fallback:
+            # Try to import and use GenericDownloader
+            try:
+                from downloader.generic import GenericDownloader
+                return GenericDownloader(
+                    download_folder=download_folder,
+                    options=options,
+                    **kwargs
+                )
+            except ImportError:
+                pass
+        
         return None
     
     @classmethod
@@ -86,3 +103,12 @@ class DownloaderFactory:
     def clear_registry(cls) -> None:
         """Clear all registered downloaders (useful for testing)."""
         cls._downloader_classes = []
+
+
+# Auto-import downloaders to ensure their @register decorators execute
+# This is important for the factory pattern to work properly
+try:
+    from downloader import bunkr, erome, simpcity, generic, reddit
+except ImportError:
+    # Some downloaders might not be available
+    pass

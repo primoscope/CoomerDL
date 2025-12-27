@@ -9,13 +9,24 @@ import uuid
 import re
 import threading
 
-class BunkrDownloader:
-    def __init__(self, download_folder, log_callback=None, enable_widgets_callback=None, update_progress_callback=None, update_global_progress_callback=None, headers=None, max_workers=5, translations=None):
-        self.download_folder = download_folder
-        self.log_callback = log_callback
-        self.enable_widgets_callback = enable_widgets_callback
-        self.update_progress_callback = update_progress_callback
-        self.update_global_progress_callback = update_global_progress_callback
+from downloader.base import BaseDownloader, DownloadResult, DownloadOptions
+from downloader.factory import DownloaderFactory
+
+
+@DownloaderFactory.register
+class BunkrDownloader(BaseDownloader):
+    def __init__(self, download_folder, log_callback=None, enable_widgets_callback=None, update_progress_callback=None, update_global_progress_callback=None, headers=None, max_workers=5, translations=None, options=None, **kwargs):
+        # Initialize base class
+        super().__init__(
+            download_folder=download_folder,
+            options=options,
+            log_callback=log_callback,
+            progress_callback=update_progress_callback,
+            global_progress_callback=update_global_progress_callback,
+            enable_widgets_callback=enable_widgets_callback,
+            tr=translations.get if translations else None
+        )
+        
         self.session = requests.Session()
         self.headers = headers or {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
@@ -23,52 +34,65 @@ class BunkrDownloader:
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'Accept-Language': 'en-US,en;q=0.9',
         }
-        self.cancel_event = threading.Event()  # Thread-safe cancellation event
-        self.executor = ThreadPoolExecutor(max_workers=max_workers)  # Thread pool executor for concurrent downloads
-        self.total_files = 0
-        self.completed_files = 0
-        self.max_downloads = 5  # Valor por defecto
-        self.log_messages = []  # Cola para almacenar mensajes de log
-        self.notification_interval = 10  # Intervalo de notificación en segundos
-        self.start_notification_thread()
-        self.translations = translations or {}  
-
-    def start_notification_thread(self):
-        self._notification_shutdown = threading.Event()
+        self.executor = ThreadPoolExecutor(max_workers=max_workers)
+        self.max_downloads = max_workers
+        self.translations = translations or {}
         
-        def notify_user():
-            while not self._notification_shutdown.is_set():
-                if self.log_messages:
-                    # Enviar todos los mensajes acumulados
-                    if self.log_callback:
-                        self.log_callback("\n".join(self.log_messages))
-                    self.log_messages.clear()
-                time.sleep(self.notification_interval if self.notification_interval > 0 else 0.1)
+        # Legacy support for update callbacks
+        self.update_progress_callback = update_progress_callback
+        self.update_global_progress_callback = update_global_progress_callback
 
-        # Iniciar un hilo para notificaciones periódicas
-        notification_thread = threading.Thread(target=notify_user, daemon=True)
-        notification_thread.start()
+    def supports_url(self, url: str) -> bool:
+        """Check if this downloader supports the given URL."""
+        return 'bunkr' in url.lower() or 'bunkrr' in url.lower()
 
-    def tr(self, key):
-        # Obtener la traducción para la clave dada
+    def get_site_name(self) -> str:
+        """Return the site name."""
+        return "Bunkr"
+
+    def download(self, url: str) -> DownloadResult:
+        """
+        Main download entry point. Detects URL type and delegates.
+        """
+        self.reset()
+        
+        try:
+            if '/a/' in url or '/v/' in url or '/d/' in url or '/i/' in url or '/f/' in url:
+                self.descargar_post_bunkr(url)
+            else:
+                self.descargar_perfil_bunkr(url)
+            
+            return DownloadResult(
+                success=not self.is_cancelled(),
+                total_files=self.total_files,
+                completed_files=self.completed_files,
+                failed_files=self.failed_files,
+                skipped_files=self.skipped_files
+            )
+        except Exception as e:
+            self.log(f"Error during download: {e}")
+            return DownloadResult(
+                success=False,
+                total_files=self.total_files,
+                completed_files=self.completed_files,
+                failed_files=self.failed_files,
+                skipped_files=self.skipped_files,
+                error_message=str(e)
+            )
+
+    def tr_legacy(self, key):
+        """Legacy translation method for backward compatibility."""
         return self.translations.get(key, key)
 
-    def log(self, message_key, url=None):
-        message = self.tr(message_key)
+    def log_legacy(self, message_key, url=None):
+        """Legacy log method that matches old interface."""
+        message = self.tr_legacy(message_key)
         domain = urlparse(url).netloc if url else "General"
         full_message = f"{domain}: {message}"
-        self.log_messages.append(full_message)  # Agregar mensaje a la cola
-
-    def request_cancel(self):
-        self.cancel_event.set()
-        if hasattr(self, '_notification_shutdown'):
-            self._notification_shutdown.set()
-        self.log("Download has been cancelled.")
-        self.shutdown_executor()
+        self.log(full_message)
 
     def shutdown_executor(self):
-        if hasattr(self, '_notification_shutdown'):
-            self._notification_shutdown.set()
+        """Shutdown the thread pool executor."""
         self.executor.shutdown(wait=False)
         self.log("Executor shut down.")
 
@@ -82,8 +106,8 @@ class BunkrDownloader:
         return self.clean_filename(folder_name)
 
     def download_file(self, url_media, ruta_carpeta, file_id):
-        if self.cancel_event.is_set():
-            self.log("Descarga cancelada", url=url_media)
+        if self.is_cancelled():
+            self.log("Descarga cancelada")
             return
 
         file_name = os.path.basename(urlparse(url_media).path)
@@ -92,8 +116,7 @@ class BunkrDownloader:
         if os.path.exists(file_path):
             self.log(f"El archivo ya existe, omitiendo: {file_path}")
             self.completed_files += 1
-            if self.update_global_progress_callback:
-                self.update_global_progress_callback(self.completed_files, self.total_files)
+            self.report_global_progress()
             return
 
         max_attempts = 3
@@ -110,31 +133,26 @@ class BunkrDownloader:
                 # Descargar el archivo en fragmentos
                 with open(file_path, 'wb') as file:
                     for chunk in response.iter_content(chunk_size=65536):  # Fragmentos de 64KB
-                        if self.cancel_event.is_set():
-                            self.log("Descarga cancelada durante la descarga del archivo.", url=url_media)
+                        if self.is_cancelled():
+                            self.log("Descarga cancelada durante la descarga del archivo.")
                             file.close()
                             os.remove(file_path)
                             return
                         file.write(chunk)
                         downloaded_size += len(chunk)
-                        if self.update_progress_callback:
-                            self.update_progress_callback(downloaded_size, total_size, file_id=file_id, file_path=file_path)
+                        self.report_progress(downloaded_size, total_size, file_id=file_id, file_path=file_path)
 
-                self.log("Archivo descargado", url=url_media)
-                # Notificar al usuario al completar la descarga
-                if self.log_callback:
-                    self.log_callback(f"Descarga completada: {file_name}")
+                self.log(f"Archivo descargado: {file_name}")
                 self.completed_files += 1
-                if self.update_global_progress_callback:
-                    self.update_global_progress_callback(self.completed_files, self.total_files)
+                self.report_global_progress()
                 break
             except requests.RequestException as e:
-                if response.status_code == 429:
+                if hasattr(response, 'status_code') and response.status_code == 429:
                     self.log(f"Límite de tasa excedido. Reintentando después de {delay} segundos.")
                     time.sleep(delay)
                     delay *= 2  # Retroceso exponencial para limitación de tasa
                 else:
-                    self.log(f"Error al descargar de {url_media}: {e}. Intento {attempt + 1} de {max_attempts}", url=url_media)
+                    self.log(f"Error al descargar de {url_media}: {e}. Intento {attempt + 1} de {max_attempts}")
                     if attempt < max_attempts - 1:
                         time.sleep(3)
     
@@ -265,22 +283,17 @@ class BunkrDownloader:
                 with ThreadPoolExecutor(max_workers=self.max_downloads) as executor:
                     futures = [executor.submit(self.download_file, url, folder, str(uuid.uuid4())) for url, folder in media_urls]
                     for future in as_completed(futures):
-                        if self.cancel_event.is_set():
+                        if self.is_cancelled():
                             self.log("Cancelando descargas restantes.")
                             break
                         future.result()
 
             self.log("Descarga iniciada para todos los medios.")
-            if self.enable_widgets_callback:
-                self.enable_widgets_callback()
+            self.enable_widgets(True)
 
         except Exception as e:
             self.log(f"Error al procesar el post {url_post}: {e}")
-            if self.enable_widgets_callback:
-                self.enable_widgets_callback()
-        finally:
-            if hasattr(self, '_notification_shutdown'):
-                self._notification_shutdown.set()
+            self.enable_widgets(True)
 
 
     def descargar_perfil_bunkr(self, url_perfil):
@@ -310,7 +323,7 @@ class BunkrDownloader:
                     links = grid_div.find_all('a', {'class': 'after:absolute after:z-10 after:inset-0'})
                     total_links = len(links)
                     for idx, link in enumerate(links):
-                        if self.cancel_event.is_set():
+                        if self.is_cancelled():
                             self.log("Cancelling remaining downloads.")
                             break
 
@@ -348,23 +361,18 @@ class BunkrDownloader:
                 
                 # Only after all futures are done, enable widgets again
                 for future in as_completed(futures):
-                    if self.cancel_event.is_set():
+                    if self.is_cancelled():
                         self.log("Cancelling remaining downloads.")
                         break
                     future.result()
 
                 self.log("Download completed for all media.")
-                if self.enable_widgets_callback:
-                    self.enable_widgets_callback()  # Only enable after all downloads are done
+                self.enable_widgets(True)
             else:
                 self.log(f"Failed to access the profile {url_perfil}: Status {response.status_code}")
         except Exception as e:
             self.log(f"Failed to access the profile {url_perfil}: {e}")
-            if self.enable_widgets_callback:
-                self.enable_widgets_callback()
-        finally:
-            if hasattr(self, '_notification_shutdown'):
-                self._notification_shutdown.set()
+            self.enable_widgets(True)
 
     def set_max_downloads(self, max_downloads):
         self.max_downloads = max_downloads
