@@ -17,5 +17,7 @@ dependencies:
     - cloudscraper
     - selenium
     - yt-dlp
+    - gallery-dl
     - pytest
+    - pytest-cov
     - flake8
