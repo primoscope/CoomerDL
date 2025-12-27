@@ -12,9 +12,8 @@ from typing import Optional
 from urllib.parse import ParseResult, parse_qs, urlparse
 import webbrowser
 import requests
-from PIL import Image
-import customtkinter as ctk
 from PIL import Image, ImageTk
+import customtkinter as ctk
 import psutil
 import functools
 import subprocess
@@ -38,7 +37,7 @@ from app.window.progress_panel import ProgressPanel
 from app.window.status_bar import StatusBar
 
 VERSION = "V0.8.12"
-MAX_LOG_LINES = None
+MAX_LOG_LINES = 1000  # Set to reasonable default to prevent crashes
 
 def extract_ck_parameters(url: ParseResult) -> tuple[Optional[str], Optional[str], Optional[str]]:
     """
@@ -431,6 +430,11 @@ class ImageDownloaderApp(ctk.CTk):
     def download_compressed_check(self):
         """Access download compressed checkbox from OptionsPanel."""
         return self.options_panel.download_compressed_check
+    
+    @property
+    def download_documents_check(self):
+        """Access download documents checkbox from OptionsPanel."""
+        return self.options_panel.download_documents_check
     
     @property
     def download_button(self):
@@ -910,10 +914,68 @@ class ImageDownloaderApp(ctk.CTk):
             download_thread = threading.Thread(target=self.wrapped_download, args=(self.active_downloader.descargar_imagenes,))
         
         else:
-            self.add_log_message_safe(self.tr("URL no válida"))
-            self.download_button.configure(state="normal")
-            self.cancel_button.configure(state="disabled")
-            return
+            # Universal fallback using DownloaderFactory for YouTube, Twitter, TikTok, etc.
+            self.add_log_message_safe(self.tr("Detecting downloader for URL..."))
+            from downloader.factory import DownloaderFactory
+            from downloader.base import DownloadOptions
+            from downloader.ytdlp_adapter import YtDlpOptions
+            
+            # Create DownloadOptions from UI checkboxes
+            options = DownloadOptions(
+                download_images=self.download_images_check.get(),
+                download_videos=self.download_videos_check.get(),
+                download_compressed=self.download_compressed_check.get(),
+                download_documents=self.download_documents_check.get(),  # Use actual checkbox
+                max_retries=self.settings.get('max_retries', 3),
+                retry_interval=self.settings.get('retry_interval', 2.0)
+            )
+            
+            # Create YtDlpOptions from settings
+            ytdlp_options = YtDlpOptions(
+                format_selector=self.settings.get('ytdlp_format', 'best'),
+                merge_output_format=self.settings.get('ytdlp_container', 'mp4'),
+                embed_thumbnail=self.settings.get('ytdlp_embed_thumbnail', True),
+                embed_metadata=self.settings.get('ytdlp_embed_metadata', True),
+                download_subtitles=self.settings.get('ytdlp_download_subtitles', False),
+                subtitle_languages=self.settings.get('ytdlp_subtitle_languages', 'en'),
+                cookies_from_browser=self.settings.get('ytdlp_cookies_browser', None) if self.settings.get('ytdlp_cookies_browser') != "None" else None
+            )
+            
+            # Try to get downloader from factory
+            downloader = DownloaderFactory.get_downloader(
+                url=url,
+                download_folder=self.download_folder,
+                options=options,
+                ytdlp_options=ytdlp_options,
+                log_callback=self.add_log_message_safe,
+                progress_callback=self.update_progress,
+                global_progress_callback=self.update_global_progress,
+                enable_widgets_callback=self.enable_widgets,
+                tr=self.tr
+            )
+            
+            if downloader:
+                # Successfully got a downloader
+                downloader_name = downloader.__class__.__name__
+                self.add_log_message_safe(self.tr(f"Using {downloader_name} for this URL"))
+                self.active_downloader = downloader
+                download_thread = threading.Thread(
+                    target=self.wrapped_base_download, 
+                    args=(downloader, url)
+                )
+            else:
+                # No downloader available
+                self.add_log_message_safe(self.tr("No compatible downloader found for this URL"))
+                messagebox.showerror(
+                    self.tr("Error"),
+                    self.tr("This URL is not supported. Supported sites include:\n"
+                           "- YouTube, Vimeo, Twitter/X, TikTok, Instagram\n"
+                           "- Coomer, Kemono, Erome, Bunkr, SimpCity, Jpg5\n"
+                           "- 1000+ other sites via yt-dlp")
+                )
+                self.download_button.configure(state="normal")
+                self.cancel_button.configure(state="disabled")
+                return
 
         download_thread.start()
 
@@ -967,12 +1029,15 @@ class ImageDownloaderApp(ctk.CTk):
 
     # Log messages safely
     def add_log_message_safe(self, message: str):
-        # Asegura estructuras
+        # Ensure structures exist
         if not hasattr(self, "errors") or self.errors is None:
             self.errors = []
-        self.errors.append(message)
+        
+        # Only add ERROR messages to errors list
+        if message and ("error" in message.lower() or "failed" in message.lower() or "falló" in message.lower()):
+            self.errors.append(message)
 
-        # Intenta escribir en el textbox si existe; si no, bufferiza
+        # Try to write to textbox if it exists; otherwise buffer
         try:
             if hasattr(self, "log_textbox") and self.log_textbox:
                 self.log_textbox.configure(state="normal")
@@ -982,12 +1047,12 @@ class ImageDownloaderApp(ctk.CTk):
                 if getattr(self, "autoscroll_logs_var", None) and self.autoscroll_logs_var.get():
                     self.log_textbox.see("end")
             else:
-                # aún no existe el textbox; guardamos
+                # textbox doesn't exist yet; buffer the message
                 if not hasattr(self, "_log_buffer") or self._log_buffer is None:
                     self._log_buffer = []
                 self._log_buffer.append(message)
         except Exception:
-            # ante cualquier problema, también bufferiza
+            # on any problem, also buffer
             if not hasattr(self, "_log_buffer") or self._log_buffer is None:
                 self._log_buffer = []
             self._log_buffer.append(message)

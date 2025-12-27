@@ -1,8 +1,11 @@
 """
 Factory for creating downloader instances based on URL.
 """
+import logging
 from typing import Optional, List, Type
 from downloader.base import BaseDownloader, DownloadOptions
+
+logger = logging.getLogger(__name__)
 
 
 class DownloaderFactory:
@@ -184,8 +187,39 @@ class DownloaderFactory:
 
 # Auto-import downloaders to ensure their @register decorators execute
 # This is important for the factory pattern to work properly
+# Import each module explicitly to catch and log specific failures
+_import_errors = []
+
 try:
-    from downloader import bunkr, erome, simpcity, generic, reddit
-except ImportError:
-    # Some downloaders might not be available
-    pass
+    from downloader import bunkr
+except ImportError as e:
+    logger.warning(f"Failed to import bunkr downloader: {e}")
+    _import_errors.append(("bunkr", str(e)))
+
+try:
+    from downloader import erome
+except ImportError as e:
+    logger.warning(f"Failed to import erome downloader: {e}")
+    _import_errors.append(("erome", str(e)))
+
+try:
+    from downloader import simpcity
+except ImportError as e:
+    logger.warning(f"Failed to import simpcity downloader: {e}")
+    _import_errors.append(("simpcity", str(e)))
+
+try:
+    from downloader import generic
+except ImportError as e:
+    logger.warning(f"Failed to import generic downloader: {e}")
+    _import_errors.append(("generic", str(e)))
+
+try:
+    from downloader import reddit
+except ImportError as e:
+    logger.warning(f"Failed to import reddit downloader: {e}")
+    _import_errors.append(("reddit", str(e)))
+
+# Log summary if any imports failed
+if _import_errors:
+    logger.warning(f"Failed to import {len(_import_errors)} downloader(s): {', '.join([name for name, _ in _import_errors])}")

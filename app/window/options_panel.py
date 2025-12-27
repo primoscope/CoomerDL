@@ -56,6 +56,14 @@ class OptionsPanel(ctk.CTkFrame):
         )
         self.download_compressed_check.pack(side='left', padx=10)
         self.download_compressed_check.select()
+        
+        # Download documents checkbox (NEW)
+        self.download_documents_check = ctk.CTkCheckBox(
+            self,
+            text=self.tr("Descargar Documentos")
+        )
+        self.download_documents_check.pack(side='left', padx=10)
+        self.download_documents_check.select()
     
     def get_download_images(self) -> bool:
         """Get the download images checkbox state."""
@@ -69,12 +77,17 @@ class OptionsPanel(ctk.CTkFrame):
         """Get the download compressed checkbox state."""
         return bool(self.download_compressed_check.get())
     
+    def get_download_documents(self) -> bool:
+        """Get the download documents checkbox state."""
+        return bool(self.download_documents_check.get())
+    
     def get_options(self) -> Dict[str, bool]:
         """Get all download options as a dictionary."""
         return {
             'download_images': self.get_download_images(),
             'download_videos': self.get_download_videos(),
             'download_compressed': self.get_download_compressed(),
+            'download_documents': self.get_download_documents(),
         }
     
     def set_options(self, options: Dict[str, bool]):
@@ -93,9 +106,15 @@ class OptionsPanel(ctk.CTkFrame):
             self.download_compressed_check.select()
         else:
             self.download_compressed_check.deselect()
+        
+        if options.get('download_documents', True):
+            self.download_documents_check.select()
+        else:
+            self.download_documents_check.deselect()
     
     def update_texts(self):
         """Update UI texts for translation changes."""
         self.download_images_check.configure(text=self.tr("Descargar Imágenes"))
         self.download_videos_check.configure(text=self.tr("Descargar Vídeos"))
         self.download_compressed_check.configure(text=self.tr("Descargar Comprimidos"))
+        self.download_documents_check.configure(text=self.tr("Descargar Documentos"))

@@ -2,15 +2,19 @@
 Reddit Downloader - Official support for Reddit posts.
 
 Uses Reddit's public JSON API to extract media from posts.
+Falls back to yt-dlp if JSON API fails.
 """
 import os
 import re
 import json
 import time
+import logging
 from typing import Optional
 from urllib.parse import urlparse
 from downloader.base import BaseDownloader, DownloadOptions, DownloadResult
 from downloader.factory import DownloaderFactory
+
+logger = logging.getLogger(__name__)
 
 
 @DownloaderFactory.register
@@ -55,11 +59,65 @@ class RedditDownloader(BaseDownloader):
         """
         Download media from a Reddit post.
         
+        Uses Reddit JSON API first, falls back to yt-dlp if that fails.
         Reddit JSON API: Append .json to any Reddit URL to get JSON data.
         """
         start_time = time.time()
         self.reset()
         
+        try:
+            # Try native JSON API first
+            result = self._download_via_json_api(url, start_time)
+            
+            # If native method fails and no media found, try yt-dlp fallback
+            if not result.success and result.total_files == 0:
+                self.log(self.tr("Native Reddit API failed, trying yt-dlp fallback..."))
+                logger.info(f"Reddit JSON API failed for {url}, attempting yt-dlp fallback")
+                
+                try:
+                    from downloader.ytdlp_adapter import YtDlpDownloader
+                    
+                    # Create yt-dlp downloader with same settings
+                    ytdlp = YtDlpDownloader(
+                        download_folder=self.download_folder,
+                        options=self.options,
+                        log_callback=self.log_callback,
+                        progress_callback=self.progress_callback,
+                        global_progress_callback=self.global_progress_callback,
+                        tr=self.tr
+                    )
+                    
+                    self.log(self.tr("Downloading via yt-dlp..."))
+                    return ytdlp.download(url)
+                    
+                except ImportError:
+                    logger.warning("yt-dlp not available for Reddit fallback")
+                    self.log(self.tr("yt-dlp not available for fallback"))
+                except Exception as e:
+                    logger.error(f"yt-dlp fallback failed for {url}: {e}")
+                    self.log(self.tr(f"yt-dlp fallback error: {e}"))
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Reddit download error for {url}: {e}")
+            self.log(self.tr(f"Reddit download error: {e}"))
+            return DownloadResult(
+                success=False,
+                total_files=self.total_files,
+                completed_files=self.completed_files,
+                failed_files=self.failed_files,
+                skipped_files=self.skipped_files,
+                error_message=str(e),
+                elapsed_seconds=time.time() - start_time
+            )
+    
+    def _download_via_json_api(self, url: str, start_time: float) -> DownloadResult:
+        """
+        Download media from a Reddit post using JSON API.
+        
+        Reddit JSON API: Append .json to any Reddit URL to get JSON data.
+        """
         try:
             # Normalize URL and add .json
             json_url = self._get_json_url(url)

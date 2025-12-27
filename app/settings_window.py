@@ -48,6 +48,25 @@ class SettingsWindow:
             return {'max_downloads': 3, 'folder_structure': 'default', 'language': 'en', 'theme': 'System'}
 
     def save_settings(self):
+        # Collect settings from new tabs if they exist
+        if hasattr(self, 'scraper_settings'):
+            try:
+                self.settings['scraper'] = self.scraper_settings.get_settings()
+            except Exception:
+                pass
+        
+        if hasattr(self, 'network_settings'):
+            try:
+                self.settings['network'] = self.network_settings.get_settings()
+            except Exception:
+                pass
+        
+        if hasattr(self, 'logging_settings'):
+            try:
+                self.settings['logging'] = self.logging_settings.get_settings()
+            except Exception:
+                pass
+        
         os.makedirs(os.path.dirname(self.CONFIG_PATH), exist_ok=True)
         with open(self.CONFIG_PATH, 'w') as file:
             json.dump(self.settings, file, indent=4)
@@ -83,6 +102,11 @@ class SettingsWindow:
         self.db_tab = self.tabview.add(self.translate("Database"))
         self.cookies_tab = self.tabview.add(self.translate("Cookies"))
         
+        # New tabs
+        self.scraper_tab = self.tabview.add(self.translate("Scraper"))
+        self.network_tab = self.tabview.add(self.translate("Network"))
+        self.logging_tab = self.tabview.add(self.translate("Logging"))
+        
         # Render all tabs
         self.render_general_tab(self.general_tab)
         self.render_downloads_tab(self.downloads_tab)
@@ -90,6 +114,11 @@ class SettingsWindow:
         self.render_universal_tab(self.universal_tab)
         self.render_db_tab(self.db_tab)
         self.render_cookies_tab(self.cookies_tab)
+        
+        # Render new tabs
+        self.render_scraper_tab(self.scraper_tab)
+        self.render_network_tab(self.network_tab)
+        self.render_logging_tab(self.logging_tab)
     
     def render_db_tab(self, tab):
         tab.grid_columnconfigure(0, weight=1)
@@ -1133,6 +1162,42 @@ class SettingsWindow:
             ctk.set_appearance_mode("dark")
         else:
             ctk.set_appearance_mode("system")
+    
+    def render_scraper_tab(self, tab):
+        """Render the Universal Scraper settings tab."""
+        try:
+            from app.components.settings_tabs import ScraperSettingsTab
+            self.scraper_settings = ScraperSettingsTab(tab, self.translate, self.settings)
+        except Exception as e:
+            ctk.CTkLabel(
+                tab,
+                text=f"Error loading scraper settings: {e}",
+                text_color="red"
+            ).pack(padx=20, pady=20)
+    
+    def render_network_tab(self, tab):
+        """Render the Network settings tab."""
+        try:
+            from app.components.settings_tabs import NetworkSettingsTab
+            self.network_settings = NetworkSettingsTab(tab, self.translate, self.settings)
+        except Exception as e:
+            ctk.CTkLabel(
+                tab,
+                text=f"Error loading network settings: {e}",
+                text_color="red"
+            ).pack(padx=20, pady=20)
+    
+    def render_logging_tab(self, tab):
+        """Render the Logging settings tab."""
+        try:
+            from app.components.settings_tabs import LoggingSettingsTab
+            self.logging_settings = LoggingSettingsTab(tab, self.translate, self.settings)
+        except Exception as e:
+            ctk.CTkLabel(
+                tab,
+                text=f"Error loading logging settings: {e}",
+                text_color="red"
+            ).pack(padx=20, pady=20)
         self.settings['theme'] = theme_name
         self.save_settings()
         messagebox.showinfo(self.translate("Success"), self.translate("The theme was applied successfully."))
