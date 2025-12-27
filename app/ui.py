@@ -119,6 +119,13 @@ class ImageDownloaderApp(ctk.CTk):
         
         self.autoscroll_logs_var = tk.BooleanVar(value=False) 
 
+        # Initialize download queue
+        from app.models.download_queue import DownloadQueue
+        self.download_queue = DownloadQueue(
+            on_change=self.on_queue_changed,
+            persist_file="resources/config/download_queue.json"
+        )
+
         # Initialize UI
         self.initialize_ui()
         
@@ -498,6 +505,18 @@ class ImageDownloaderApp(ctk.CTk):
         )
         donors_button.pack(side="left")
         donors_button.bind("<Button-1>", lambda e: "break")
+        
+        # Botón Queue
+        queue_button = ctk.CTkButton(
+            self.menu_bar,
+            text="📋 " + self.tr("Queue"),
+            width=80,
+            fg_color="transparent",
+            hover_color="gray25",
+            command=self.show_queue_manager
+        )
+        queue_button.pack(side="left")
+        queue_button.bind("<Button-1>", lambda e: "break")
 
         # Inicializar variables para los menús desplegables
         self.archivo_menu_frame = None
@@ -628,6 +647,18 @@ class ImageDownloaderApp(ctk.CTk):
         for menu_frame in [self.archivo_menu_frame, self.ayuda_menu_frame, self.donaciones_menu_frame]:
             if menu_frame and menu_frame.winfo_exists():
                 menu_frame.destroy()
+    
+    # Queue management methods
+    def on_queue_changed(self):
+        """Called when the download queue changes."""
+        # Could update UI badge/counter here if needed
+        pass
+    
+    def show_queue_manager(self):
+        """Show the download queue manager dialog."""
+        from app.dialogs.queue_dialog import QueueDialog
+        queue_dialog = QueueDialog(self, self.download_queue, self.tr)
+        queue_dialog.focus_set()
 
     # Image processing
     def create_photoimage(self, path, size=(32, 32)):
@@ -745,6 +776,21 @@ class ImageDownloaderApp(ctk.CTk):
             self.active_downloader = None
             self.enable_widgets()
             self.export_logs()
+    
+    def wrapped_base_download(self, downloader, url):
+        """Wrapper for BaseDownloader-compatible downloaders."""
+        try:
+            result = downloader.download(url)
+            if result.success:
+                self.add_log_message_safe(self.tr(f"Descarga completada: {result.completed_files} archivos"))
+            else:
+                self.add_log_message_safe(self.tr(f"Descarga fallida: {result.error_message}"))
+        except Exception as e:
+            self.add_log_message_safe(self.tr(f"Error durante la descarga: {e}"))
+        finally:
+            self.active_downloader = None
+            self.enable_widgets()
+            self.export_logs()
 
     # Download management
     def start_download(self):
@@ -817,10 +863,44 @@ class ImageDownloaderApp(ctk.CTk):
         
         elif "simpcity.cr" in url:
             self.add_log_message_safe(self.tr("Descargando SimpCity"))
-            self.setup_simpcity_downloader()
-            self.active_downloader = self.simpcity_downloader
-            # Iniciar la descarga en un hilo separado
-            download_thread = threading.Thread(target=self.wrapped_download, args=(self.active_downloader.download_images_from_simpcity, url))
+            # Try using DownloaderFactory for simpcity
+            from downloader.factory import DownloaderFactory
+            from downloader.base import DownloadOptions
+            
+            # Create options from UI checkboxes
+            options = DownloadOptions(
+                download_images=self.download_images_check.get(),
+                download_videos=self.download_videos_check.get(),
+                download_compressed=self.download_compressed_check.get()
+            )
+            
+            # Try to get downloader from factory
+            downloader = DownloaderFactory.get_downloader(
+                url=url,
+                download_folder=self.download_folder,
+                options=options,
+                log_callback=self.add_log_message_safe,
+                progress_callback=self.update_progress,
+                global_progress_callback=self.update_global_progress,
+                enable_widgets_callback=self.enable_widgets,
+                tr=self.tr
+            )
+            
+            if downloader:
+                # Use the new BaseDownloader interface
+                self.active_downloader = downloader
+                download_thread = threading.Thread(
+                    target=self.wrapped_base_download, 
+                    args=(downloader, url)
+                )
+            else:
+                # Fallback to legacy method if factory doesn't work
+                self.setup_simpcity_downloader()
+                self.active_downloader = self.simpcity_downloader
+                download_thread = threading.Thread(
+                    target=self.wrapped_download, 
+                    args=(self.active_downloader.download_images_from_simpcity, url)
+                )
         
         elif "jpg5.su" in url:
             self.add_log_message_safe(self.tr("Descargando desde Jpg5"))
