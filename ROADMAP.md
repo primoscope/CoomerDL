@@ -1,19 +1,426 @@
 # CoomerDL Improvement Roadmap
 
-> **Purpose**: This document outlines proposed improvements for CoomerDL to enable more features, a better UI, and a more adjustable/configurable application. This is a living document that should be refined before implementation.
+> **For AI Coding Agents**: This document is optimized for AI agents. Start with [Quick Start for Agents](#quick-start-for-agents), then use [Task Index](#task-index) to find specific work items. Each task has clear acceptance criteria and file locations.
 
-## Table of Contents
+> **For Humans**: This document outlines proposed improvements for CoomerDL. See [TASKS.md](TASKS.md) for detailed task breakdowns and [SPECIFICATIONS.md](SPECIFICATIONS.md) for implementation details.
 
-1. [Current State Analysis](#current-state-analysis)
-2. [Detailed Code Analysis](#detailed-code-analysis)
-3. [UI/UX Improvements](#uiux-improvements)
-4. [Feature Enhancements](#feature-enhancements)
-5. [Architecture Improvements](#architecture-improvements)
-6. [Performance Optimizations](#performance-optimizations)
-7. [Configuration & Customization](#configuration--customization)
-8. [Testing & Quality](#testing--quality)
-9. [Technical Debt](#technical-debt)
-10. [Implementation Priority](#implementation-priority)
+---
+
+## Quick Start for Agents
+
+### How to Use This Document
+
+1. **Find a task**: Use the [Task Index](#task-index) table below
+2. **Read the task**: Each task has `FILE:`, `PROBLEM:`, `SOLUTION:`, and `DONE WHEN:` sections
+3. **Check dependencies**: Some tasks require others to be completed first
+4. **Implement**: Make minimal changes to fix the specific issue
+5. **Verify**: Run the acceptance criteria checks
+
+### Priority Levels
+- 🔴 **CRITICAL**: Bugs that cause crashes or data loss - fix first
+- 🟠 **HIGH**: Important features or significant bugs
+- 🟡 **MEDIUM**: Improvements and minor bugs
+- 🟢 **LOW**: Nice-to-have enhancements
+
+### File Structure Reference
+```
+CoomerDL/
+├── app/
+│   ├── ui.py                 # Main UI (1226 lines) - needs refactoring
+│   ├── settings_window.py    # Settings dialog (906 lines)
+│   ├── progress_manager.py   # Progress tracking (192 lines)
+│   ├── about_window.py       # About dialog (185 lines)
+│   └── donors.py             # Donors modal (222 lines)
+├── downloader/
+│   ├── downloader.py         # Core downloader for coomer/kemono (725 lines)
+│   ├── bunkr.py              # Bunkr downloader (360 lines)
+│   ├── erome.py              # Erome downloader (288 lines)
+│   ├── simpcity.py           # SimpCity downloader (138 lines)
+│   └── jpg5.py               # Jpg5 downloader (112 lines)
+├── resources/
+│   └── config/               # JSON configs, SQLite DB, cookies
+├── main.py                   # Application entry point
+├── TASKS.md                  # Detailed task definitions
+├── SPECIFICATIONS.md         # New class/function specifications
+└── POTENTIAL_ISSUES.md       # Known issues and blockers
+```
+
+---
+
+## Task Index
+
+| ID | Priority | Task | File(s) | Complexity |
+|----|----------|------|---------|------------|
+| BUG-001 | 🔴 | Fix undefined `log_message` variable | `downloader/downloader.py` | Low |
+| BUG-002 | 🔴 | Fix SimpCity missing `base_url` | `downloader/simpcity.py` | Low |
+| BUG-003 | 🟡 | Remove unused import | `downloader/jpg5.py` | Trivial |
+| BUG-004 | 🟡 | Fix EromeDownloader `folder_name` scope | `downloader/erome.py` | Low |
+| REFACTOR-001 | 🟠 | Standardize cancel mechanisms | `downloader/*.py` | Medium |
+| REFACTOR-002 | 🟡 | Fix database connection cleanup | `downloader/downloader.py` | Low |
+| REFACTOR-003 | 🟡 | Fix BunkrDownloader thread shutdown | `downloader/bunkr.py` | Low |
+| FEATURE-001 | 🟠 | Add batch URL input | `app/ui.py` | Medium |
+| FEATURE-002 | 🟠 | Create BaseDownloader class | `downloader/base.py` (new) | High |
+| FEATURE-003 | 🟠 | Add download queue manager | `app/dialogs/queue_dialog.py` (new) | High |
+| FEATURE-004 | 🟡 | Add proxy support | `app/settings_window.py`, downloaders | Medium |
+| FEATURE-005 | 🟡 | Add bandwidth limiting | All downloaders | Medium |
+| FEATURE-006 | 🟡 | Add file size filter | All downloaders | Low |
+| FEATURE-007 | 🟡 | Add date range filter | `downloader/downloader.py` | Medium |
+| ARCH-001 | 🟠 | Split ui.py into modules | `app/ui.py` → `app/window/` | High |
+| TEST-001 | 🟠 | Add unit test infrastructure | `tests/` (new) | Medium |
+| TEST-002 | 🟡 | Add type hints | All Python files | Medium |
+
+---
+
+## Bug Fixes
+
+### BUG-001: Fix undefined `log_message` variable
+
+```
+PRIORITY: 🔴 CRITICAL
+FILE: downloader/downloader.py
+LOCATION: safe_request() method, exception handler for status codes 429, 500-504
+
+PROBLEM:
+The variable `log_message` is used before being defined in the exception handler.
+This causes NameError when the server returns 429/500-504 status codes.
+
+SOLUTION:
+Define `log_message` before the `self.log(log_message)` call.
+
+FIND THIS CODE:
+    # Look for exception handling block that calls self.log(log_message)
+    # where log_message hasn't been assigned yet
+
+FIX:
+    log_message = f"Server error {status_code}, retrying..."
+    self.log(log_message)
+
+DONE WHEN:
+- [ ] No NameError when server returns 429 status
+- [ ] No NameError when server returns 500-504 status
+- [ ] Appropriate error message is logged
+
+TEST:
+    python main.py
+    # Try downloading from a URL that might rate limit
+```
+
+---
+
+### BUG-002: Fix SimpCity missing `base_url`
+
+```
+PRIORITY: 🔴 CRITICAL
+FILE: downloader/simpcity.py
+LOCATION: process_page() method
+
+PROBLEM:
+`self.base_url` is referenced but never defined.
+This causes AttributeError when handling pagination on multi-page threads.
+
+SOLUTION:
+Set self.base_url from the initial URL before calling process_page().
+
+FIND THIS CODE:
+    self.process_page(self.base_url + next_page_url)
+
+ADD BEFORE process_page() is first called:
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    self.base_url = f"{parsed.scheme}://{parsed.netloc}"
+
+DONE WHEN:
+- [ ] self.base_url is set before process_page() is called
+- [ ] Pagination works on multi-page SimpCity threads
+- [ ] No AttributeError during download
+
+TEST:
+    python main.py
+    # Enter a multi-page SimpCity thread URL
+```
+
+---
+
+### BUG-003: Remove unused import
+
+```
+PRIORITY: 🟡 MEDIUM
+FILE: downloader/jpg5.py
+LOCATION: Top of file
+
+PROBLEM:
+`from app import progress_manager` is imported but never used.
+
+SOLUTION:
+Delete the import line.
+
+FIND THIS CODE:
+    from app import progress_manager
+
+FIX:
+    # Delete this line
+
+DONE WHEN:
+- [ ] Unused import removed
+- [ ] File still runs without errors
+
+TEST:
+    python -c "from downloader.jpg5 import Jpg5Downloader; print('OK')"
+```
+
+---
+
+### BUG-004: Fix EromeDownloader `folder_name` scope
+
+```
+PRIORITY: 🟡 MEDIUM
+FILE: downloader/erome.py
+LOCATION: process_album_page() method
+
+PROBLEM:
+`folder_name` may be undefined when direct_download is True,
+causing NameError in the log statement.
+
+SOLUTION:
+Initialize folder_name with a default value before the conditional block.
+
+FIND THIS CODE:
+    self.log(self.tr("Album download complete: {folder_name}", folder_name=folder_name))
+
+FIX:
+    # Add at the start of the method:
+    folder_name = "direct_download"
+    
+    # Then the existing conditional logic can override it
+
+DONE WHEN:
+- [ ] folder_name is always defined when logging
+- [ ] No NameError when direct_download is True
+- [ ] Download completes successfully
+
+TEST:
+    python main.py
+    # Enter an Erome direct download URL
+```
+
+---
+
+## Refactoring Tasks
+
+### REFACTOR-001: Standardize cancel mechanisms
+
+```
+PRIORITY: 🟠 HIGH
+FILES: 
+  - downloader/bunkr.py
+  - downloader/erome.py
+  - downloader/simpcity.py
+
+PROBLEM:
+Inconsistent cancellation patterns across downloaders:
+- downloader.py: threading.Event() ✓ (correct)
+- jpg5.py: threading.Event() ✓ (correct)
+- bunkr.py: self.cancel_requested = False (not thread-safe)
+- erome.py: self.cancel_requested = False (not thread-safe)
+- simpcity.py: self.cancel_requested = False (not thread-safe)
+
+SOLUTION:
+Convert all boolean flag cancellation to threading.Event() pattern.
+
+FOR EACH FILE (bunkr.py, erome.py, simpcity.py):
+
+1. FIND in __init__:
+       self.cancel_requested = False
+   REPLACE WITH:
+       self.cancel_event = threading.Event()
+
+2. FIND all occurrences of:
+       self.cancel_requested = True
+   REPLACE WITH:
+       self.cancel_event.set()
+
+3. FIND all occurrences of:
+       if self.cancel_requested:
+   REPLACE WITH:
+       if self.cancel_event.is_set():
+
+4. ADD import if not present:
+       import threading
+
+DONE WHEN:
+- [ ] All 3 files use threading.Event()
+- [ ] Cancel works correctly in all downloaders
+- [ ] No race conditions during cancellation
+
+TEST:
+    python main.py
+    # Start a download, click cancel, verify it stops cleanly
+```
+
+---
+
+### REFACTOR-002: Fix database connection cleanup
+
+```
+PRIORITY: 🟡 MEDIUM
+FILE: downloader/downloader.py
+
+PROBLEM:
+Database connection opened in init_db() is never explicitly closed.
+This can cause resource leaks.
+
+SOLUTION:
+Add cleanup in shutdown_executor() method.
+
+FIND shutdown_executor() method and ADD:
+    if hasattr(self, 'conn') and self.conn:
+        self.conn.close()
+        self.conn = None
+
+DONE WHEN:
+- [ ] Database connection closed on shutdown
+- [ ] No SQLite resource warnings
+- [ ] Application exits cleanly
+
+TEST:
+    python main.py
+    # Download something, close the app, check for warnings
+```
+
+---
+
+### REFACTOR-003: Fix BunkrDownloader notification thread
+
+```
+PRIORITY: 🟡 MEDIUM
+FILE: downloader/bunkr.py
+
+PROBLEM:
+start_notification_thread() creates a daemon thread that runs indefinitely
+with no clean shutdown mechanism.
+
+SOLUTION:
+Add a shutdown flag checked in the notification loop.
+
+1. ADD to __init__:
+       self._notification_shutdown = threading.Event()
+
+2. MODIFY the notification thread loop to check:
+       while not self._notification_shutdown.is_set():
+           # existing loop code
+           time.sleep(0.1)  # Add small sleep to prevent busy-wait
+
+3. ADD to cancel/completion handling:
+       self._notification_shutdown.set()
+
+DONE WHEN:
+- [ ] Notification thread stops when download completes
+- [ ] Notification thread stops when download is cancelled
+- [ ] No orphaned threads
+
+TEST:
+    python main.py
+    # Download from Bunkr, verify thread count returns to normal after
+```
+
+---
+
+## Feature Tasks
+
+### FEATURE-001: Add batch URL input
+
+```
+PRIORITY: 🟠 HIGH
+FILE: app/ui.py
+COMPLEXITY: Medium
+DEPENDS ON: None
+
+PROBLEM:
+Users can only enter one URL at a time.
+
+SOLUTION:
+Replace single-line CTkEntry with multi-line CTkTextbox.
+
+IMPLEMENTATION STEPS:
+
+1. FIND the URL entry widget creation (around line 320-340):
+       self.entry_url = ctk.CTkEntry(...)
+   
+2. REPLACE WITH:
+       self.entry_url = ctk.CTkTextbox(
+           self.input_frame,
+           height=80,
+           wrap="none"
+       )
+
+3. UPDATE get URL method - FIND:
+       url = self.entry_url.get()
+   REPLACE WITH:
+       url = self.entry_url.get("1.0", "end-1c").strip()
+
+4. ADD URL parsing for multiple lines:
+       urls = [line.strip() for line in url.split('\n') if line.strip()]
+
+5. ADD validation before download:
+       # Skip empty lines, warn on invalid URLs
+
+DONE WHEN:
+- [ ] Multi-line textbox accepts multiple URLs
+- [ ] Each URL is processed (can be sequential for now)
+- [ ] Empty lines are skipped
+- [ ] Invalid URLs show warning
+
+TEST:
+    python main.py
+    # Paste multiple URLs, verify all are processed
+```
+
+---
+
+### FEATURE-002: Create BaseDownloader class
+
+```
+PRIORITY: 🟠 HIGH
+FILE: downloader/base.py (NEW FILE)
+COMPLEXITY: High
+DEPENDS ON: BUG-001, BUG-002, REFACTOR-001
+
+PROBLEM:
+Each downloader has different interfaces, making code inconsistent.
+
+SOLUTION:
+Create abstract base class that all downloaders inherit from.
+
+SEE: SPECIFICATIONS.md section "BaseDownloader (Abstract Base Class)"
+
+IMPLEMENTATION STEPS:
+
+1. CREATE new file: downloader/base.py
+
+2. ADD the BaseDownloader class with:
+   - Abstract methods: supports_url(), get_site_name(), download()
+   - Common methods: request_cancel(), is_cancelled(), log(), report_progress()
+   - Data classes: DownloadOptions, DownloadResult, MediaItem
+
+3. CREATE downloader/factory.py with DownloaderFactory class
+
+4. MIGRATE one downloader as proof of concept (suggest: jpg5.py as simplest)
+
+DONE WHEN:
+- [ ] base.py exists with BaseDownloader class
+- [ ] factory.py exists with DownloaderFactory class
+- [ ] At least one downloader inherits from BaseDownloader
+- [ ] Factory can create correct downloader for URL
+
+TEST:
+    python -c "
+    from downloader.factory import DownloaderFactory
+    from downloader.jpg5 import Jpg5Downloader
+    DownloaderFactory.register(Jpg5Downloader)
+    d = DownloaderFactory.get_downloader('https://jpg5.su/test', '/tmp')
+    print('OK' if d else 'FAIL')
+    "
+```
 
 ---
 
@@ -943,5 +1350,108 @@ This roadmap is a starting point for discussion. Areas that need community input
 
 ---
 
+## Agent-Optimized Task Format Reference
+
+All tasks in this document follow this format for easy parsing by AI agents:
+
+```
+### TASK-ID: Short Description
+
+PRIORITY: 🔴|🟠|🟡|🟢
+FILE: path/to/file.py
+LOCATION: method_name() or line numbers (optional)
+DEPENDS ON: TASK-IDs (optional)
+COMPLEXITY: Low|Medium|High
+
+PROBLEM:
+Clear description of what's wrong or what's needed.
+
+SOLUTION:
+Concise description of the fix/implementation.
+
+FIND THIS CODE: (for modifications)
+    exact code to find
+
+REPLACE WITH: (or ADD:)
+    exact replacement code
+
+DONE WHEN:
+- [ ] Acceptance criterion 1
+- [ ] Acceptance criterion 2
+
+TEST:
+    commands to verify the fix works
+```
+
+### Key Patterns for Agents
+
+**For bug fixes**: Look for `FIND THIS CODE` and `REPLACE WITH` sections.
+
+**For new features**: Check `SPECIFICATIONS.md` for full class/function definitions.
+
+**For refactoring**: Follow numbered implementation steps.
+
+**Before starting any task**: Check `POTENTIAL_ISSUES.md` for known blockers.
+
+---
+
+## Quick Copy-Paste Prompts for AI Agents
+
+### Fix All Critical Bugs
+```
+Read ROADMAP.md. Find all 🔴 CRITICAL priority tasks.
+For each one:
+1. Read the PROBLEM and SOLUTION sections
+2. Find the code in the specified FILE
+3. Apply the fix
+4. Verify with the TEST command
+
+Start with BUG-001, then BUG-002.
+```
+
+### Implement a Specific Task
+```
+Read ROADMAP.md task [TASK-ID].
+
+Context:
+- This is a Python desktop app using CustomTkinter for UI
+- The app downloads media from various websites
+- Follow the coding patterns already in the codebase
+
+Implementation:
+1. Check DEPENDS ON - complete prerequisites first
+2. Read the PROBLEM and SOLUTION sections carefully  
+3. If FILE says "(NEW FILE)", check SPECIFICATIONS.md for full implementation
+4. Make the minimal changes to satisfy DONE WHEN criteria
+5. Run the TEST command to verify
+```
+
+### Code Review a Change
+```
+Read ROADMAP.md task [TASK-ID] and POTENTIAL_ISSUES.md.
+
+Review this code change:
+[paste code here]
+
+Check:
+1. Does it satisfy all DONE WHEN criteria?
+2. Does it avoid issues listed in POTENTIAL_ISSUES.md?
+3. Does it follow existing code patterns in the repository?
+4. Is it the minimal change needed?
+```
+
+---
+
+## Related Documentation
+
+| Document | When to Use |
+|----------|-------------|
+| [TASKS.md](TASKS.md) | Full task details with context and dependencies |
+| [SPECIFICATIONS.md](SPECIFICATIONS.md) | New class/function implementations |
+| [POTENTIAL_ISSUES.md](POTENTIAL_ISSUES.md) | Known blockers and edge cases |
+| [README.md](README.md) | Project overview and setup |
+
+---
+
 *Last updated: December 2024*
-*Version: 0.1 (Draft)*
+*Version: 0.2 (Agent-Optimized)*
