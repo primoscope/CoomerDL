@@ -9,7 +9,7 @@
 **What This Is**: Detailed breakdown of all development tasks with step-by-step implementation guidance
 
 **How to Use**:
-1. Find task ID from ROADMAP.md (e.g., T001, T004, T008)
+1. Find task ID from DEVELOPMENT_ROADMAP.md (e.g., T001, T004, T008)
 2. Read full task definition here
 3. Follow the implementation steps
 4. Verify against acceptance criteria
