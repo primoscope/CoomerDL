@@ -133,5 +133,8 @@ class SimpCity:
 
     def download_images_from_simpcity(self, url):
         self.log(self.tr(f"Procesando hilo: {url}"))
+        # Set base_url from the initial URL for pagination
+        parsed = urlparse(url)
+        self.base_url = f"{parsed.scheme}://{parsed.netloc}"
         self.process_page(url)
         self.log(self.tr("Descarga completada."))

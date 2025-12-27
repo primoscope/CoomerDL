@@ -191,6 +191,7 @@ class Downloader:
 				except requests.exceptions.RequestException as e:
 					status_code = getattr(e.response, 'status_code', None)
 					if status_code in (429, 500, 502, 503, 504):
+						log_message = self.tr("Server error {status_code}, retrying...").format(status_code=status_code)
 						self.log(log_message)
 						time.sleep(self.retry_interval)
 					elif status_code not in (403, 404):

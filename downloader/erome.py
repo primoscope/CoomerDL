@@ -185,6 +185,8 @@ class EromeDownloader:
             response = requests.get(page_url, headers=self.headers)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
+                # Initialize folder_name with a default value to avoid NameError
+                folder_name = "direct_download"
                 if not self.direct_download:
                     folder_name = self.clean_filename(soup.find('h1').text if soup.find('h1') else self.tr("Unknown Album"))
                     folder_path = self.create_folder(os.path.join(base_folder, folder_name))
