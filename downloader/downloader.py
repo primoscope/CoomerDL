@@ -5,6 +5,8 @@ from urllib.parse import quote_plus, urlencode, urljoin, urlparse
 import os
 import re
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import threading
 import time
 import sqlite3
@@ -30,6 +32,22 @@ class Downloader:
 		}
 		self.media_counter = 0
 		self.session = requests.Session()
+		
+		# Optimize connection pooling for better performance
+		adapter = HTTPAdapter(
+			pool_connections=20,      # Connection pool size
+			pool_maxsize=20,          # Max connections per host
+			max_retries=Retry(
+				total=3,
+				backoff_factor=1,
+				status_forcelist=[429, 500, 502, 503, 504]
+			),
+			pool_block=False
+		)
+		self.session.mount('http://', adapter)
+		self.session.mount('https://', adapter)
+		self.session.headers.update({'Connection': 'keep-alive'})
+		
 		self.max_workers = max_workers  
 		self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
 		self.rate_limit = Semaphore(self.max_workers)  
@@ -85,6 +103,16 @@ class Downloader:
 				downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 			)
 		""")
+		# Add indexes for faster lookups
+		self.db_cursor.execute(
+			"CREATE INDEX IF NOT EXISTS idx_media_url ON downloads(media_url)"
+		)
+		self.db_cursor.execute(
+			"CREATE INDEX IF NOT EXISTS idx_user_id ON downloads(user_id)"
+		)
+		self.db_cursor.execute(
+			"CREATE INDEX IF NOT EXISTS idx_post_id ON downloads(post_id)"
+		)
 		self.db_connection.commit()
 
 	def load_download_cache(self):
@@ -131,6 +159,13 @@ class Downloader:
 			self.shutdown_called = True
 			if self.executor:
 				self.executor.shutdown(wait=True)
+			# Close database connection to prevent resource leaks
+			if hasattr(self, 'db_connection') and self.db_connection:
+				try:
+					self.db_connection.close()
+					self.db_connection = None
+				except Exception as e:
+					self.log(self.tr("Error closing database: {error}").format(error=e))
 			if self.enable_widgets_callback:
 				self.enable_widgets_callback()
 			self.log(self.tr("All downloads completed or cancelled."))

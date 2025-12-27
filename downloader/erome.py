@@ -191,6 +191,7 @@ class EromeDownloader:
                     folder_name = self.clean_filename(soup.find('h1').text if soup.find('h1') else self.tr("Unknown Album"))
                     folder_path = self.create_folder(os.path.join(base_folder, folder_name))
                 else:
+                    folder_name = "direct_download"  # Default folder name for direct downloads
                     folder_path = base_folder  # Use the base folder directly
 
                 media_urls = []
