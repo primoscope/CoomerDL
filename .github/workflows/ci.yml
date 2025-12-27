@@ -11,6 +11,8 @@ jobs:
   lint:
     name: Lint Code
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +38,8 @@ jobs:
     name: Test on ${{ matrix.os }} - Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     needs: lint
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -75,6 +79,8 @@ jobs:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     needs: test
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
