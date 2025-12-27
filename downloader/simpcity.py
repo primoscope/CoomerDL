@@ -66,7 +66,13 @@ class SimpCity(BaseDownloader):
     @classmethod
     def can_handle(cls, url: str) -> bool:
         """Lightweight check if this downloader supports the given URL."""
-        return 'simpcity' in (url or "").lower()
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse((url or "").lower())
+            domain = parsed.netloc.lstrip('www.')
+            return 'simpcity.' in domain
+        except Exception:
+            return False
 
     @classmethod
     def supports_url(cls, url: str) -> bool:

@@ -9,7 +9,7 @@ import pytest
 import tempfile
 import threading
 import time
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 
 from downloader.models import (
     JobStatus, ItemStatus, DownloadEventType,

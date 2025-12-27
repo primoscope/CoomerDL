@@ -255,10 +255,11 @@ class GalleryDownloader(BaseDownloader):
             
             # Hook into the job for progress reporting
             original_handle_url = download_job.handle_url
+            gallery_dl_module = self._gallery_dl  # Store reference for closure
             
             def hooked_handle_url(url_tuple):
                 if self.is_cancelled():
-                    raise gallery_dl.exception.StopExtraction("Cancelled by user")
+                    raise gallery_dl_module.exception.StopExtraction("Cancelled by user")
                 
                 result = original_handle_url(url_tuple)
                 

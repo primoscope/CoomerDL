@@ -59,7 +59,9 @@ class DownloadQueueManager:
         max_workers: int = 1,
         use_ytdlp_fallback: bool = True,
         use_generic_fallback: bool = True,
-        ytdlp_options: Any = None
+        use_gallery_fallback: bool = True,
+        ytdlp_options: Any = None,
+        gallery_options: Any = None
     ):
         """
         Initialize the queue manager.
@@ -73,7 +75,9 @@ class DownloadQueueManager:
             max_workers: Number of concurrent download workers.
             use_ytdlp_fallback: Whether to use yt-dlp for unsupported URLs.
             use_generic_fallback: Whether to use generic downloader as last resort.
+            use_gallery_fallback: Whether to use gallery-dl for image galleries.
             ytdlp_options: Options for yt-dlp downloads.
+            gallery_options: Options for gallery-dl downloads.
         """
         self.download_folder = download_folder
         self.options = options or DownloadOptions()
@@ -83,7 +87,9 @@ class DownloadQueueManager:
         self.max_workers = max_workers
         self.use_ytdlp_fallback = use_ytdlp_fallback
         self.use_generic_fallback = use_generic_fallback
+        self.use_gallery_fallback = use_gallery_fallback
         self.ytdlp_options = ytdlp_options
+        self.gallery_options = gallery_options
         
         # Job tracking
         self._jobs: Dict[str, DownloadJob] = {}
@@ -120,7 +126,9 @@ class DownloadQueueManager:
             options=options or self.options,
             use_ytdlp_fallback=self.use_ytdlp_fallback,
             use_generic_fallback=self.use_generic_fallback,
-            ytdlp_options=self.ytdlp_options
+            use_gallery_fallback=self.use_gallery_fallback,
+            ytdlp_options=self.ytdlp_options,
+            gallery_options=self.gallery_options
         )
         
         engine_name = downloader.get_site_name() if downloader else "Unknown"
@@ -343,7 +351,9 @@ class DownloadQueueManager:
                 options=job_options,
                 use_ytdlp_fallback=self.use_ytdlp_fallback,
                 use_generic_fallback=self.use_generic_fallback,
+                use_gallery_fallback=self.use_gallery_fallback,
                 ytdlp_options=self.ytdlp_options,
+                gallery_options=self.gallery_options,
                 log_callback=lambda msg: self._on_downloader_log(job.id, msg),
                 progress_callback=lambda d, t, meta: self._on_downloader_progress(job.id, d, t, meta),
                 global_progress_callback=lambda c, t: self._on_downloader_global_progress(job, c, t)

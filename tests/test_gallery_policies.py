@@ -4,7 +4,7 @@ Unit tests for Gallery Downloader, Policies, and Rate Limiter.
 import pytest
 import threading
 import time
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 
 from downloader.policies import (
     RetryPolicy, DomainPolicy, compute_backoff, compute_backoff_sequence,
