@@ -86,3 +86,13 @@ class DownloaderFactory:
     def clear_registry(cls) -> None:
         """Clear all registered downloaders (useful for testing)."""
         cls._downloader_classes = []
+
+
+# Auto-register downloaders
+from downloader.bunkr import BunkrDownloader
+from downloader.erome import EromeDownloader
+from downloader.simpcity import SimpCityDownloader
+
+DownloaderFactory.register(BunkrDownloader)
+DownloaderFactory.register(EromeDownloader)
+DownloaderFactory.register(SimpCityDownloader)
