@@ -30,6 +30,12 @@ from downloader.simpcity import SimpCity
 from downloader.jpg5 import Jpg5Downloader
 from app.progress_manager import ProgressManager
 from app.donors import DonorsModal
+from app.window.input_panel import InputPanel
+from app.window.options_panel import OptionsPanel
+from app.window.action_panel import ActionPanel
+from app.window.log_panel import LogPanel
+from app.window.progress_panel import ProgressPanel
+from app.window.status_bar import StatusBar
 
 VERSION = "V0.8.12"
 MAX_LOG_LINES = None
@@ -137,7 +143,7 @@ class ImageDownloaderApp(ctk.CTk):
         # Load download folder
         self.download_folder = self.load_download_folder() 
         if self.download_folder:
-            self.folder_path.configure(text=self.download_folder)
+            self.input_panel.set_download_folder(self.download_folder)
 
         self.default_downloader = Downloader(
             download_folder=self.download_folder,
@@ -167,10 +173,10 @@ class ImageDownloaderApp(ctk.CTk):
         self.progress_manager = ProgressManager(
             root=self,
             icons=self.icons,
-            footer_speed_label=self.footer_speed_label,
-            footer_eta_label=self.footer_eta_label,
-            progress_bar=self.progress_bar,
-            progress_percentage=self.progress_percentage
+            footer_speed_label=self.status_bar.footer_speed_label,
+            footer_eta_label=self.status_bar.footer_eta_label,
+            progress_bar=self.progress_panel.progress_bar,
+            progress_percentage=self.progress_panel.progress_percentage
         )
         
         # Check for new version on startup
@@ -306,116 +312,61 @@ class ImageDownloaderApp(ctk.CTk):
         self.update_download_button = ctk.CTkButton(self.update_alert_frame, text=self.tr("Download Now"), command=self.open_latest_release, fg_color="#388E3C", hover_color="#2E7D32")
         self.update_download_button.pack(side="right", padx=10, pady=5)
 
-        # Input frame
-        self.input_frame = ctk.CTkFrame(self)
-        self.input_frame.pack(fill='x', padx=20, pady=20)
-        self.input_frame.grid_columnconfigure(0, weight=1)
-        self.input_frame.grid_rowconfigure(1, weight=1)
-
-        self.url_label = ctk.CTkLabel(self.input_frame, text=self.tr("URL de la página web:"))
-        self.url_label.grid(row=0, column=0, sticky='w')
-
-        self.url_entry = ctk.CTkEntry(self.input_frame)
-        self.url_entry.grid(row=1, column=0, sticky='ew', padx=(0, 5))
-
-        self.browse_button = ctk.CTkButton(self.input_frame, text=self.tr("Seleccionar Carpeta"), command=self.select_folder)
-        self.browse_button.grid(row=1, column=1, sticky='e')
-
-        self.folder_path = ctk.CTkLabel(self.input_frame, text="", cursor="hand2", font=("Arial", 13))
-        self.folder_path.grid(row=2, column=0, columnspan=2, sticky='w')
-        self.folder_path.bind("<Button-1>", self.open_download_folder)
-
-        # Añadir eventos para el efecto hover
-        self.folder_path.bind("<Enter>", self.on_hover_enter)
-        self.folder_path.bind("<Leave>", self.on_hover_leave)
-
-        # Options frame
-        self.options_frame = ctk.CTkFrame(self)
-        self.options_frame.pack(pady=10, fill='x', padx=20)
-
-        self.download_images_check = ctk.CTkCheckBox(self.options_frame, text=self.tr("Descargar Imágenes"))
-        self.download_images_check.pack(side='left', padx=10)
-        self.download_images_check.select()
-
-        self.download_videos_check = ctk.CTkCheckBox(self.options_frame, text=self.tr("Descargar Vídeos"))
-        self.download_videos_check.pack(side='left', padx=10)
-        self.download_videos_check.select()
-
-        self.download_compressed_check = ctk.CTkCheckBox(self.options_frame, text=self.tr("Descargar Comprimidos"))
-        self.download_compressed_check.pack(side='left', padx=10)
-        self.download_compressed_check.select()
-
-        # Action frame
-        self.action_frame = ctk.CTkFrame(self)
-        self.action_frame.pack(pady=10, fill='x', padx=20)
-
-        self.download_button = ctk.CTkButton(self.action_frame, text=self.tr("Descargar"), command=self.start_download)
-        self.download_button.pack(side='left', padx=10)
-
-        self.cancel_button = ctk.CTkButton(self.action_frame, text=self.tr("Cancelar Descarga"), state="disabled", command=self.cancel_download)
-        self.cancel_button.pack(side='left', padx=10)
-        
-        # Logs options (autoscroll)
-        self.autoscroll_logs_checkbox = ctk.CTkCheckBox(
-            self.action_frame,
-            text=self.tr("Auto-scroll logs"),
-            variable=self.autoscroll_logs_var
+        # Input panel
+        self.input_panel = InputPanel(
+            self,
+            tr=self.tr,
+            on_folder_change=self.on_folder_selected
         )
-        self.autoscroll_logs_checkbox.pack(side="right")
+        self.input_panel.pack(fill='x', padx=20, pady=20)
 
-        self.progress_label = ctk.CTkLabel(self.action_frame, text="")
-        self.progress_label.pack(side='left', padx=10)
+        # Options panel
+        self.options_panel = OptionsPanel(self, tr=self.tr)
+        self.options_panel.pack(pady=10, fill='x', padx=20)
 
-        self.log_textbox = ctk.CTkTextbox(self, width=590, height=200)
-        self.log_textbox.pack(pady=(10, 0), padx=20, fill='both', expand=True)
-        self.log_textbox.configure(state="disabled")
+        # Action panel
+        self.action_panel = ActionPanel(
+            self,
+            tr=self.tr,
+            on_download=self.start_download,
+            on_cancel=self.cancel_download,
+            autoscroll_var=self.autoscroll_logs_var
+        )
+        self.action_panel.pack(pady=10, fill='x', padx=20)
 
-        # Progress frame
-        self.progress_frame = ctk.CTkFrame(self)
-        self.progress_frame.pack(pady=(0, 10), fill='x', padx=20)
+        # Log panel
+        self.log_panel = LogPanel(
+            self,
+            tr=self.tr,
+            autoscroll_var=self.autoscroll_logs_var,
+            width=590,
+            height=200
+        )
+        self.log_panel.pack(pady=(10, 0), padx=20, fill='both', expand=True)
 
-        self.progress_bar = ctk.CTkProgressBar(self.progress_frame)
-        self.progress_bar.pack(side='left', fill='x', expand=True, padx=(0, 10))
-
-        # self.processing_label = ctk.CTkLabel(self.progress_frame, text=self.tr("Procesando videos..."), font=("Arial", 12))
-        # self.processing_label.pack(side='top', pady=(0, 10))
-        # self.processing_label.pack_forget()
-
-        self.progress_percentage = ctk.CTkLabel(self.progress_frame, text="0%")
-        self.progress_percentage.pack(side='left')
-
-        # Cargar el icono de descarga con un tamaño mayor
-        self.download_icon = self.load_and_resize_image('resources/img/iconos/ui/download_icon.png', (24, 24))  # Cambiado a (24, 24)
-
-        # Reemplazar el botón con una etiqueta que simule un botón
-        self.toggle_details_button = ctk.CTkLabel(self.progress_frame, image=self.download_icon, text="", cursor="hand2")
-        self.toggle_details_button.pack(side='left', padx=(5, 0))
-        self.toggle_details_button.bind("<Button-1>", lambda e: self.toggle_progress_details())
-
-        # Agregar efecto hover
-        self.toggle_details_button.bind("<Enter>", lambda e: self.toggle_details_button.configure(fg_color="gray25"))
-        self.toggle_details_button.bind("<Leave>", lambda e: self.toggle_details_button.configure(fg_color="transparent"))
+        # Progress panel
+        self.progress_panel = ProgressPanel(
+            self,
+            tr=self.tr,
+            on_toggle_details=self.toggle_progress_details
+        )
+        self.progress_panel.pack(pady=(0, 10), fill='x', padx=20)
 
         self.progress_details_frame = ctk.CTkFrame(self)
         self.progress_details_frame.place_forget()
 
-        # Context menu
-        self.context_menu = tk.Menu(self.url_entry, tearoff=0)
+        # Context menu for URL entry
+        self.context_menu = tk.Menu(self.input_panel.get_url_entry_widget(), tearoff=0)
         self.context_menu.add_command(label=self.tr("Copiar"), command=self.copy_to_clipboard)
         self.context_menu.add_command(label=self.tr("Pegar"), command=self.paste_from_clipboard)
         self.context_menu.add_command(label=self.tr("Cortar"), command=self.cut_to_clipboard)
 
-        self.url_entry.bind("<Button-3>", self.show_context_menu)
+        self.input_panel.get_url_entry_widget().bind("<Button-3>", self.show_context_menu)
         self.bind("<Button-1>", self.on_click)
 
-        footer = ctk.CTkFrame(self, height=30, corner_radius=0)
-        footer.pack(side="bottom", fill="x")
-
-        self.footer_eta_label = ctk.CTkLabel(footer, text="ETA: N/A", font=("Arial", 11))
-        self.footer_eta_label.pack(side="left", padx=20)
-
-        self.footer_speed_label = ctk.CTkLabel(footer, text="Speed: 0 KB/s", font=("Arial", 11))
-        self.footer_speed_label.pack(side="right", padx=20)
+        # Status bar (footer)
+        self.status_bar = StatusBar(self, tr=self.tr)
+        self.status_bar.pack(side="bottom", fill="x")
 
         # Actualizar textos después de inicializar la UI
         self.update_ui_texts()
@@ -435,28 +386,59 @@ class ImageDownloaderApp(ctk.CTk):
             self.archivo_menu_frame.destroy()
             self.toggle_archivo_menu()
 
-        self.url_label.configure(text=self.tr("URL de la página web:"))
-        self.browse_button.configure(text=self.tr("Seleccionar Carpeta"))
-        self.download_images_check.configure(text=self.tr("Descargar Imágenes"))
-        self.download_videos_check.configure(text=self.tr("Descargar Vídeos"))
-        self.download_compressed_check.configure(text=self.tr("Descargar Comprimidos"))
-        self.download_button.configure(text=self.tr("Descargar"))
-        self.cancel_button.configure(text=self.tr("Cancelar Descarga"))
-        # self.processing_label.configure(text=self.tr("Procesando videos..."))
+        # Update modular panel texts
+        self.input_panel.update_texts()
+        self.options_panel.update_texts()
+        self.action_panel.update_texts()
+        
         self.title(self.tr(f"Downloader [{VERSION}]"))
         self.update_download_button.configure(text=self.tr("Download Now"))
 
     
+    def on_folder_selected(self, folder_path: str):
+        """Callback when folder is selected via InputPanel."""
+        self.download_folder = folder_path
+        self.save_download_folder(folder_path)
+    
     def open_download_folder(self, event=None):
-        if self.download_folder and os.path.exists(self.download_folder):
-            if sys.platform == "win32":
-                os.startfile(self.download_folder)  # Para Windows
-            elif sys.platform == "darwin":
-                subprocess.Popen(["open", self.download_folder])  # Para macOS
-            else:
-                subprocess.Popen(["xdg-open", self.download_folder])  # Para Linux
-        else:
-            messagebox.showerror(self.tr("Error"), self.tr("La carpeta no existe o no es válida."))
+        # This method is now handled by InputPanel, but kept for backward compatibility
+        pass
+    
+    # Property accessors for backward compatibility with existing code
+    @property
+    def url_entry(self):
+        """Access URL entry widget from InputPanel."""
+        return self.input_panel.url_entry
+    
+    @property
+    def download_images_check(self):
+        """Access download images checkbox from OptionsPanel."""
+        return self.options_panel.download_images_check
+    
+    @property
+    def download_videos_check(self):
+        """Access download videos checkbox from OptionsPanel."""
+        return self.options_panel.download_videos_check
+    
+    @property
+    def download_compressed_check(self):
+        """Access download compressed checkbox from OptionsPanel."""
+        return self.options_panel.download_compressed_check
+    
+    @property
+    def download_button(self):
+        """Access download button from ActionPanel."""
+        return self.action_panel.download_button
+    
+    @property
+    def cancel_button(self):
+        """Access cancel button from ActionPanel."""
+        return self.action_panel.cancel_button
+    
+    @property
+    def log_textbox(self):
+        """Access log textbox from LogPanel."""
+        return self.log_panel
 
 
     def on_click(self, event):
@@ -729,12 +711,6 @@ class ImageDownloaderApp(ctk.CTk):
         )
 
     # Folder selection
-    def select_folder(self):
-        folder_selected = filedialog.askdirectory()
-        if folder_selected:
-            self.download_folder = folder_selected
-            self.folder_path.configure(text=folder_selected)
-            self.save_download_folder(folder_selected)
     
     # Función para cargar y redimensionar imágenes
     def load_and_resize_image(self, path, size=(20, 20)):
@@ -1085,12 +1061,6 @@ class ImageDownloaderApp(ctk.CTk):
         if hasattr(self, 'bunkr_downloader'):
             self.bunkr_downloader.max_workers = max_downloads
 
-    def on_hover_enter(self, event):
-        self.folder_path.configure(font=("Arial", 13, "underline"))  # Subrayar el texto al pasar el ratón
-
-    def on_hover_leave(self, event):
-        self.folder_path.configure(font=("Arial", 13))  # Quitar el subrayado al salir el ratón
-
     def get_github_stars(self, user: str, repo: str, timeout: float = 2.5) -> int:
         try:
             url = f"https://api.github.com/repos/{user}/{repo}"
@@ -1197,16 +1167,16 @@ class ImageDownloaderApp(ctk.CTk):
         self.update_alert_label.configure(text=self.tr("New version ({latest_tag}) available!", latest_tag=latest_tag))
         self.update_alert_frame.pack(side="top", fill="x")
         # Re-pack other elements to ensure they are below the alert
-        self.input_frame.pack_forget()
-        self.input_frame.pack(fill='x', padx=20, pady=20)
-        self.options_frame.pack_forget()
-        self.options_frame.pack(pady=10, fill='x', padx=20)
-        self.action_frame.pack_forget()
-        self.action_frame.pack(pady=10, fill='x', padx=20)
-        self.log_textbox.pack_forget()
-        self.log_textbox.pack(pady=(10, 0), padx=20, fill='both', expand=True)
-        self.progress_frame.pack_forget()
-        self.progress_frame.pack(pady=(0, 10), fill='x', padx=20)
+        self.input_panel.pack_forget()
+        self.input_panel.pack(fill='x', padx=20, pady=20)
+        self.options_panel.pack_forget()
+        self.options_panel.pack(pady=10, fill='x', padx=20)
+        self.action_panel.pack_forget()
+        self.action_panel.pack(pady=10, fill='x', padx=20)
+        self.log_panel.pack_forget()
+        self.log_panel.pack(pady=(10, 0), padx=20, fill='both', expand=True)
+        self.progress_panel.pack_forget()
+        self.progress_panel.pack(pady=(0, 10), fill='x', padx=20)
 
     def open_latest_release(self):
         if hasattr(self, 'latest_release_url'):
