@@ -1,7 +1,7 @@
-from app.sidebar_app import SidebarApp
+from app.ui import ImageDownloaderApp
 
 def main():
-    app = SidebarApp()
+    app = ImageDownloaderApp()
     app.mainloop()
 
 if __name__ == "__main__":

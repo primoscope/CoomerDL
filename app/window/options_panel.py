@@ -77,6 +77,15 @@ class OptionsPanel(ctk.CTkFrame):
         )
         self.use_dynamic_mode_check.pack(side='left', padx=10)
 
+        # Headless Engine Selection (Selenium vs Playwright)
+        self.headless_engine_combo = ctk.CTkComboBox(
+            self.advanced_frame,
+            values=["playwright", "selenium"],
+            width=100
+        )
+        self.headless_engine_combo.pack(side='left', padx=5)
+        self.headless_engine_combo.set("playwright")
+
         # Crawl Depth
         self.crawl_depth_label = ctk.CTkLabel(self.advanced_frame, text=self.tr("Crawl Depth: 0"))
         self.crawl_depth_label.pack(side='left', padx=(20, 5))
@@ -122,6 +131,10 @@ class OptionsPanel(ctk.CTkFrame):
     def get_crawl_depth(self) -> int:
         """Get crawl depth."""
         return int(self.crawl_depth_slider.get())
+
+    def get_headless_browser_type(self) -> str:
+        """Get headless browser type."""
+        return self.headless_engine_combo.get()
     
     def get_options(self) -> Dict[str, bool]:
         """Get all download options as a dictionary."""
@@ -131,6 +144,7 @@ class OptionsPanel(ctk.CTkFrame):
             'download_compressed': self.get_download_compressed(),
             'download_documents': self.get_download_documents(),
             'use_headless_browser': self.get_use_dynamic_mode(),
+            'headless_browser_type': self.get_headless_browser_type(),
             'crawl_depth': self.get_crawl_depth(),
         }
     

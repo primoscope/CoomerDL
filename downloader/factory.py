@@ -132,27 +132,17 @@ class DownloaderFactory:
                 # yt-dlp not installed, fall through to generic
                 pass
         
-        # 4. Generic/Universal scraper as last resort (lowest priority)
+        # 4. Generic HTML scraper as last resort (lowest priority)
         if use_generic_fallback:
             try:
-                # Prefer UniversalScraper if available as it's more capable
-                from downloader.universal_scraper import UniversalScraper
-                return UniversalScraper(
+                from downloader.generic import GenericDownloader
+                return GenericDownloader(
                     download_folder=download_folder,
                     options=options,
                     **kwargs
                 )
             except ImportError:
-                # Fallback to legacy GenericDownloader if UniversalScraper fails to import
-                try:
-                    from downloader.generic import GenericDownloader
-                    return GenericDownloader(
-                        download_folder=download_folder,
-                        options=options,
-                        **kwargs
-                    )
-                except ImportError:
-                    pass
+                pass
         
         return None
     

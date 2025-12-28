@@ -89,7 +89,8 @@ class UniversalScraper(BaseDownloader):
         'html5_video_extraction',
         'html5_audio_extraction',
         'image_extraction',
-        'selenium_extraction', # New dynamic strategy
+        'playwright_extraction', # New dynamic strategy (preferred)
+        'selenium_extraction', # Legacy dynamic strategy
         'link_extraction',
         'iframe_extraction',
     ]
@@ -631,9 +632,85 @@ class UniversalScraper(BaseDownloader):
         # In the future, could add filtering by media_types
         return self.download(url)
 
+    def _strategy_playwright_extraction(self, url: str) -> List[str]:
+        """
+        Extract media using Playwright headless browser.
+        Includes network sniffing for API/m3u8 calls.
+        """
+        if not self.options.use_headless_browser or self.options.headless_browser_type != "playwright":
+            return []
+
+        urls = []
+        try:
+            from playwright.sync_api import sync_playwright
+
+            self.log(self.tr("Starting Playwright for dynamic content and network sniffing..."))
+
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
+
+                # Network sniffing handler
+                def handle_response(response):
+                    try:
+                        content_type = response.headers.get("content-type", "")
+                        resp_url = response.url
+
+                        # Check for media content types
+                        if any(t in content_type for t in ["video/", "audio/", "image/"]):
+                            # Filter out small icons/tracking pixels if size is known (hard in response event without body)
+                            # But we can filter by extension or pattern
+                            urls.append(resp_url)
+
+                        # Check for streaming manifests
+                        if ".m3u8" in resp_url or ".mpd" in resp_url:
+                            urls.append(resp_url)
+
+                    except Exception:
+                        pass
+
+                page.on("response", handle_response)
+
+                try:
+                    page.goto(url, wait_until="networkidle", timeout=30000)
+
+                    # Scroll to trigger lazy loading
+                    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                    time.sleep(2) # Wait for lazy load
+
+                    # DOM Extraction (fallback if network sniffing missed it)
+                    # Extract image tags
+                    for img in page.query_selector_all("img"):
+                        src = img.get_attribute("src")
+                        if src:
+                            urls.append(urljoin(url, src))
+
+                    # Extract video tags
+                    for video in page.query_selector_all("video"):
+                        src = video.get_attribute("src")
+                        if src:
+                            urls.append(urljoin(url, src))
+                        # Sources
+                        for source in video.query_selector_all("source"):
+                            src = source.get_attribute("src")
+                            if src:
+                                urls.append(urljoin(url, src))
+
+                except Exception as e:
+                    logger.debug(f"Playwright navigation error: {e}")
+                finally:
+                    browser.close()
+
+        except ImportError:
+            logger.warning("Playwright not installed. Install with 'pip install playwright'")
+        except Exception as e:
+            logger.debug(f"Playwright extraction failed: {e}")
+
+        return urls
+
     def _strategy_selenium_extraction(self, url: str) -> List[str]:
         """Extract media using Selenium headless browser."""
-        if not self.options.use_headless_browser:
+        if not self.options.use_headless_browser or self.options.headless_browser_type != "selenium":
             return []
 
         urls = []
@@ -644,7 +721,7 @@ class UniversalScraper(BaseDownloader):
             from webdriver_manager.chrome import ChromeDriverManager
             from bs4 import BeautifulSoup
 
-            self.log(self.tr("Starting headless browser for dynamic content..."))
+            self.log(self.tr("Starting Selenium for dynamic content..."))
 
             chrome_options = Options()
             chrome_options.add_argument("--headless=new")
@@ -656,14 +733,11 @@ class UniversalScraper(BaseDownloader):
 
             try:
                 driver.get(url)
-                # Wait for dynamic content? Simple sleep for now
                 time.sleep(3)
 
-                # Get rendered HTML
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
 
-                # Extract image and video tags from rendered source
                 for img in soup.find_all('img'):
                     src = img.get('src')
                     if src:
@@ -710,18 +784,11 @@ class UniversalScraper(BaseDownloader):
             self.log(self.tr(f"Crawling: {current_url} (Depth: {current_depth})"))
             pages_crawled += 1
 
-            # Analyze and download from current page
-            # We temporarily set crawl_depth to 0 to avoid infinite recursion in analyze_page if we called download()
-            # But wait, analyze_page doesn't call download().
-            # We just need to extract links for the queue.
-
             analysis = self.analyze_page(current_url)
 
-            # Add found media to total count logic
             self.total_files += analysis.total_items
             results.total_files += analysis.total_items
 
-            # Download items found on this page
             for item in analysis.all_media:
                 if self.is_cancelled(): break
                 try:
@@ -738,7 +805,6 @@ class UniversalScraper(BaseDownloader):
                 except Exception:
                     pass
 
-            # If we haven't reached max depth, find links to other pages
             if current_depth < self.options.crawl_depth:
                 new_links = self._extract_internal_links(current_url)
                 for link in new_links:
@@ -761,7 +827,6 @@ class UniversalScraper(BaseDownloader):
                 for a in soup.find_all('a', href=True):
                     href = a['href']
                     full_url = urljoin(url, href)
-                    # Simple internal link check
                     if urlparse(full_url).netloc == base_domain:
                         links.append(full_url)
         except Exception:

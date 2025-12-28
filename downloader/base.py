@@ -41,8 +41,9 @@ class DownloadOptions:
     # Advanced Crawler Options
     crawl_depth: int = 0  # 0 = single page, 1+ = follow links
     use_headless_browser: bool = False  # Try Selenium/Headless if standard request fails
-    headless_browser_type: str = "chrome"  # chrome, firefox, edge
+    headless_browser_type: str = "playwright"  # "selenium" or "playwright"
     max_crawl_pages: int = 50  # Safety limit for crawling
+    use_playwright: bool = False # Explicit flag for Playwright strategy
 
 
 @dataclass

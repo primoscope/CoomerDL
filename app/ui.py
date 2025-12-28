@@ -63,19 +63,19 @@ def extract_ck_query(url: ParseResult) -> tuple[Optional[str], int]:
     return q, int(o) if str.isdigit(o) else 0
 
 # Application class
-class ImageDownloaderApp(ctk.CTkFrame):
-    def __init__(self, parent):
+class ImageDownloaderApp(ctk.CTk):
+    def __init__(self):
         self.errors = []  
         self._log_buffer = []
         self.github_stars = 0
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("dark-blue")
-        super().__init__(parent)
+        super().__init__()
         self.version = VERSION
-        # self.title(f"Downloader [{VERSION}]")
+        self.title(f"Downloader [{VERSION}]")
         
         # Setup window
-        # self.setup_window()
+        self.setup_window()
         
         # Settings window
         self.settings_window = SettingsWindow(
@@ -196,9 +196,8 @@ class ImageDownloaderApp(ctk.CTkFrame):
                 self.tr("Descarga Activa"),
                 self.tr("Hay una descarga en progreso. Por favor, cancela la descarga antes de cerrar.")
             )
-            return False
         else:
-            return True
+            self.destroy()
 
     def is_download_active(self):
         return self.active_downloader is not None
@@ -290,14 +289,13 @@ class ImageDownloaderApp(ctk.CTkFrame):
 
     # Window setup
     def setup_window(self):
-        pass
-        # window_width, window_height = 1000, 600
-        # center_x = int((self.winfo_screenwidth() / 2) - (window_width / 2))
-        # center_y = int((self.winfo_screenheight() / 2) - (window_height / 2))
-        # self.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
+        window_width, window_height = 1000, 600
+        center_x = int((self.winfo_screenwidth() / 2) - (window_width / 2))
+        center_y = int((self.winfo_screenheight() / 2) - (window_height / 2))
+        self.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
         
-        # if sys.platform == "win32":
-        #     self.iconbitmap("resources/img/window.ico")
+        if sys.platform == "win32":
+            self.iconbitmap("resources/img/window.ico")
 
     # Initialize UI components
     def initialize_ui(self):
@@ -327,10 +325,6 @@ class ImageDownloaderApp(ctk.CTkFrame):
             on_folder_change=self.on_folder_selected
         )
         self.input_panel.pack(fill='x', padx=20, pady=20)
-
-        # Analyze Button next to input (Hacked in for now, ideally part of InputPanel)
-        self.analyze_button = ctk.CTkButton(self.input_panel, text="🔍 " + self.tr("Analyze Link"), width=120, command=self.analyze_current_link)
-        self.analyze_button.pack(pady=5)
 
         # Options panel
         self.options_panel = OptionsPanel(self, tr=self.tr)
@@ -403,29 +397,8 @@ class ImageDownloaderApp(ctk.CTkFrame):
         self.options_panel.update_texts()
         self.action_panel.update_texts()
         
-        # self.title(self.tr(f"Downloader [{VERSION}]"))
+        self.title(self.tr(f"Downloader [{VERSION}]"))
         self.update_download_button.configure(text=self.tr("Download Now"))
-
-    def winfo_screenwidth(self):
-        return self.master.winfo_screenwidth()
-
-    def winfo_screenheight(self):
-        return self.master.winfo_screenheight()
-
-    def geometry(self, geometry_string):
-        pass # Ignored in Frame mode
-
-    def iconbitmap(self, bitmap):
-        pass # Ignored in Frame mode
-
-    def title(self, title):
-        pass # Ignored in Frame mode
-
-    def protocol(self, name, func):
-        pass # Ignored in Frame mode
-
-    def destroy(self):
-        super().destroy()
 
     
     def on_folder_selected(self, folder_path: str):
@@ -957,6 +930,7 @@ class ImageDownloaderApp(ctk.CTkFrame):
                     download_compressed=ui_opts.get('download_compressed', True),
                     download_documents=ui_opts.get('download_documents', True),
                     use_headless_browser=ui_opts.get('use_headless_browser', False),
+                    headless_browser_type=ui_opts.get('headless_browser_type', 'playwright'),
                     crawl_depth=ui_opts.get('crawl_depth', 0),
                     max_retries=self.settings.get('max_retries', 3),
                     retry_interval=self.settings.get('retry_interval', 2.0)
@@ -1364,40 +1338,6 @@ class ImageDownloaderApp(ctk.CTkFrame):
         self.log_panel.pack(pady=(10, 0), padx=20, fill='both', expand=True)
         self.progress_panel.pack_forget()
         self.progress_panel.pack(pady=(0, 10), fill='x', padx=20)
-
-    def analyze_current_link(self):
-        """Analyze the current link in the input field."""
-        url = self.url_entry.get().strip()
-        if not url:
-            messagebox.showwarning(self.tr("Warning"), self.tr("Please enter a URL to analyze."))
-            return
-
-        self.add_log_message_safe(self.tr("Analyzing link: {url}", url=url))
-
-        def run_analysis():
-            from app.utils.batch_analyzer import BatchLinkAnalyzer
-            analyzer = BatchLinkAnalyzer()
-            meta = analyzer.analyze(url)
-
-            # Show results in a dialog on main thread
-            self.after(0, lambda: self.show_analysis_results(meta))
-
-        threading.Thread(target=run_analysis).start()
-
-    def show_analysis_results(self, meta):
-        """Show analysis results dialog."""
-        msg = f"Title: {meta.title}\n"
-        msg += f"Images: {meta.count_images}\n"
-        msg += f"Videos: {meta.count_videos}\n"
-        if meta.total_est_size_mb > 0:
-            msg += f"Est. Size: ~{meta.total_est_size_mb:.1f} MB\n"
-
-        if not meta.is_supported:
-            msg += "\n(Warning: Generic support only, counts may be inaccurate)"
-
-        confirm = messagebox.askyesno(self.tr("Link Analysis"), msg + "\n\nDo you want to download now?")
-        if confirm:
-            self.start_download()
 
     def open_latest_release(self):
         if hasattr(self, 'latest_release_url'):

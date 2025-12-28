@@ -10,5 +10,3 @@ cloudscraper
 selenium
 yt-dlp
 gallery-dl
-pyperclip
-webdriver-manager
