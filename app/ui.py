@@ -948,14 +948,29 @@ class ImageDownloaderApp(ctk.CTkFrame):
             from downloader.ytdlp_adapter import YtDlpOptions
             
             # Create DownloadOptions from UI checkboxes
-            options = DownloadOptions(
-                download_images=self.download_images_check.get(),
-                download_videos=self.download_videos_check.get(),
-                download_compressed=self.download_compressed_check.get(),
-                download_documents=self.download_documents_check.get(),  # Use actual checkbox
-                max_retries=self.settings.get('max_retries', 3),
-                retry_interval=self.settings.get('retry_interval', 2.0)
-            )
+            # Use get_options() if available or construct manually
+            if hasattr(self.options_panel, 'get_options'):
+                ui_opts = self.options_panel.get_options()
+                options = DownloadOptions(
+                    download_images=ui_opts.get('download_images', True),
+                    download_videos=ui_opts.get('download_videos', True),
+                    download_compressed=ui_opts.get('download_compressed', True),
+                    download_documents=ui_opts.get('download_documents', True),
+                    use_headless_browser=ui_opts.get('use_headless_browser', False),
+                    crawl_depth=ui_opts.get('crawl_depth', 0),
+                    max_retries=self.settings.get('max_retries', 3),
+                    retry_interval=self.settings.get('retry_interval', 2.0)
+                )
+            else:
+                # Fallback for backward compatibility or if get_options not ready
+                options = DownloadOptions(
+                    download_images=self.download_images_check.get(),
+                    download_videos=self.download_videos_check.get(),
+                    download_compressed=self.download_compressed_check.get(),
+                    download_documents=self.download_documents_check.get(),
+                    max_retries=self.settings.get('max_retries', 3),
+                    retry_interval=self.settings.get('retry_interval', 2.0)
+                )
             
             # Create YtDlpOptions from settings
             ytdlp_options = YtDlpOptions(

@@ -38,6 +38,12 @@ class DownloadOptions:
     date_to: Optional[str] = None  # ISO format YYYY-MM-DD
     excluded_extensions: set = field(default_factory=set)  # Set of extensions to skip, e.g. {'.webm', '.gif'}
 
+    # Advanced Crawler Options
+    crawl_depth: int = 0  # 0 = single page, 1+ = follow links
+    use_headless_browser: bool = False  # Try Selenium/Headless if standard request fails
+    headless_browser_type: str = "chrome"  # chrome, firefox, edge
+    max_crawl_pages: int = 50  # Safety limit for crawling
+
 
 @dataclass
 class MediaItem:
