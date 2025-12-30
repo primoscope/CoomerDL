@@ -362,6 +362,7 @@ This repository is optimized for AI coding agents (GitHub Copilot, Claude, GPT-4
 | File | Purpose | Use When |
 |------|---------|----------|
 | [ROADMAP.md](ROADMAP.md) | User-friendly feature roadmap and planned features | Understanding what's available and coming soon |
+| [ROADMAP_TASKS_BY_PRIORITY.md](ROADMAP_TASKS_BY_PRIORITY.md) | Quick summary of all open tasks organized by priority | Getting a fast overview of what needs to be done |
 | [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md) | Technical roadmap with detailed task breakdowns | Finding what to work on (developers) |
 | [TASKS.md](TASKS.md) | Detailed task breakdowns with acceptance criteria | Implementing a specific task |
 | [SPECIFICATIONS.md](SPECIFICATIONS.md) | Full code specifications for new features | Building new classes/functions |
