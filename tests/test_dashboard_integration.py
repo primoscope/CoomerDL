@@ -1,85 +1,88 @@
-#!/usr/bin/env python3
 """
-Test script to verify CommandCenterDashboard component works correctly.
-This script can be run in a headless environment to check for import errors.
+Unit tests for Dashboard UI components integration.
+
+Tests verify that UI components can be imported and have expected structure.
+These tests are designed to work in headless environments where tkinter may not be available.
+
+Note: These tests may be affected by other tests that mock tkinter globally (e.g., test_utils.py).
+In such cases, the tests will skip gracefully or handle mocked imports appropriately.
 """
+import pytest
 
-import sys
-import os
-import traceback
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-def test_dashboard_imports():
-    """Test that all dashboard-related imports work."""
-    print("Testing dashboard imports...")
-    
+def is_tkinter_available():
+    """Check if real tkinter (not a mock) is available."""
     try:
-        from app.window.dashboard import CommandCenterDashboard
-        print("✓ CommandCenterDashboard imported successfully")
-    except ImportError as e:
-        print(f"✗ Failed to import CommandCenterDashboard: {e}")
-        return False
-    
-    try:
-        from app.window.menu_bar import MenuBar
-        print("✓ MenuBar imported successfully")
-    except ImportError as e:
-        print(f"✗ Failed to import MenuBar: {e}")
-        return False
-    
-    try:
-        from app.dialogs.queue_dialog import QueueDialog
-        print("✓ QueueDialog imported successfully")
-    except ImportError as e:
-        print(f"✗ Failed to import QueueDialog: {e}")
-        return False
-    
-    try:
-        from app.models.download_queue import DownloadQueue
-        print("✓ DownloadQueue imported successfully")
-    except ImportError as e:
-        print(f"✗ Failed to import DownloadQueue: {e}")
-        return False
-    
-    return True
-
-
-def test_dashboard_structure():
-    """Test that dashboard has expected structure."""
-    print("\nTesting dashboard structure...")
-    
-    # Since we can't actually create GUI widgets in headless mode,
-    # we'll just verify the class structure
-    from app.window.dashboard import CommandCenterDashboard
-    
-    # Check that required methods exist
-    expected_methods = [
-        'create_home_tab',
-        'create_queue_tab',
-        'create_gallery_tab',
-        'create_history_tab',
-        'create_stat_card',
-        'start_download',
-        'update_stats'
-    ]
-    
-    for method in expected_methods:
-        if hasattr(CommandCenterDashboard, method):
-            print(f"✓ Method '{method}' exists")
-        else:
-            print(f"✗ Method '{method}' missing")
+        import tkinter
+        import sys
+        # Check if tkinter module is a MagicMock (mocked by test_utils.py)
+        if 'unittest.mock' in str(type(tkinter)):
             return False
-    
-    return True
+        # Try to access a real tkinter attribute
+        tkinter.Tk
+        return True
+    except (ImportError, AttributeError):
+        return False
 
 
-def test_modular_components():
-    """Test that all modular UI components are importable."""
-    print("\nTesting modular UI components...")
+class TestDashboardImports:
+    """Test that dashboard-related components can be imported."""
     
-    components = [
+    def test_command_center_dashboard_import(self):
+        """Test CommandCenterDashboard can be imported."""
+        if not is_tkinter_available():
+            pytest.skip("tkinter not available or is mocked")
+        from app.window.dashboard import CommandCenterDashboard
+        assert CommandCenterDashboard is not None
+    
+    def test_menu_bar_import(self):
+        """Test MenuBar can be imported."""
+        if not is_tkinter_available():
+            pytest.skip("tkinter not available or is mocked")
+        from app.window.menu_bar import MenuBar
+        assert MenuBar is not None
+    
+    def test_queue_dialog_import(self):
+        """Test QueueDialog can be imported."""
+        if not is_tkinter_available():
+            pytest.skip("tkinter not available or is mocked")
+        from app.dialogs.queue_dialog import QueueDialog
+        assert QueueDialog is not None
+    
+    def test_download_queue_import(self):
+        """Test DownloadQueue can be imported."""
+        from app.models.download_queue import DownloadQueue
+        assert DownloadQueue is not None
+
+
+class TestDashboardStructure:
+    """Test dashboard component structure."""
+    
+    def test_dashboard_has_required_methods(self):
+        """Test that CommandCenterDashboard has all required methods."""
+        if not is_tkinter_available():
+            pytest.skip("tkinter not available or is mocked")
+        from app.window.dashboard import CommandCenterDashboard
+        
+        expected_methods = [
+            'create_home_tab',
+            'create_queue_tab',
+            'create_gallery_tab',
+            'create_history_tab',
+            'create_stat_card',
+            'start_download',
+            'update_stats'
+        ]
+        
+        for method in expected_methods:
+            assert hasattr(CommandCenterDashboard, method), \
+                f"CommandCenterDashboard missing method: {method}"
+
+
+class TestModularComponents:
+    """Test that modular UI components are properly structured."""
+    
+    @pytest.mark.parametrize("module_name,class_name", [
         ('app.window.input_panel', 'InputPanel'),
         ('app.window.options_panel', 'OptionsPanel'),
         ('app.window.action_panel', 'ActionPanel'),
@@ -88,55 +91,11 @@ def test_modular_components():
         ('app.window.status_bar', 'StatusBar'),
         ('app.window.gallery_viewer', 'GalleryViewer'),
         ('app.window.history_viewer', 'HistoryViewer'),
-    ]
-    
-    for module_name, class_name in components:
-        try:
-            module = __import__(module_name, fromlist=[class_name])
-            cls = getattr(module, class_name)
-            print(f"✓ {class_name} imported successfully")
-        except ImportError as e:
-            print(f"✗ Failed to import {class_name}: {e}")
-            return False
-        except AttributeError as e:
-            print(f"✗ Class {class_name} not found in {module_name}: {e}")
-            return False
-    
-    return True
-
-
-def main():
-    """Run all tests."""
-    print("=" * 60)
-    print("Dashboard Component Integration Test")
-    print("=" * 60)
-    
-    tests = [
-        test_dashboard_imports,
-        test_dashboard_structure,
-        test_modular_components,
-    ]
-    
-    all_passed = True
-    for test in tests:
-        try:
-            if not test():
-                all_passed = False
-        except Exception as e:
-            print(f"\n✗ Test failed with exception: {e}")
-            traceback.print_exc()
-            all_passed = False
-    
-    print("\n" + "=" * 60)
-    if all_passed:
-        print("✓ All tests passed!")
-        print("=" * 60)
-        return 0
-    else:
-        print("✗ Some tests failed")
-        print("=" * 60)
-        return 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    ])
+    def test_component_can_be_imported(self, module_name, class_name):
+        """Test that each modular component can be imported."""
+        if not is_tkinter_available():
+            pytest.skip("tkinter not available or is mocked")
+        module = __import__(module_name, fromlist=[class_name])
+        assert hasattr(module, class_name), \
+            f"Module {module_name} does not have class {class_name}"
