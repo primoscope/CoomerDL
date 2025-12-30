@@ -424,6 +424,83 @@ python main.py
 "Run any tests related to the downloader module"
 ```
 
+---
+
+## AI-Assisted Development with Gemini Code Assist
+
+This repository is fully configured for **Gemini Code Assist Enterprise**, providing AI-powered code reviews, intelligent suggestions, and custom workflow automation.
+
+### 🚀 Quick Start with Gemini
+
+#### Prerequisites
+1. **Gemini Code Assist Enterprise** subscription (via Google Cloud Console)
+2. Link this repository to your **Code Repository Index** in Google Cloud Console for enhanced context
+
+#### Configuration Files
+
+This repository includes optimized Gemini configuration in the `.gemini/` directory:
+
+- **`.gemini/config.yaml`** - Review settings with LOW severity threshold for thorough analysis
+- **`.gemini/styleguide.md`** - Project-specific coding standards enforcing modular architecture
+- **`.gemini/commands/*.toml`** - Custom slash commands for common workflows
+
+### 🎯 Custom Slash Commands
+
+Use these powerful shortcuts in your Gemini-enabled IDE or CLI:
+
+#### `/plan` - Create Implementation Plan
+Generate a detailed technical plan for any feature or bug fix:
+```
+/plan "add dark mode to the UI"
+/plan "implement resume capability for downloads"
+```
+
+#### `/test` - Generate Tests
+Auto-generate comprehensive pytest tests following repository patterns:
+```
+/test "downloader/base.py"
+/test "def safe_request(self, url, method='GET'):"
+```
+
+#### `/optimize` - Code Audit
+Identify performance bottlenecks and suggest improvements:
+```
+/optimize "downloader/queue.py"
+/optimize "app/ui.py lines 100-200"
+```
+
+### 📋 Code Review Configuration
+
+Gemini Code Assist is configured to provide:
+- **Thorough Reviews**: LOW severity threshold catches style and logic issues
+- **Comprehensive Feedback**: Up to 80 review comments per PR
+- **Architecture Enforcement**: Validates adherence to Phase 1 modular architecture
+- **Test Coverage**: Always calls out missing tests for new logic
+
+### 🔧 Enterprise Features
+
+When linked to the **Code Repository Index**:
+- **Codebase-Wide Context**: Gemini understands the entire project structure
+- **Intelligent Suggestions**: Recommendations based on existing patterns
+- **Cross-File Analysis**: Detects issues spanning multiple modules
+- **Historical Context**: Learns from past changes and reviews
+
+### 📚 Style Guide Highlights
+
+The `.gemini/styleguide.md` enforces:
+- **Modular Architecture**: Proper use of `downloader/` and `app/` packages
+- **Type Hinting**: All new functions must include Python type hints
+- **Pytest Standards**: Test classes and fixtures, no standalone scripts
+- **Error Handling**: Consistent use of `self.log()` patterns
+
+### 🔗 Additional Resources
+
+- **Official Docs**: [Gemini Code Assist Documentation](https://developers.google.com/gemini-code-assist/docs)
+- **Enterprise Setup**: [Google Cloud Console - Code Repository Index](https://console.cloud.google.com/)
+- **Slash Commands Guide**: See `.gemini/commands/*.toml` for all available commands
+
+---
+
 ### Task Priority Guide
 
 | Icon | Priority | Agent Instruction |
