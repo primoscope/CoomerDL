@@ -1,0 +1,15 @@
+# Gemini Code Assist Configuration
+code_review:
+  # Set threshold to LOW to ensure thorough reviews of logic and style
+  comment_severity_threshold: LOW
+  # Increase limit for comprehensive PR reviews
+  max_review_comments: 80
+
+# Specify files to ignore for indexing and reviews
+ignore:
+  - "**/__pycache__/**"
+  - "**/*.pyc"
+  - "**/dist/**"
+  - "**/build/**"
+  - ".git/**"
+  - "node_modules/**"

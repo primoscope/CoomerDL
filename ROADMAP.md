@@ -2,6 +2,8 @@
 
 Welcome to the CoomerDL Roadmap! This document outlines our current features, what we're working on, and exciting ideas for the future. We'd love to hear your feedback and feature requests!
 
+> 📌 **Quick Reference**: Looking for a summary of all tasks by priority? Check out [ROADMAP_TASKS_BY_PRIORITY.md](ROADMAP_TASKS_BY_PRIORITY.md)
+
 ---
 
 ## 📋 Table of Contents

@@ -1,0 +1,4 @@
+description = "Generate pytest tests for the current file or specific logic"
+prompt = """Generate comprehensive pytest tests for the following code. 
+Follow the repository's pattern of using test classes and parametrize. 
+Code: {{args}}"""

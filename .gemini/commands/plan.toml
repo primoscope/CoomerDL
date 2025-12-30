@@ -1,0 +1,4 @@
+description = "Create a detailed implementation plan for a feature or bug fix"
+prompt = """Analyze the current codebase and the user's request. 
+Provide a step-by-step technical plan that respects the modular architecture. 
+Task: {{args}}"""
