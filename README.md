@@ -7,6 +7,140 @@
 
 ---
 
+## 🤖 AI-Assisted Development Guide
+
+This repository is optimized for **GitHub Copilot** and **Gemini Code Assist** for automated development workflows.
+
+### Quick Start Commands
+
+#### For New Features
+```
+@copilot Implement [feature description]
+
+Example: @copilot Implement dark mode toggle in dashboard UI with persistent settings
+```
+
+#### For Bug Fixes
+```
+@copilot Fix [bug description] and add regression tests
+
+Example: @copilot Fix download retry logic not logging errors properly
+```
+
+#### For Testing
+```
+@copilot Add comprehensive tests for [module/feature]
+
+Example: @copilot Add comprehensive tests for simpcity_handler.py
+```
+
+#### For Code Quality
+```
+@copilot Refactor [file/module] to improve [aspect]
+
+Example: @copilot Refactor downloader.py to improve error handling and logging
+```
+
+#### For Full Features (Multi-file)
+```
+@copilot Implement complete [feature] including:
+- Source code in appropriate modules
+- Comprehensive pytest tests
+- Documentation updates
+- Error handling
+- Validation tests
+
+Example: @copilot Implement complete concurrent download manager including:
+- Source code in downloader/concurrent_manager.py
+- Comprehensive pytest tests
+- Documentation updates
+- Error handling for race conditions
+- Validation tests with mocked network calls
+```
+
+### Configuration Files
+
+This repository includes:
+- `.github/copilot-instructions.md` - Repository-wide coding standards and automation instructions
+- `.github/instructions/*.instructions.md` - Path-specific instructions for tests, UI, etc.
+- `.github/workflows/copilot-setup-steps.yml` - Automated environment setup for Copilot agent
+- `.gemini/config.yaml` - Gemini Code Assist configuration
+- `.gemini/styleguide.md` - Gemini-specific style guide
+
+### How It Works
+
+**GitHub Copilot** reads the instructions in `.github/copilot-instructions.md` and path-specific instructions to understand:
+- Project architecture and structure
+- Coding standards and conventions
+- Testing requirements (pytest classes, no standalone scripts)
+- Error handling patterns
+- When to work exhaustively vs. incrementally
+
+When you assign a task to `@copilot`, it will:
+1. Analyze the repository structure
+2. Apply the custom instructions
+3. Create a new branch and PR
+4. Implement the complete solution
+5. Run tests and validation
+6. Iterate until all checks pass
+
+### Agent Behavior
+
+Copilot is configured to:
+- ✅ Work exhaustively - complete full implementations, not partial work
+- ✅ Follow modular architecture strictly
+- ✅ Create pytest tests (classes, not scripts)
+- ✅ Add type hints to all code
+- ✅ Use existing logging patterns
+- ✅ Run automated tests before considering work complete
+- ✅ Iterate on failures until all tests pass
+
+### Copy-Paste Variations
+
+**For Backend Development:**
+```
+@copilot Implement [feature] in downloader module with full tests and error handling
+```
+
+**For UI Development:**
+```
+@copilot Add [UI component] to dashboard with proper event handling and headless-compatible tests
+```
+
+**For Bug Hunt:**
+```
+@copilot Analyze [module] for bugs, add regression tests, and fix all issues found
+```
+
+**For Documentation:**
+```
+@copilot Update documentation for [feature/module] with usage examples and API reference
+```
+
+**For Performance:**
+```
+@copilot Optimize [module] for performance and add benchmarking tests
+```
+
+**For Security:**
+```
+@copilot Audit [module] for security vulnerabilities and implement fixes with tests
+```
+
+### Best Practices
+
+1. **Be Specific**: The more detailed your request, the better the result
+2. **Request Complete Solutions**: Ask for tests, docs, and validation together
+3. **Review PR Changes**: Copilot creates PRs for you to review before merging
+4. **Iterate in PR**: Comment on the PR to request changes or improvements
+5. **Trust the Process**: Copilot will work exhaustively until tests pass
+
+### Links
+- [GitHub Copilot Documentation](https://docs.github.com/copilot)
+- [Gemini Code Assist Documentation](https://developers.google.com/gemini-code-assist/docs)
+
+---
+
 ## 📋 Quick Summary (for AI Agents)
 
 **What**: Universal media archiver with three engines:

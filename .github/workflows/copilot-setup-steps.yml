@@ -1,0 +1,46 @@
+name: "Copilot Setup Steps"
+
+# Run when manually triggered, on push, or when this file changes
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov black flake8
+      
+      - name: Install UI dependencies (headless)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk xvfb
+      
+      - name: Create necessary directories
+        run: |
+          mkdir -p tests/
+          mkdir -p downloads/
+      
+      - name: Verify installation
+        run: |
+          python --version
+          pip list
+          pytest --version
