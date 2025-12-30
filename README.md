@@ -366,6 +366,7 @@ This repository is optimized for AI coding agents (GitHub Copilot, Claude, GPT-4
 | [TASKS.md](TASKS.md) | Detailed task breakdowns with acceptance criteria | Implementing a specific task |
 | [SPECIFICATIONS.md](SPECIFICATIONS.md) | Full code specifications for new features | Building new classes/functions |
 | [POTENTIAL_ISSUES.md](POTENTIAL_ISSUES.md) | Known blockers and edge cases | Understanding risks |
+| [AGENT_VALIDATION_REPORT.md](AGENT_VALIDATION_REPORT.md) | AI agent configuration validation results | Verifying agent setup and installation |
 
 ### How to Prompt AI Agents
 
@@ -454,3 +455,27 @@ Read SPECIFICATIONS.md section "BaseDownloader" and create the file downloader/b
 ```
 Read POTENTIAL_ISSUES.md and tell me which issues might affect task FEATURE-001.
 ```
+
+### Validation and Testing
+
+The repository includes validation scripts to ensure AI agent configurations and installations are working correctly:
+
+**Validate agent configurations:**
+```bash
+python validate_agents.py
+```
+This checks that all `.agent.md` files in `.github/agents/` are properly formatted with required fields.
+
+**Test installation:**
+```bash
+python test_installation.py
+```
+This verifies that all dependencies and application modules can be imported successfully.
+
+**Run full test suite:**
+```bash
+pytest tests/ -v
+```
+Runs all 241 tests to validate codebase functionality.
+
+For detailed validation results, see [AGENT_VALIDATION_REPORT.md](AGENT_VALIDATION_REPORT.md).
