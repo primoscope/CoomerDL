@@ -14,11 +14,11 @@ def is_tkinter_available():
     """Check if real tkinter (not a mock) is available."""
     try:
         import tkinter
-        import sys
-        # Check if tkinter module is a MagicMock (mocked by test_utils.py)
-        if 'unittest.mock' in str(type(tkinter)):
+        # Check if tkinter module has been mocked (by test_utils.py or similar)
+        # MagicMock objects have a _mock_name attribute
+        if hasattr(tkinter, '_mock_name'):
             return False
-        # Try to access a real tkinter attribute
+        # Try to access a real tkinter attribute to verify it's functional
         tkinter.Tk
         return True
     except (ImportError, AttributeError):
