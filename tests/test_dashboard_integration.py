@@ -6,6 +6,10 @@ This script can be run in a headless environment to check for import errors.
 
 import sys
 import os
+import traceback
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def test_dashboard_imports():
     """Test that all dashboard-related imports work."""
@@ -120,7 +124,6 @@ def main():
                 all_passed = False
         except Exception as e:
             print(f"\n✗ Test failed with exception: {e}")
-            import traceback
             traceback.print_exc()
             all_passed = False
     
