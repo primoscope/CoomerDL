@@ -142,45 +142,7 @@ class MenuBar(ctk.CTkFrame):
             github_frame.bind("<Leave>", lambda e: on_leave(e, github_frame))
             github_label.bind("<Enter>", lambda e: on_enter(e, github_frame))
             github_label.bind("<Leave>", lambda e: on_leave(e, github_frame))
-            github_label.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/emy69/CoomerDL"))
-        
-        # Discord icon
-        if self.discord_icon:
-            resized_discord_icon = self.discord_icon.resize((16, 16), Image.Resampling.LANCZOS)
-            resized_discord_icon = ctk.CTkImage(resized_discord_icon)
-            discord_frame = ctk.CTkFrame(self, cursor="hand2", fg_color="transparent", corner_radius=5)
-            discord_frame.pack(side="right", padx=5)
-            discord_label = ctk.CTkLabel(
-                discord_frame,
-                image=resized_discord_icon,
-                text="Discord",
-                compound="left"
-            )
-            discord_label.pack(padx=5, pady=5)
-            discord_frame.bind("<Enter>", lambda e: on_enter(e, discord_frame))
-            discord_frame.bind("<Leave>", lambda e: on_leave(e, discord_frame))
-            discord_label.bind("<Enter>", lambda e: on_enter(e, discord_frame))
-            discord_label.bind("<Leave>", lambda e: on_leave(e, discord_frame))
-            discord_label.bind("<Button-1>", lambda e: webbrowser.open("https://discord.gg/ku8gSPsesh"))
-        
-        # Patreon icon
-        if self.patreon_icon:
-            resized_patreon_icon = self.patreon_icon.resize((16, 16), Image.Resampling.LANCZOS)
-            resized_patreon_icon = ctk.CTkImage(resized_patreon_icon)
-            patreon_frame = ctk.CTkFrame(self, cursor="hand2", fg_color="transparent", corner_radius=5)
-            patreon_frame.pack(side="right", padx=5)
-            patreon_label = ctk.CTkLabel(
-                patreon_frame,
-                image=resized_patreon_icon,
-                text="Patreon",
-                compound="left"
-            )
-            patreon_label.pack(padx=5, pady=5)
-            patreon_frame.bind("<Enter>", lambda e: on_enter(e, patreon_frame))
-            patreon_frame.bind("<Leave>", lambda e: on_leave(e, patreon_frame))
-            patreon_label.bind("<Enter>", lambda e: on_enter(e, patreon_frame))
-            patreon_label.bind("<Leave>", lambda e: on_leave(e, patreon_frame))
-            patreon_label.bind("<Button-1>", lambda e: webbrowser.open("https://www.patreon.com/Emy69"))
+            github_label.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/primoscope/CoomerDL"))
     
     def toggle_archivo_menu(self):
         """Toggle the File (Archivo) dropdown menu."""
