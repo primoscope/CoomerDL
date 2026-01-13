@@ -1,0 +1,20 @@
+{
+  "name": "postgres",
+  "description": "PostgreSQL database operations for future scaling",
+  "command": "npx",
+  "args": [
+    "-y",
+    "mcp-server-postgres"
+  ],
+  "env": {
+    "POSTGRES_CONNECTION_STRING": "${POSTGRES_CONNECTION_STRING}"
+  },
+  "capabilities": [
+    "execute_query",
+    "read_query",
+    "list_tables",
+    "describe_table",
+    "analyze_query"
+  ],
+  "useCase": "Future migration from SQLite to PostgreSQL for better concurrency and multi-user support"
+}

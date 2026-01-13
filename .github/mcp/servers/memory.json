@@ -1,0 +1,16 @@
+{
+  "name": "memory",
+  "description": "Persistent agent memory across sessions",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-memory"
+  ],
+  "capabilities": [
+    "store_entity",
+    "retrieve_entities",
+    "create_relation",
+    "query_graph"
+  ],
+  "useCase": "Maintain context about CoomerDL architecture, previous decisions, and learned patterns across agent sessions"
+}

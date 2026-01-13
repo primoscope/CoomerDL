@@ -1,0 +1,18 @@
+{
+  "name": "playwright",
+  "description": "Alternative browser automation with multi-browser support",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@anthropic/server-playwright"
+  ],
+  "capabilities": [
+    "navigate",
+    "click",
+    "fill",
+    "screenshot",
+    "evaluate",
+    "wait_for_selector"
+  ],
+  "useCase": "Cross-browser testing of scrapers (Chrome, Firefox, Safari), debugging complex JavaScript interactions"
+}

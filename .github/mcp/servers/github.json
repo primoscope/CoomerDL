@@ -1,0 +1,23 @@
+{
+  "name": "github",
+  "description": "Enhanced GitHub integration for repository operations",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@github/mcp-server"
+  ],
+  "env": {
+    "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+  },
+  "capabilities": [
+    "search_code",
+    "search_repositories",
+    "get_file_contents",
+    "list_commits",
+    "list_issues",
+    "create_issue",
+    "create_pull_request",
+    "list_pull_requests"
+  ],
+  "useCase": "Advanced GitHub operations including code search, PR management, issue tracking, and workflow analysis"
+}

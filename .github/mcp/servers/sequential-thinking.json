@@ -1,0 +1,15 @@
+{
+  "name": "sequential-thinking",
+  "description": "Complex reasoning and multi-step problem solving",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-sequential-thinking"
+  ],
+  "capabilities": [
+    "think_step_by_step",
+    "break_down_problem",
+    "reason_about_code"
+  ],
+  "useCase": "Complex architectural decisions, debugging multi-threaded race conditions, and optimizing download algorithms"
+}

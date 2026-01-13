@@ -1,0 +1,16 @@
+{
+  "name": "fetch",
+  "description": "HTTP/web content retrieval for testing and debugging",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-fetch"
+  ],
+  "capabilities": [
+    "fetch_url",
+    "fetch_html",
+    "fetch_json",
+    "fetch_text"
+  ],
+  "useCase": "Testing HTTP endpoints, debugging API responses, and validating scraper URL patterns"
+}

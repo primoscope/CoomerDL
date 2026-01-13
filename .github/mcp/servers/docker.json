@@ -1,0 +1,18 @@
+{
+  "name": "docker",
+  "description": "Docker container operations for testing and deployment",
+  "command": "npx",
+  "args": [
+    "-y",
+    "mcp-server-docker"
+  ],
+  "capabilities": [
+    "list_containers",
+    "create_container",
+    "start_container",
+    "stop_container",
+    "exec_command",
+    "inspect_container"
+  ],
+  "useCase": "Testing CoomerDL in isolated environments, creating reproducible build environments, and container-based deployment"
+}

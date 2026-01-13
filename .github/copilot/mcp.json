@@ -1,0 +1,100 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "tools": ["read_file", "read_multiple_files", "write_file", "edit_file", "create_directory", "list_directory", "move_file", "search_files", "get_file_info", "list_allowed_directories"]
+    },
+    "sqlite": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "--db-path", "resources/config/downloads.db"],
+      "tools": ["read_query", "write_query", "create_table", "list_tables", "describe_table", "append_insight"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@github/mcp-server"],
+      "env": {
+        "GITHUB_TOKEN": "${COPILOT_MCP_GITHUB_TOKEN}"
+      },
+      "tools": ["get_file_contents", "get_issue", "get_pull_request", "list_issues", "list_pull_requests", "search_code", "search_issues", "search_repositories", "create_issue", "create_pull_request", "update_issue", "create_or_update_file", "push_files", "create_branch", "list_commits", "list_branches"]
+    },
+    "python-analysis": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mcp_server_python_analysis"],
+      "env": {
+        "PROJECT_PATH": "."
+      },
+      "tools": ["run_mypy", "analyze_complexity", "find_imports", "get_definitions"]
+    },
+    "puppeteer": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/server-puppeteer"],
+      "tools": ["puppeteer_navigate", "puppeteer_screenshot", "puppeteer_click", "puppeteer_fill", "puppeteer_select", "puppeteer_hover", "puppeteer_evaluate"]
+    },
+    "fetch": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "tools": ["fetch"]
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "tools": ["create_entities", "create_relations", "add_observations", "delete_entities", "delete_observations", "delete_relations", "read_graph", "search_nodes", "open_nodes"]
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "tools": ["sequentialthinking"]
+    },
+    "docker": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-server-docker"],
+      "tools": ["list_containers", "create_container", "run_container", "stop_container", "remove_container", "list_images", "pull_image", "build_image", "run_exec"]
+    },
+    "yt-dlp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-server-yt-dlp"],
+      "tools": ["download_video", "get_video_info", "list_formats", "extract_audio"]
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/server-playwright"],
+      "tools": ["browser_navigate", "browser_screenshot", "browser_click", "browser_fill", "browser_select", "browser_hover", "browser_evaluate", "browser_close"]
+    },
+    "git": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git", "--repository", "."],
+      "tools": ["git_status", "git_diff", "git_commit", "git_add", "git_reset", "git_log", "git_show", "git_branch", "git_checkout", "git_clone"]
+    },
+    "brave-search": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${COPILOT_MCP_BRAVE_API_KEY}"
+      },
+      "tools": ["brave_web_search", "brave_local_search"]
+    },
+    "postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-server-postgres"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "${COPILOT_MCP_POSTGRES_CONNECTION_STRING}"
+      },
+      "tools": ["query", "execute", "list_tables", "describe_table"]
+    }
+  }
+}

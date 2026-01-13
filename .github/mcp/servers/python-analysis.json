@@ -1,0 +1,20 @@
+{
+  "name": "python-analysis",
+  "description": "Python static analysis with mypy, complexity metrics, and code quality",
+  "command": "python",
+  "args": [
+    "-m",
+    "mcp_server_python_analysis"
+  ],
+  "env": {
+    "PROJECT_PATH": "/home/runner/work/CoomerDL/CoomerDL"
+  },
+  "capabilities": [
+    "type_check",
+    "complexity_analysis",
+    "import_graph",
+    "dependency_scan",
+    "code_metrics"
+  ],
+  "useCase": "Static type checking with mypy, cyclomatic complexity analysis, and Python code quality assessment"
+}

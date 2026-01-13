@@ -1,0 +1,19 @@
+{
+  "name": "filesystem",
+  "description": "File system operations for CoomerDL repository",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-filesystem",
+    "/home/runner/work/CoomerDL/CoomerDL"
+  ],
+  "capabilities": [
+    "read_file",
+    "write_file",
+    "list_directory",
+    "create_directory",
+    "move_file",
+    "search_files"
+  ],
+  "useCase": "Primary file system access for reading/writing code, configs, and data files"
+}

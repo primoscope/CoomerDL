@@ -1,0 +1,19 @@
+{
+  "name": "sqlite",
+  "description": "SQLite database operations for downloads.db",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-sqlite",
+    "--db-path",
+    "resources/config/downloads.db"
+  ],
+  "capabilities": [
+    "execute_query",
+    "read_query",
+    "list_tables",
+    "describe_table",
+    "analyze_query"
+  ],
+  "useCase": "Direct access to CoomerDL's download tracking database for inspection, optimization, and debugging"
+}

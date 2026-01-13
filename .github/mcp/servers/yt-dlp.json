@@ -1,0 +1,16 @@
+{
+  "name": "yt-dlp",
+  "description": "Direct yt-dlp integration for video downloader testing",
+  "command": "npx",
+  "args": [
+    "-y",
+    "mcp-server-yt-dlp"
+  ],
+  "capabilities": [
+    "extract_info",
+    "get_formats",
+    "download_video",
+    "get_subtitles"
+  ],
+  "useCase": "Testing and debugging yt-dlp adapter, validating format selection, and comparing with CoomerDL's implementation"
+}

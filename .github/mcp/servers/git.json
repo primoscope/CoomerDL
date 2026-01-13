@@ -1,0 +1,20 @@
+{
+  "name": "git",
+  "description": "Git operations for repository management",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-git",
+    "--repository",
+    "/home/runner/work/CoomerDL/CoomerDL"
+  ],
+  "capabilities": [
+    "git_status",
+    "git_diff",
+    "git_log",
+    "git_show",
+    "git_commit",
+    "git_branch"
+  ],
+  "useCase": "Advanced git operations, analyzing commit history, managing branches, and reviewing changes"
+}
