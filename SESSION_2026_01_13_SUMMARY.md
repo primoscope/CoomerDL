@@ -285,9 +285,8 @@ This session successfully accomplished all objectives:
 ## 📞 Contact
 
 For questions or feedback about this session's work:
-- **Discord:** [Join Server](https://discord.gg/ku8gSPsesh)
-- **Issues:** [GitHub Issues](https://github.com/Emy69/CoomerDL/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/Emy69/CoomerDL/discussions)
+- **Issues:** [GitHub Issues](https://github.com/primoscope/CoomerDL/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/primoscope/CoomerDL/discussions)
 
 ---
 

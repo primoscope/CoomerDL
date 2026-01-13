@@ -559,47 +559,7 @@ class ImageDownloaderApp(ctk.CTk):
             github_frame.bind("<Leave>", lambda e: on_leave(e, github_frame))
             github_label.bind("<Enter>", lambda e: on_enter(e, github_frame))
             github_label.bind("<Leave>", lambda e: on_leave(e, github_frame))
-            github_label.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/emy69/CoomerDL"))
-
-        # Añadir el icono de Discord
-        self.discord_icon = self.load_discord_icon()
-        if self.discord_icon:
-            resized_discord_icon = self.discord_icon.resize((16, 16), Image.Resampling.LANCZOS)
-            resized_discord_icon = ctk.CTkImage(resized_discord_icon)
-            discord_frame = ctk.CTkFrame(self.menu_bar,cursor="hand2", fg_color="transparent", corner_radius=5)
-            discord_frame.pack(side="right", padx=5)
-            discord_label = ctk.CTkLabel(
-                discord_frame,
-                image=resized_discord_icon,
-                text="Discord",
-                compound="left"
-            )
-            discord_label.pack(padx=5, pady=5)
-            discord_frame.bind("<Enter>", lambda e: on_enter(e, discord_frame))
-            discord_frame.bind("<Leave>", lambda e: on_leave(e, discord_frame))
-            discord_label.bind("<Enter>", lambda e: on_enter(e, discord_frame))
-            discord_label.bind("<Leave>", lambda e: on_leave(e, discord_frame))
-            discord_label.bind("<Button-1>", lambda e: webbrowser.open("https://discord.gg/ku8gSPsesh"))
-
-        # Añadir un nuevo icono PNG
-        self.new_icon = self.load_patreon_icon()
-        if self.new_icon:
-            resized_new_icon = self.new_icon.resize((16, 16), Image.Resampling.LANCZOS)
-            resized_new_icon = ctk.CTkImage(resized_new_icon)
-            new_icon_frame = ctk.CTkFrame(self.menu_bar,cursor="hand2", fg_color="transparent", corner_radius=5)
-            new_icon_frame.pack(side="right", padx=5)
-            new_icon_label = ctk.CTkLabel(
-                new_icon_frame,
-                image=resized_new_icon,
-                text="Patreon",
-                compound="left"
-            )
-            new_icon_label.pack(padx=5, pady=5)
-            new_icon_frame.bind("<Enter>", lambda e: on_enter(e, new_icon_frame))
-            new_icon_frame.bind("<Leave>", lambda e: on_leave(e, new_icon_frame))
-            new_icon_label.bind("<Enter>", lambda e: on_enter(e, new_icon_frame))
-            new_icon_label.bind("<Leave>", lambda e: on_leave(e, new_icon_frame))
-            new_icon_label.bind("<Button-1>", lambda e: webbrowser.open("https://www.patreon.com/Emy69"))
+            github_label.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/primoscope/CoomerDL"))
     
     def show_donors_modal(self):
         donors_modal = DonorsModal(self, self.tr)
@@ -1289,7 +1249,7 @@ class ImageDownloaderApp(ctk.CTk):
           return (0, 0, 0) # Fallback for invalid format
 
     def check_for_new_version(self, startup_check=False):
-        repo_owner = "emy69"
+        repo_owner = "primoscope"
         repo_name = "CoomerDL"
         github_api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
         

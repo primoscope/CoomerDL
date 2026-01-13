@@ -11,7 +11,7 @@ class AboutWindow:
         self.version = version
 
     def get_github_data(self):
-        url = "https://api.github.com/repos/Emy69/CoomerDL"
+        url = "https://api.github.com/repos/primoscope/CoomerDL"
         try:
             response = requests.get(url)
             response.raise_for_status()
@@ -79,7 +79,7 @@ class AboutWindow:
         self.date_label = None
 
         details = [
-            (developer_icon, f"{self.translate('Developer')}: Emy69", None),
+            (developer_icon, f"{self.translate('Developer')}: primoscope", None),
             (version_icon, f"{self.translate('Version')}: {self.version}", None),
             (downloads_icon, f"{self.translate('Total Downloads')}: {total_downloads}", "downloads"),
             (date_icon, f"{self.translate('Release Date')}: {created_date}", "date")

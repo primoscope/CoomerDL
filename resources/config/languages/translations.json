@@ -794,13 +794,13 @@
         "ru": "Доступна новая версия: {latest_version}\nХотите перейти на страницу загрузки?",
         "zh": "有新版本可用：{latest_version}\n要去下载页面吗？"
     },
-    "Desarrollado por: Emy69": {
-        "es": "Desarrollado por: Emy69",
-        "en": "Developed by: Emy69",
-        "fr": "Développé par : Emy69",
-        "ja": "開発者：Emy69",
-        "ru": "Разработано: Emy69",
-        "zh": "开发者：Emy69"
+    "Desarrollado por: primoscope": {
+        "es": "Desarrollado por: primoscope",
+        "en": "Developed by: primoscope",
+        "fr": "Développé par : primoscope",
+        "ja": "開発者：primoscope",
+        "ru": "Разработано: primoscope",
+        "zh": "开发者：primoscope"
     },
     "Versión": {
         "es": "Versión",

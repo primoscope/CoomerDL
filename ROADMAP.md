@@ -202,9 +202,8 @@ These are features we're considering for future versions. Vote for your favorite
 
 ### How to Request Features
 
-1. **Discord**: Join our [Discord server](https://discord.gg/ku8gSPsesh) and post in the feature-requests channel
-2. **GitHub**: Open an issue with the "feature request" label
-3. **Discussions**: Start a discussion in the GitHub Discussions tab
+1. **GitHub**: Open an issue with the "feature request" label
+2. **Discussions**: Start a discussion in the GitHub Discussions tab
 
 ### Current Top Requests
 
@@ -242,26 +241,10 @@ Want to help make CoomerDL better? Here's how:
 
 ---
 
-## 💖 Support Development
-
-If you find CoomerDL useful, please consider supporting its development:
-
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00.svg?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/emy_69)
-[![Support on Patreon](https://img.shields.io/badge/Support%20on%20Patreon-FF424D.svg?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/emy69)
-
-Your support helps us:
-- 🔧 Fix bugs faster
-- ✨ Add new features
-- 🌍 Support more sites
-- 📚 Improve documentation
-
----
-
 ## 📣 Stay Updated
 
-- **Discord**: [Join our community](https://discord.gg/ku8gSPsesh) for announcements and support
 - **GitHub**: Watch the repository for release notifications
-- **Releases**: Check the [Releases page](https://github.com/Emy69/CoomerDL/releases) for updates
+- **Releases**: Check the [Releases page](https://github.com/primoscope/CoomerDL/releases) for updates
 
 ---
 

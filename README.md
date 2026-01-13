@@ -1,5 +1,5 @@
 ![Windows Compatibility](https://img.shields.io/badge/Windows-10%2C%2011-blue)
-![Downloads](https://img.shields.io/github/downloads/emy69/CoomerDL/total)
+![Downloads](https://img.shields.io/github/downloads/primoscope/CoomerDL/total)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
@@ -9,7 +9,7 @@
 
 CoomerDL is a powerful Python desktop application for downloading images, videos, and galleries from over 1000 websites. Whether you're archiving content from YouTube, Twitter, DeviantArt, or specialized sites, CoomerDL handles it all with smart automation and an intuitive interface.
 
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=for-the-badge)](https://github.com/Emy69/CoomerDL/releases)
+[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=for-the-badge)](https://github.com/primoscope/CoomerDL/releases)
 
 ---
 
@@ -45,16 +45,6 @@ CoomerDL is a powerful Python desktop application for downloading images, videos
 
 ---
 
-## Support My Work
-
-If you find this tool helpful, please consider supporting my efforts:
-
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00.svg?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/emy_69)
-[![Support on Patreon](https://img.shields.io/badge/Support%20on%20Patreon-FF424D.svg?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/emy69)
-
-
----
-
 ## 🎯 Supported Sites
 
 CoomerDL supports **1000+ websites** through three powerful engines:
@@ -86,7 +76,7 @@ Support for **100+ image gallery sites** including:
 ## 📥 Quick Start
 
 ### For Windows Users (Easiest)
-1. Download the latest `.exe` from [Releases](https://github.com/Emy69/CoomerDL/releases)
+1. Download the latest `.exe` from [Releases](https://github.com/primoscope/CoomerDL/releases)
 2. Run the installer
 3. Launch CoomerDL - that's it!
 
@@ -98,7 +88,7 @@ Support for **100+ image gallery sites** including:
    - Linux: `sudo apt install ffmpeg`
 3. **Clone and run**:
    ```bash
-   git clone https://github.com/Emy69/CoomerDL.git
+   git clone https://github.com/primoscope/CoomerDL.git
    cd CoomerDL
    pip install -r requirements.txt
    python main.py
@@ -115,7 +105,7 @@ Support for **100+ image gallery sites** including:
 3. **Choose Options** - Select what to download (images, videos, etc.)
 4. **Click Download** - Sit back and watch the magic happen!
 
-![Usage Demo](https://github.com/Emy69/CoomerDL/blob/main/resources/screenshots/0627.gif)
+![Usage Demo](https://github.com/primoscope/CoomerDL/blob/main/resources/screenshots/0627.gif)
 
 ### Pro Tips
 - 📝 **Batch Downloads**: Paste multiple URLs (one per line) to download them all at once
@@ -132,15 +122,8 @@ Support for **100+ image gallery sites** including:
 CoomerDL is available in:  
 🇺🇸 English | 🇪🇸 Español | 🇫🇷 Français | 🇩🇪 Deutsch | 🇯🇵 日本語 | 🇨🇳 中文 | 🇷🇺 Русский
 
-### Join the Community
-Have questions or want to connect with other users?
-
-[![Join Discord](https://img.shields.io/badge/Join-Discord-7289DA.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/ku8gSPsesh)
-
 ### Command-Line Alternatives
-Prefer CLI tools? Check out:
-- **[Coomer CLI](https://github.com/Emy69/Coomer-cli)** - Command-line tool for Coomer/Kemono
-- **[Simpcity CLI](https://github.com/Emy69/SimpCityCLI)** - Command-line tool for SimpCity
+Prefer CLI tools? Check out other similar command-line tools for specific sites.
 
 ---
 
@@ -205,9 +188,8 @@ Note: CoomerDL works without FFmpeg, but video merging won't be available.
 
 ### Still Need Help?
 
-1. Check [existing issues](https://github.com/Emy69/CoomerDL/issues)
-2. Join our [Discord server](https://discord.gg/ku8gSPsesh)
-3. Create a [new issue](https://github.com/Emy69/CoomerDL/issues/new) with:
+1. Check [existing issues](https://github.com/primoscope/CoomerDL/issues)
+2. Create a [new issue](https://github.com/primoscope/CoomerDL/issues/new) with:
    - Python version (`python --version`)
    - OS and version
    - Full error message
@@ -251,7 +233,7 @@ python main.py        # Manual testing
 
 ### Quick Start for Development
 ```bash
-git clone https://github.com/Emy69/CoomerDL.git
+git clone https://github.com/primoscope/CoomerDL.git
 cd CoomerDL
 pip install -r requirements.txt
 pip install pytest  # For running tests
@@ -271,8 +253,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you find CoomerDL useful, please consider:
 - ⭐ **Star this repository** on GitHub
 - 🐛 **Report bugs** and suggest features
-- 💬 **Join the Discord** community
-- ☕ **Buy me a coffee** or support on Patreon
+- 🤝 **Contribute** to the project
 
 Your support helps maintain and improve CoomerDL!
 
