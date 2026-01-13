@@ -48,6 +48,25 @@ class SettingsWindow:
             return {'max_downloads': 3, 'folder_structure': 'default', 'language': 'en', 'theme': 'System'}
 
     def save_settings(self):
+        # Collect settings from new tabs if they exist
+        if hasattr(self, 'scraper_settings'):
+            try:
+                self.settings['scraper'] = self.scraper_settings.get_settings()
+            except Exception:
+                pass
+        
+        if hasattr(self, 'network_settings'):
+            try:
+                self.settings['network'] = self.network_settings.get_settings()
+            except Exception:
+                pass
+        
+        if hasattr(self, 'logging_settings'):
+            try:
+                self.settings['logging'] = self.logging_settings.get_settings()
+            except Exception:
+                pass
+        
         os.makedirs(os.path.dirname(self.CONFIG_PATH), exist_ok=True)
         with open(self.CONFIG_PATH, 'w') as file:
             json.dump(self.settings, file, indent=4)
@@ -79,15 +98,27 @@ class SettingsWindow:
         self.general_tab = self.tabview.add(self.translate("General"))
         self.downloads_tab = self.tabview.add(self.translate("Downloads"))
         self.structure_tab = self.tabview.add(self.translate("Structure"))
+        self.universal_tab = self.tabview.add(self.translate("Universal (yt-dlp)"))
         self.db_tab = self.tabview.add(self.translate("Database"))
         self.cookies_tab = self.tabview.add(self.translate("Cookies"))
         
-        # New tab for database
+        # New tabs
+        self.scraper_tab = self.tabview.add(self.translate("Scraper"))
+        self.network_tab = self.tabview.add(self.translate("Network"))
+        self.logging_tab = self.tabview.add(self.translate("Logging"))
+        
+        # Render all tabs
         self.render_general_tab(self.general_tab)
         self.render_downloads_tab(self.downloads_tab)
         self.render_structure_tab(self.structure_tab)
+        self.render_universal_tab(self.universal_tab)
         self.render_db_tab(self.db_tab)
         self.render_cookies_tab(self.cookies_tab)
+        
+        # Render new tabs
+        self.render_scraper_tab(self.scraper_tab)
+        self.render_network_tab(self.network_tab)
+        self.render_logging_tab(self.logging_tab)
     
     def render_db_tab(self, tab):
         tab.grid_columnconfigure(0, weight=1)
@@ -708,6 +739,244 @@ class SettingsWindow:
         apply_download_button.grid(row=7, column=1, pady=10, sticky="e")
 
 
+    def render_universal_tab(self, tab):
+        """Render the Universal / yt-dlp settings tab."""
+        tab.grid_columnconfigure(0, weight=1)
+        tab.grid_rowconfigure(1, weight=1)
+
+        # Frame for the Universal tab
+        universal_frame = ctk.CTkFrame(tab, fg_color="transparent")
+        universal_frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+        universal_frame.grid_columnconfigure(1, weight=1)
+
+        # Header
+        header_label = ctk.CTkLabel(
+            universal_frame,
+            text=self.translate("Universal Download Settings (yt-dlp)"),
+            font=("Helvetica", 16, "bold")
+        )
+        header_label.grid(row=0, column=0, columnspan=2, sticky="w")
+
+        description_label = ctk.CTkLabel(
+            universal_frame,
+            text=self.translate("Configure settings for downloads from 1000+ supported sites (YouTube, Twitter, Instagram, TikTok, etc.)"),
+            font=("Helvetica", 11),
+            text_color="gray",
+            wraplength=600
+        )
+        description_label.grid(row=1, column=0, columnspan=2, sticky="w", pady=(0, 15))
+
+        # FFmpeg status indicator
+        ffmpeg_status = self._check_ffmpeg_status()
+        ffmpeg_label = ctk.CTkLabel(
+            universal_frame,
+            text=self.translate("FFmpeg Status"),
+            font=("Helvetica", 12)
+        )
+        ffmpeg_label.grid(row=2, column=0, pady=5, sticky="w")
+        
+        ffmpeg_status_label = ctk.CTkLabel(
+            universal_frame,
+            text=ffmpeg_status,
+            font=("Helvetica", 11),
+            text_color="#4CAF50" if "✓" in ffmpeg_status else "#FF9800"
+        )
+        ffmpeg_status_label.grid(row=2, column=1, pady=5, padx=(10, 0), sticky="w")
+
+        # Separator
+        separator_1 = ttk.Separator(universal_frame, orient="horizontal")
+        separator_1.grid(row=3, column=0, columnspan=2, sticky="ew", pady=15)
+
+        # ----------------------------
+        # Format Selector
+        # ----------------------------
+        format_label = ctk.CTkLabel(universal_frame, text=self.translate("Video Quality/Format"))
+        format_label.grid(row=4, column=0, pady=5, sticky="w")
+
+        format_options = [
+            "Best (Auto-Merge)",
+            "Audio Only (MP3)",
+            "Low Quality (Data Saver)"
+        ]
+        
+        format_combobox = ctk.CTkComboBox(
+            universal_frame,
+            values=format_options,
+            state='readonly',
+            width=200
+        )
+        format_combobox.set(self._get_format_display(self.settings.get('ytdlp_format', 'best')))
+        format_combobox.grid(row=4, column=1, pady=5, padx=(10, 0), sticky="w")
+
+        # ----------------------------
+        # Output Container
+        # ----------------------------
+        container_label = ctk.CTkLabel(universal_frame, text=self.translate("Output Container"))
+        container_label.grid(row=5, column=0, pady=5, sticky="w")
+
+        container_options = ["MP4", "MKV", "WebM"]
+        
+        container_combobox = ctk.CTkComboBox(
+            universal_frame,
+            values=container_options,
+            state='readonly',
+            width=100
+        )
+        container_combobox.set(self.settings.get('ytdlp_container', 'MP4').upper())
+        container_combobox.grid(row=5, column=1, pady=5, padx=(10, 0), sticky="w")
+
+        # Separator
+        separator_2 = ttk.Separator(universal_frame, orient="horizontal")
+        separator_2.grid(row=6, column=0, columnspan=2, sticky="ew", pady=15)
+
+        # ----------------------------
+        # Metadata Options (Checkboxes)
+        # ----------------------------
+        metadata_label = ctk.CTkLabel(
+            universal_frame,
+            text=self.translate("Metadata Options"),
+            font=("Helvetica", 12, "bold")
+        )
+        metadata_label.grid(row=7, column=0, columnspan=2, pady=(5, 10), sticky="w")
+
+        # Embed Thumbnail
+        embed_thumbnail_var = ctk.BooleanVar(value=self.settings.get('ytdlp_embed_thumbnail', True))
+        embed_thumbnail_cb = ctk.CTkCheckBox(
+            universal_frame,
+            text=self.translate("Embed Thumbnail"),
+            variable=embed_thumbnail_var
+        )
+        embed_thumbnail_cb.grid(row=8, column=0, pady=5, sticky="w")
+
+        # Embed Metadata
+        embed_metadata_var = ctk.BooleanVar(value=self.settings.get('ytdlp_embed_metadata', True))
+        embed_metadata_cb = ctk.CTkCheckBox(
+            universal_frame,
+            text=self.translate("Embed Metadata"),
+            variable=embed_metadata_var
+        )
+        embed_metadata_cb.grid(row=8, column=1, pady=5, sticky="w")
+
+        # Download Subtitles
+        download_subs_var = ctk.BooleanVar(value=self.settings.get('ytdlp_download_subtitles', False))
+        download_subs_cb = ctk.CTkCheckBox(
+            universal_frame,
+            text=self.translate("Download Subtitles"),
+            variable=download_subs_var
+        )
+        download_subs_cb.grid(row=9, column=0, pady=5, sticky="w")
+
+        # Separator
+        separator_3 = ttk.Separator(universal_frame, orient="horizontal")
+        separator_3.grid(row=10, column=0, columnspan=2, sticky="ew", pady=15)
+
+        # ----------------------------
+        # Browser Cookies
+        # ----------------------------
+        cookies_label = ctk.CTkLabel(universal_frame, text=self.translate("Import Cookies From Browser"))
+        cookies_label.grid(row=11, column=0, pady=5, sticky="w")
+
+        cookies_options = ["None", "Chrome", "Firefox", "Edge", "Opera", "Brave"]
+        
+        cookies_combobox = ctk.CTkComboBox(
+            universal_frame,
+            values=cookies_options,
+            state='readonly',
+            width=150
+        )
+        cookies_combobox.set(self.settings.get('ytdlp_cookies_browser', 'None'))
+        cookies_combobox.grid(row=11, column=1, pady=5, padx=(10, 0), sticky="w")
+
+        # Cookies description
+        cookies_desc = ctk.CTkLabel(
+            universal_frame,
+            text=self.translate("Automatically extract cookies from your browser for premium content access"),
+            font=("Helvetica", 10),
+            text_color="gray"
+        )
+        cookies_desc.grid(row=12, column=0, columnspan=2, pady=(0, 10), sticky="w")
+
+        # ----------------------------
+        # Apply Button
+        # ----------------------------
+        apply_button = ctk.CTkButton(
+            universal_frame,
+            text=self.translate("Apply Universal Settings"),
+            command=lambda: self.apply_universal_settings(
+                format_combobox,
+                container_combobox,
+                embed_thumbnail_var,
+                embed_metadata_var,
+                download_subs_var,
+                cookies_combobox
+            )
+        )
+        apply_button.grid(row=13, column=1, pady=15, sticky="e")
+
+    def _check_ffmpeg_status(self):
+        """Check if FFmpeg is available."""
+        try:
+            from app.utils.ffmpeg_check import check_ffmpeg, get_ffmpeg_version
+            if check_ffmpeg():
+                version = get_ffmpeg_version()
+                if version:
+                    # Extract just the version number
+                    return f"✓ {self.translate('Installed')} ({version[:50]}...)"
+                return f"✓ {self.translate('Installed')}"
+            return f"⚠ {self.translate('Not found - Some features may be limited')}"
+        except Exception:
+            return f"⚠ {self.translate('Status unknown')}"
+
+    def _get_format_display(self, format_key):
+        """Convert format key to display string."""
+        mapping = {
+            'best': "Best (Auto-Merge)",
+            'bestaudio': "Audio Only (MP3)",
+            'low': "Low Quality (Data Saver)"
+        }
+        return mapping.get(format_key, "Best (Auto-Merge)")
+
+    def _get_format_key(self, display_str):
+        """Convert display string to format key."""
+        mapping = {
+            "Best (Auto-Merge)": 'best',
+            "Audio Only (MP3)": 'bestaudio',
+            "Low Quality (Data Saver)": 'low'
+        }
+        return mapping.get(display_str, 'best')
+
+    def apply_universal_settings(self, format_cb, container_cb, thumb_var, meta_var, subs_var, cookies_cb):
+        """Apply Universal / yt-dlp settings."""
+        try:
+            # Get values
+            format_key = self._get_format_key(format_cb.get())
+            container = container_cb.get().lower()
+            embed_thumbnail = thumb_var.get()
+            embed_metadata = meta_var.get()
+            download_subtitles = subs_var.get()
+            cookies_browser = cookies_cb.get()
+
+            # Save to settings
+            self.settings['ytdlp_format'] = format_key
+            self.settings['ytdlp_container'] = container
+            self.settings['ytdlp_embed_thumbnail'] = embed_thumbnail
+            self.settings['ytdlp_embed_metadata'] = embed_metadata
+            self.settings['ytdlp_download_subtitles'] = download_subtitles
+            self.settings['ytdlp_cookies_browser'] = cookies_browser if cookies_browser != "None" else None
+
+            self.save_settings()
+
+            messagebox.showinfo(
+                self.translate("Success"),
+                self.translate("Universal download settings applied successfully.")
+            )
+
+        except Exception as e:
+            messagebox.showerror(
+                self.translate("Error"),
+                self.translate(f"Error applying settings: {e}")
+            )
+
 
     def render_structure_tab(self, tab):
         tab.grid_columnconfigure(0, weight=1)
@@ -893,6 +1162,42 @@ class SettingsWindow:
             ctk.set_appearance_mode("dark")
         else:
             ctk.set_appearance_mode("system")
+    
+    def render_scraper_tab(self, tab):
+        """Render the Universal Scraper settings tab."""
+        try:
+            from app.components.settings_tabs import ScraperSettingsTab
+            self.scraper_settings = ScraperSettingsTab(tab, self.translate, self.settings)
+        except Exception as e:
+            ctk.CTkLabel(
+                tab,
+                text=f"Error loading scraper settings: {e}",
+                text_color="red"
+            ).pack(padx=20, pady=20)
+    
+    def render_network_tab(self, tab):
+        """Render the Network settings tab."""
+        try:
+            from app.components.settings_tabs import NetworkSettingsTab
+            self.network_settings = NetworkSettingsTab(tab, self.translate, self.settings)
+        except Exception as e:
+            ctk.CTkLabel(
+                tab,
+                text=f"Error loading network settings: {e}",
+                text_color="red"
+            ).pack(padx=20, pady=20)
+    
+    def render_logging_tab(self, tab):
+        """Render the Logging settings tab."""
+        try:
+            from app.components.settings_tabs import LoggingSettingsTab
+            self.logging_settings = LoggingSettingsTab(tab, self.translate, self.settings)
+        except Exception as e:
+            ctk.CTkLabel(
+                tab,
+                text=f"Error loading logging settings: {e}",
+                text_color="red"
+            ).pack(padx=20, pady=20)
         self.settings['theme'] = theme_name
         self.save_settings()
         messagebox.showinfo(self.translate("Success"), self.translate("The theme was applied successfully."))

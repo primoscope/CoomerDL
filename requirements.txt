@@ -8,3 +8,5 @@ markdown2
 tkinterweb
 cloudscraper
 selenium
+yt-dlp
+gallery-dl

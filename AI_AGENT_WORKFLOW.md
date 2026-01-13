@@ -99,7 +99,7 @@ python -c "from app.ui import ImageDownloaderApp; print('OK')"
 
 **Steps:**
 ```
-1. READ: Task description from ROADMAP.md
+1. READ: Task description from DEVELOPMENT_ROADMAP.md
    └─ Note: File location, line number, problem description
 
 2. LOCATE: Find exact code location
@@ -130,7 +130,7 @@ python -c "from app.ui import ImageDownloaderApp; print('OK')"
 **Example: BUG-001 (Fix undefined log_message)**
 ```bash
 # Step 1: Read task
-view /home/runner/work/CoomerDL/CoomerDL/ROADMAP.md --range 76-106
+view /home/runner/work/CoomerDL/CoomerDL/DEVELOPMENT_ROADMAP.md --range 76-106
 
 # Step 2: Locate code
 view /home/runner/work/CoomerDL/CoomerDL/downloader/downloader.py --range 190-220
@@ -275,7 +275,7 @@ report_progress(
 **Steps:**
 ```
 1. RESEARCH: Understand requirement
-   └─ Read ROADMAP.md task description
+   └─ Read DEVELOPMENT_ROADMAP.md task description
    └─ Check SPECIFICATIONS.md for design details
    └─ Review POTENTIAL_ISSUES.md for gotchas
    └─ Check dependencies are complete
@@ -318,7 +318,7 @@ report_progress(
 **Example: FEATURE-001 (Batch URL Input)**
 ```
 1. Research
-   - Read ROADMAP.md line 330-376
+   - Read DEVELOPMENT_ROADMAP.md line 330-376
    - Goal: Replace single-line entry with multi-line textbox
    - Must handle multiple URLs (one per line)
 
@@ -503,7 +503,8 @@ CoomerDL/
 │   └── jpg5.py            # Jpg5 support (110 lines)
 ├── resources/config/      # Settings, DB, cookies
 ├── main.py                # Entry point (7 lines)
-├── ROADMAP.md             # Detailed task descriptions
+├── ROADMAP.md             # User-friendly feature roadmap
+├── DEVELOPMENT_ROADMAP.md # Detailed technical task descriptions
 ├── TASKS.md               # Task definitions
 ├── SPECIFICATIONS.md      # Design specs for new features
 └── POTENTIAL_ISSUES.md    # Known problems

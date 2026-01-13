@@ -1,0 +1,14 @@
+[
+  {
+    "id": "968cbc2b-2b0e-4f92-b23e-1c0a61e7c8a2",
+    "url": "https://example.com/test",
+    "download_folder": "/tmp/downloads",
+    "status": "pending",
+    "priority": 2,
+    "progress": 0.0,
+    "error_message": null,
+    "added_at": "2025-12-27T18:31:57.773975",
+    "started_at": null,
+    "completed_at": null
+  }
+]
