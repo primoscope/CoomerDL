@@ -57,7 +57,7 @@ CoomerDL has evolved from a site-specific downloader into a **Universal Media Ar
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| **6 Languages** | ✅ Ready | English, Spanish, French, German, Japanese, Chinese, Russian |
+| **6 Languages** | ✅ Ready | English, Spanish, French, Japanese, Russian, Chinese |
 | **Dark/Light Theme** | ✅ Ready | Choose your preferred appearance with System auto-detect |
 | **Real-Time Progress** | ✅ Ready | See download speed, ETA, and progress for each file |
 | **Detailed Logs** | ✅ Ready | Track exactly what's happening during downloads |

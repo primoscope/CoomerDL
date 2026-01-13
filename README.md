@@ -31,7 +31,7 @@ CoomerDL is a powerful Python desktop application for downloading images, videos
 ### 🎨 User-Friendly Interface
 - **Modern GUI** - Clean, intuitive interface with light and dark themes
 - **Real-Time Progress** - See download speed, progress, and estimated time
-- **Multi-Language** - Available in English, Spanish, French, German, Japanese, Chinese, and Russian
+- **Multi-Language** - Available in 6 languages: English, Spanish, French, Japanese, Russian, and Chinese
 - **Queue Management** - Organize, prioritize, and control your downloads
 - **Download History** - Browse and search everything you've downloaded
 
@@ -119,8 +119,8 @@ Support for **100+ image gallery sites** including:
 ## 🌍 Language Support & Community
 
 ### Supported Languages
-CoomerDL is available in:  
-🇺🇸 English | 🇪🇸 Español | 🇫🇷 Français | 🇩🇪 Deutsch | 🇯🇵 日本語 | 🇨🇳 中文 | 🇷🇺 Русский
+CoomerDL is available in 6 languages:  
+🇺🇸 English | 🇪🇸 Español | 🇫🇷 Français | 🇯🇵 日本語 | 🇨🇳 中文 | 🇷🇺 Русский
 
 ### Command-Line Alternatives
 Prefer CLI tools? Check out other similar command-line tools for specific sites.
@@ -175,6 +175,38 @@ Note: CoomerDL works without FFmpeg, but video merging won't be available.
 
 - **403 Forbidden:** Site requires authentication. Use Settings → Universal → Import browser cookies.
 - **429 Too Many Requests:** Rate limited. Lower concurrent downloads in Settings → Network.
+</details>
+
+<details>
+<summary><b>YouTube or other site downloads fail</b></summary>
+
+If you get "invalid URL" or "not supported" errors:
+- **Verify yt-dlp is installed:** `pip install -U yt-dlp`
+- **Check network connectivity** to the target site
+- **For video+audio merging,** install FFmpeg (see installation section above)
+- **Try updating yt-dlp:** `pip install --upgrade yt-dlp`
+- **Check the URL format** - some sites require specific URL patterns
+
+**Testing yt-dlp directly:**
+```bash
+# Test if yt-dlp can handle the URL
+yt-dlp --list-formats YOUR_URL
+
+# Download with yt-dlp directly
+yt-dlp -f best YOUR_URL
+```
+
+Note: CoomerDL uses yt-dlp which supports 1000+ sites including YouTube, Twitter, TikTok, etc.
+</details>
+
+<details>
+<summary><b>Application won't start or crashes</b></summary>
+
+Check for common issues:
+- **Python version:** Requires Python 3.8 or higher - check with `python --version`
+- **Missing dependencies:** Run `pip install -r requirements.txt` to reinstall all packages
+- **Tkinter missing (Linux):** Install with `sudo apt install python3-tk`
+- **Corrupted settings:** Delete the settings file in the app data directory and restart
 </details>
 
 <details>
