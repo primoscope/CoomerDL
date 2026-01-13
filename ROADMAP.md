@@ -28,6 +28,8 @@ CoomerDL has evolved from a site-specific downloader into a **Universal Media Ar
 | 🔄 **Smart Auto-Retry** | Failed downloads automatically retry with exponential backoff |
 | 💾 **Crash Recovery** | Resume your downloads even after unexpected shutdowns |
 | 🍪 **Browser Cookie Import** | Automatically use your login credentials from Chrome, Firefox, or Edge |
+| 📝 **Batch URL Input** | Paste multiple URLs at once for batch downloading (NEW in v2.1!) |
+| 🌐 **Proxy Support** | Configure HTTP/HTTPS proxies and custom user agents (NEW in v2.1!) |
 
 ---
 
@@ -38,10 +40,11 @@ CoomerDL has evolved from a site-specific downloader into a **Universal Media Ar
 | Feature | Status | Description |
 |---------|--------|-------------|
 | **Multi-Site Support** | ✅ Ready | Download from Coomer, Kemono, Erome, Bunkr, SimpCity, jpg5, and 1000+ more sites |
-| **Batch Downloads** | ✅ Ready | Download entire profiles, albums, and collections at once |
+| **Batch URL Input** | ✅ Ready | Paste multiple URLs (one per line) for batch downloading |
 | **Multi-Threaded** | ✅ Ready | Faster downloads using multiple simultaneous connections (1-10 threads) |
 | **Resume Interrupted Downloads** | ✅ Ready | Continue where you left off if a download is interrupted |
 | **Skip Duplicates** | ✅ Ready | Automatically skip files you've already downloaded |
+| **Proxy Support** | ✅ Ready | Configure custom proxies in Settings → Network |
 
 ### File Types Supported
 
@@ -84,15 +87,6 @@ A new way to manage multiple downloads:
 - ⭐ Set download priorities (High, Normal, Low)
 - 💾 Queue persists across app restarts
 
-### 📝 Batch URL Input
-**Status: Coming Soon**
-
-Download multiple URLs at once:
-- 📋 Paste multiple URLs (one per line)
-- 📁 Drag and drop text files containing URLs
-- ✅ Automatic URL validation
-- 🔍 Duplicate detection
-
 ### 🎨 UI Improvements
 **Status: 30% Complete**
 
@@ -108,7 +102,7 @@ Making CoomerDL easier and more pleasant to use:
 ### Short-Term (Next 1-3 Months)
 
 #### 🌐 Network Options
-- **Proxy Support** - Use HTTP, SOCKS4, or SOCKS5 proxies
+- ~~**Proxy Support** - Use HTTP, HTTPS, or custom proxies~~ ✅ **COMPLETED**
 - **Bandwidth Limiting** - Cap download speeds to not overwhelm your connection
 - **Custom Timeouts** - Configure connection and read timeouts
 

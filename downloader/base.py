@@ -37,6 +37,10 @@ class DownloadOptions:
     date_from: Optional[str] = None  # ISO format YYYY-MM-DD
     date_to: Optional[str] = None  # ISO format YYYY-MM-DD
     excluded_extensions: set = field(default_factory=set)  # Set of extensions to skip, e.g. {'.webm', '.gif'}
+    # Proxy configuration
+    proxy_type: str = 'none'  # 'none', 'system', or 'custom'
+    proxy_url: str = ''  # Proxy URL for custom proxy (e.g., 'http://proxy.example.com:8080')
+    user_agent: Optional[str] = None  # Custom user agent string
 
 
 @dataclass
@@ -413,6 +417,33 @@ class BaseDownloader(ABC):
             return urlunparse(parsed)
         except Exception:
             return url
+    
+    def configure_session_proxy(self, session) -> None:
+        """
+        Configure proxy settings for a requests.Session object.
+        
+        Args:
+            session: The requests.Session to configure
+        """
+        import os
+        
+        if self.options.proxy_type == 'system':
+            # Use system proxy settings (requests automatically detects them)
+            # No explicit configuration needed
+            pass
+        elif self.options.proxy_type == 'custom' and self.options.proxy_url:
+            # Set custom proxy for both HTTP and HTTPS
+            proxies = {
+                'http': self.options.proxy_url,
+                'https': self.options.proxy_url
+            }
+            session.proxies.update(proxies)
+            self.log(f"Using custom proxy: {self.options.proxy_url}")
+        # If 'none', don't configure any proxy
+        
+        # Set custom user agent if provided
+        if self.options.user_agent:
+            session.headers['User-Agent'] = self.options.user_agent
     
     def safe_request(self, url: str, method: str = 'GET', **kwargs):
         """

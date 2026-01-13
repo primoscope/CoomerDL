@@ -137,14 +137,18 @@ class ImageDownloaderApp(ctk.CTk):
         self.download_start_time = None
         self.errors = []
         self.warnings = []
-
-
         
         # Load all settings with defaults from the settings object
         self.max_downloads = self.settings.get('max_downloads', 3)
         max_retries_setting = self.settings.get('max_retries', 3)
         retry_interval_setting = self.settings.get('retry_interval', 2.0)
         folder_structure_setting = self.settings.get('folder_structure', 'default')
+        
+        # Load network settings (proxy, user agent)
+        network_settings = self.settings.get('network', {})
+        proxy_type = network_settings.get('proxy_type', 'none')
+        proxy_url = network_settings.get('proxy_url', '')
+        user_agent = network_settings.get('user_agent', None)
         
         # Load download folder
         self.download_folder = self.load_download_folder() 
@@ -160,7 +164,10 @@ class ImageDownloaderApp(ctk.CTk):
             tr=self.tr,
             retry_interval=retry_interval_setting,
             folder_structure=folder_structure_setting,
-            max_retries=max_retries_setting
+            max_retries=max_retries_setting,
+            proxy_type=proxy_type,
+            proxy_url=proxy_url,
+            user_agent=user_agent
         )
         
         self.settings_window.downloader = self.default_downloader
@@ -715,6 +722,12 @@ class ImageDownloaderApp(ctk.CTk):
         )
 
     def setup_general_downloader(self):
+        # Load network settings
+        network_settings = self.settings.get('network', {})
+        proxy_type = network_settings.get('proxy_type', 'none')
+        proxy_url = network_settings.get('proxy_url', '')
+        user_agent = network_settings.get('user_agent', None)
+        
         self.general_downloader = Downloader(
             download_folder=self.download_folder,
             log_callback=self.add_log_message_safe,
@@ -722,7 +735,7 @@ class ImageDownloaderApp(ctk.CTk):
             update_progress_callback=self.update_progress,
             update_global_progress_callback=self.update_global_progress,
             headers={
-                'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                'User-Agent': user_agent or 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
                 'Referer': 'https://coomer.st/',
                 "Accept": "text/css"
             },
@@ -731,7 +744,10 @@ class ImageDownloaderApp(ctk.CTk):
             download_compressed=self.download_compressed_check.get(),
             tr=self.tr,
             max_workers=self.max_downloads,
-            folder_structure=self.settings.get('folder_structure', 'default')
+            folder_structure=self.settings.get('folder_structure', 'default'),
+            proxy_type=proxy_type,
+            proxy_url=proxy_url,
+            user_agent=user_agent
         )
         self.general_downloader.file_naming_mode = self.settings.get('file_naming_mode', 0)
 

@@ -133,10 +133,10 @@ CoomerDL/
 | REFACTOR-001 | ✅ | Standardize cancel mechanisms | `downloader/*.py` | DONE |
 | REFACTOR-002 | 🟡 | Fix database connection cleanup | `downloader/downloader.py` | Low |
 | REFACTOR-003 | 🟡 | Fix BunkrDownloader thread shutdown | `downloader/bunkr.py` | Low |
-| FEATURE-001 | 🟠 | Add batch URL input | `app/ui.py` | Medium |
+| FEATURE-001 | ✅ | Add batch URL input | `app/ui.py` | DONE |
 | FEATURE-002 | ✅ | Create BaseDownloader class | `downloader/base.py` | DONE |
 | FEATURE-003 | ✅ | Add download queue manager | `downloader/queue.py` | DONE |
-| FEATURE-004 | 🟡 | Add proxy support | `app/settings_window.py`, downloaders | Medium |
+| FEATURE-004 | ✅ | Add proxy support | `app/settings_window.py`, downloaders | DONE |
 | FEATURE-005 | 🟡 | Add bandwidth limiting | All downloaders | Medium |
 | FEATURE-006 | 🟡 | Add file size filter | All downloaders | Low |
 | FEATURE-007 | 🟡 | Add date range filter | `downloader/downloader.py` | Medium |

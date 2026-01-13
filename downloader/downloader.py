@@ -17,7 +17,8 @@ class Downloader:
 				update_global_progress_callback=None, headers=None,
 				max_retries=999999, retry_interval=1.0, stream_read_timeout=10,
 				download_images=True, download_videos=True, download_compressed=True, 
-				tr=None, folder_structure='default', rate_limit_interval=1.0):
+				tr=None, folder_structure='default', rate_limit_interval=1.0,
+				proxy_type='none', proxy_url='', user_agent=None):
 		
 		self.download_folder = download_folder
 		self.log_callback = log_callback
@@ -47,6 +48,24 @@ class Downloader:
 		self.session.mount('http://', adapter)
 		self.session.mount('https://', adapter)
 		self.session.headers.update({'Connection': 'keep-alive'})
+		
+		# Configure proxy settings
+		if proxy_type == 'system':
+			# Use system proxy (requests automatically detects it)
+			pass
+		elif proxy_type == 'custom' and proxy_url:
+			# Set custom proxy for both HTTP and HTTPS
+			proxies = {
+				'http': proxy_url,
+				'https': proxy_url
+			}
+			self.session.proxies.update(proxies)
+			if self.log_callback:
+				self.log(f"Using custom proxy: {proxy_url}")
+		
+		# Set custom user agent if provided
+		if user_agent:
+			self.session.headers['User-Agent'] = user_agent
 		
 		self.max_workers = max_workers  
 		self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
