@@ -1,6 +1,6 @@
 # AI Agent Quick Reference
 
-**TL;DR**: This repository has 3 specialized AI agents + workflow documentation for optimal development.
+**TL;DR**: This repository has 5 specialized AI agents + workflow documentation for optimal development.
 
 ## 🤖 Available Agents
 
@@ -9,6 +9,8 @@
 | **clever-coder** | General coding, bug fixes, features | `.github/agents/my-agent.agent.md` |
 | **performance-optimizer** | Speed/memory optimization | `.github/agents/performance-optimizer.agent.md` |
 | **concurrency-expert** | Threading, race conditions | `.github/agents/concurrency-expert.agent.md` |
+| **roadmap-manager** | Implement roadmap items, track progress, update docs | `.github/agents/roadmap-manager.agent.md` |
+| **docs-verifier** | Verify documented features exist and work, fix mismatches | `.github/agents/docs-verifier.agent.md` |
 
 ## ⚡ Quick Start
 
@@ -21,6 +23,12 @@
 
 # For threading issues
 @agent:concurrency-expert Review thread safety in bunkr.py
+
+# For implementing roadmap features
+@agent:roadmap-manager Implement next high-priority feature from DEVELOPMENT_ROADMAP.md
+
+# For verifying documentation accuracy
+@agent:docs-verifier Verify all features in README.md are actually implemented and working
 ```
 
 ## 📚 Documentation
@@ -35,7 +43,9 @@
 - `BUG-*` → clever-coder
 - `PERF-*` → performance-optimizer  
 - `REFACTOR-*` (threading) → concurrency-expert
-- `FEATURE-*` → clever-coder
+- `FEATURE-*` → roadmap-manager (for roadmap features) or clever-coder (for ad-hoc features)
+- Documentation verification → docs-verifier
+- Roadmap implementation → roadmap-manager
 
 ## 🔧 Key Features
 
