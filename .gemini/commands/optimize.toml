@@ -1,0 +1,4 @@
+description = "Audit code for performance and readability improvements"
+prompt = """Identify bottlenecks or anti-patterns in this code. 
+Suggest optimizations for performance, memory usage, and PEP-8 compliance. 
+Code: {{args}}"""

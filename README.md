@@ -7,6 +7,140 @@
 
 ---
 
+## 🤖 AI-Assisted Development Guide
+
+This repository is optimized for **GitHub Copilot** and **Gemini Code Assist** for automated development workflows.
+
+### Quick Start Commands
+
+#### For New Features
+```
+@copilot Implement [feature description]
+
+Example: @copilot Implement dark mode toggle in dashboard UI with persistent settings
+```
+
+#### For Bug Fixes
+```
+@copilot Fix [bug description] and add regression tests
+
+Example: @copilot Fix download retry logic not logging errors properly
+```
+
+#### For Testing
+```
+@copilot Add comprehensive tests for [module/feature]
+
+Example: @copilot Add comprehensive tests for simpcity_handler.py
+```
+
+#### For Code Quality
+```
+@copilot Refactor [file/module] to improve [aspect]
+
+Example: @copilot Refactor downloader.py to improve error handling and logging
+```
+
+#### For Full Features (Multi-file)
+```
+@copilot Implement complete [feature] including:
+- Source code in appropriate modules
+- Comprehensive pytest tests
+- Documentation updates
+- Error handling
+- Validation tests
+
+Example: @copilot Implement complete concurrent download manager including:
+- Source code in downloader/concurrent_manager.py
+- Comprehensive pytest tests
+- Documentation updates
+- Error handling for race conditions
+- Validation tests with mocked network calls
+```
+
+### Configuration Files
+
+This repository includes:
+- `.github/copilot-instructions.md` - Repository-wide coding standards and automation instructions
+- `.github/instructions/*.instructions.md` - Path-specific instructions for tests, UI, etc.
+- `.github/workflows/copilot-setup-steps.yml` - Automated environment setup for Copilot agent
+- `.gemini/config.yaml` - Gemini Code Assist configuration
+- `.gemini/styleguide.md` - Gemini-specific style guide
+
+### How It Works
+
+**GitHub Copilot** reads the instructions in `.github/copilot-instructions.md` and path-specific instructions to understand:
+- Project architecture and structure
+- Coding standards and conventions
+- Testing requirements (pytest classes, no standalone scripts)
+- Error handling patterns
+- When to work exhaustively vs. incrementally
+
+When you assign a task to `@copilot`, it will:
+1. Analyze the repository structure
+2. Apply the custom instructions
+3. Create a new branch and PR
+4. Implement the complete solution
+5. Run tests and validation
+6. Iterate until all checks pass
+
+### Agent Behavior
+
+Copilot is configured to:
+- ✅ Work exhaustively - complete full implementations, not partial work
+- ✅ Follow modular architecture strictly
+- ✅ Create pytest tests (classes, not scripts)
+- ✅ Add type hints to all code
+- ✅ Use existing logging patterns
+- ✅ Run automated tests before considering work complete
+- ✅ Iterate on failures until all tests pass
+
+### Copy-Paste Variations
+
+**For Backend Development:**
+```
+@copilot Implement [feature] in downloader module with full tests and error handling
+```
+
+**For UI Development:**
+```
+@copilot Add [UI component] to dashboard with proper event handling and headless-compatible tests
+```
+
+**For Bug Hunt:**
+```
+@copilot Analyze [module] for bugs, add regression tests, and fix all issues found
+```
+
+**For Documentation:**
+```
+@copilot Update documentation for [feature/module] with usage examples and API reference
+```
+
+**For Performance:**
+```
+@copilot Optimize [module] for performance and add benchmarking tests
+```
+
+**For Security:**
+```
+@copilot Audit [module] for security vulnerabilities and implement fixes with tests
+```
+
+### Best Practices
+
+1. **Be Specific**: The more detailed your request, the better the result
+2. **Request Complete Solutions**: Ask for tests, docs, and validation together
+3. **Review PR Changes**: Copilot creates PRs for you to review before merging
+4. **Iterate in PR**: Comment on the PR to request changes or improvements
+5. **Trust the Process**: Copilot will work exhaustively until tests pass
+
+### Links
+- [GitHub Copilot Documentation](https://docs.github.com/copilot)
+- [Gemini Code Assist Documentation](https://developers.google.com/gemini-code-assist/docs)
+
+---
+
 ## 📋 Quick Summary (for AI Agents)
 
 **What**: Universal media archiver with three engines:
@@ -362,10 +496,12 @@ This repository is optimized for AI coding agents (GitHub Copilot, Claude, GPT-4
 | File | Purpose | Use When |
 |------|---------|----------|
 | [ROADMAP.md](ROADMAP.md) | User-friendly feature roadmap and planned features | Understanding what's available and coming soon |
+| [ROADMAP_TASKS_BY_PRIORITY.md](ROADMAP_TASKS_BY_PRIORITY.md) | Quick summary of all open tasks organized by priority | Getting a fast overview of what needs to be done |
 | [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md) | Technical roadmap with detailed task breakdowns | Finding what to work on (developers) |
 | [TASKS.md](TASKS.md) | Detailed task breakdowns with acceptance criteria | Implementing a specific task |
 | [SPECIFICATIONS.md](SPECIFICATIONS.md) | Full code specifications for new features | Building new classes/functions |
 | [POTENTIAL_ISSUES.md](POTENTIAL_ISSUES.md) | Known blockers and edge cases | Understanding risks |
+| [AGENT_VALIDATION_REPORT.md](AGENT_VALIDATION_REPORT.md) | AI agent configuration validation results | Verifying agent setup and installation |
 
 ### How to Prompt AI Agents
 
@@ -422,6 +558,83 @@ python main.py
 "Run any tests related to the downloader module"
 ```
 
+---
+
+## AI-Assisted Development with Gemini Code Assist
+
+This repository is fully configured for **Gemini Code Assist Enterprise**, providing AI-powered code reviews, intelligent suggestions, and custom workflow automation.
+
+### 🚀 Quick Start with Gemini
+
+#### Prerequisites
+1. **Gemini Code Assist Enterprise** subscription (via Google Cloud Console)
+2. Link this repository to your **Code Repository Index** in Google Cloud Console for enhanced context
+
+#### Configuration Files
+
+This repository includes optimized Gemini configuration in the `.gemini/` directory:
+
+- **`.gemini/config.yaml`** - Review settings with LOW severity threshold for thorough analysis
+- **`.gemini/styleguide.md`** - Project-specific coding standards enforcing modular architecture
+- **`.gemini/commands/*.toml`** - Custom slash commands for common workflows
+
+### 🎯 Custom Slash Commands
+
+Use these powerful shortcuts in your Gemini-enabled IDE or CLI:
+
+#### `/plan` - Create Implementation Plan
+Generate a detailed technical plan for any feature or bug fix:
+```
+/plan "add dark mode to the UI"
+/plan "implement resume capability for downloads"
+```
+
+#### `/test` - Generate Tests
+Auto-generate comprehensive pytest tests following repository patterns:
+```
+/test "downloader/base.py"
+/test "def safe_request(self, url, method='GET'):"
+```
+
+#### `/optimize` - Code Audit
+Identify performance bottlenecks and suggest improvements:
+```
+/optimize "downloader/queue.py"
+/optimize "app/ui.py lines 100-200"
+```
+
+### 📋 Code Review Configuration
+
+Gemini Code Assist is configured to provide:
+- **Thorough Reviews**: LOW severity threshold catches style and logic issues
+- **Comprehensive Feedback**: Up to 80 review comments per PR
+- **Architecture Enforcement**: Validates adherence to Phase 1 modular architecture
+- **Test Coverage**: Always calls out missing tests for new logic
+
+### 🔧 Enterprise Features
+
+When linked to the **Code Repository Index**:
+- **Codebase-Wide Context**: Gemini understands the entire project structure
+- **Intelligent Suggestions**: Recommendations based on existing patterns
+- **Cross-File Analysis**: Detects issues spanning multiple modules
+- **Historical Context**: Learns from past changes and reviews
+
+### 📚 Style Guide Highlights
+
+The `.gemini/styleguide.md` enforces:
+- **Modular Architecture**: Proper use of `downloader/` and `app/` packages
+- **Type Hinting**: All new functions must include Python type hints
+- **Pytest Standards**: Test classes and fixtures, no standalone scripts
+- **Error Handling**: Consistent use of `self.log()` patterns
+
+### 🔗 Additional Resources
+
+- **Official Docs**: [Gemini Code Assist Documentation](https://developers.google.com/gemini-code-assist/docs)
+- **Enterprise Setup**: [Google Cloud Console - Code Repository Index](https://console.cloud.google.com/)
+- **Slash Commands Guide**: See `.gemini/commands/*.toml` for all available commands
+
+---
+
 ### Task Priority Guide
 
 | Icon | Priority | Agent Instruction |
@@ -454,3 +667,27 @@ Read SPECIFICATIONS.md section "BaseDownloader" and create the file downloader/b
 ```
 Read POTENTIAL_ISSUES.md and tell me which issues might affect task FEATURE-001.
 ```
+
+### Validation and Testing
+
+The repository includes validation scripts to ensure AI agent configurations and installations are working correctly:
+
+**Validate agent configurations:**
+```bash
+python validate_agents.py
+```
+This checks that all `.agent.md` files in `.github/agents/` are properly formatted with required fields.
+
+**Test installation:**
+```bash
+python test_installation.py
+```
+This verifies that all dependencies and application modules can be imported successfully.
+
+**Run full test suite:**
+```bash
+pytest tests/ -v
+```
+Runs all 241 tests to validate codebase functionality.
+
+For detailed validation results, see [AGENT_VALIDATION_REPORT.md](AGENT_VALIDATION_REPORT.md).
