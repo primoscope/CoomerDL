@@ -262,6 +262,7 @@ class Downloader:
 						else:			
 							log_message = self.tr("Intento {attempt}/{max_retries_val}: Error {status_code} - Reintentando...").format(
 								attempt=attempt + 1, max_retries_val=max_retries + 1, status_code=status_code)
+							self.log(log_message)
 						
 					if status_code in (403, 404) and ("coomer" in domain or "kemono" in domain) and attempt == max_retries:
 						self.log(self.tr("Fallo final al acceder a {url} con error {status_code}").format(url=url, status_code=status_code))

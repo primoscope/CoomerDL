@@ -736,8 +736,11 @@ class ImageDownloaderApp(ctk.CTk):
         self.general_downloader.file_naming_mode = self.settings.get('file_naming_mode', 0)
 
     def setup_jpg5_downloader(self):
+        # Get first URL from textbox for jpg5 (doesn't support batch yet)
+        urls = self.input_panel.get_urls()
+        url = urls[0] if urls else ""
         self.active_downloader = Jpg5Downloader(
-            url=self.url_entry.get().strip(),
+            url=url,
             carpeta_destino=self.download_folder,
             log_callback=self.add_log_message_safe,
             tr=self.tr,
@@ -798,7 +801,28 @@ class ImageDownloaderApp(ctk.CTk):
 
     # Download management
     def start_download(self):
-        url = self.url_entry.get().strip()
+        # Get URLs from the input panel (supports batch input)
+        urls = self.input_panel.get_urls()
+        
+        if not urls:
+            messagebox.showerror(self.tr("Error"), self.tr("Por favor, ingresa al menos una URL."))
+            return
+            
+        if not hasattr(self, 'download_folder') or not self.download_folder:
+            messagebox.showerror(self.tr("Error"), self.tr("Por favor, selecciona una carpeta de descarga."))
+            return
+        
+        # For batch downloads, process URLs sequentially
+        if len(urls) > 1:
+            self.add_log_message_safe(self.tr(f"Batch download: {len(urls)} URLs detected"))
+            for i, url in enumerate(urls, 1):
+                self.add_log_message_safe(self.tr(f"Processing URL {i}/{len(urls)}: {url[:60]}..."))
+                self._process_single_url(url)
+        else:
+            # Single URL - process normally
+            self._process_single_url(urls[0])
+    
+    def _process_single_url(self, url):
         if not hasattr(self, 'download_folder') or not self.download_folder:
             messagebox.showerror(self.tr("Error"), self.tr("Por favor, selecciona una carpeta de descarga."))
             return
@@ -1119,10 +1143,11 @@ class ImageDownloaderApp(ctk.CTk):
             self.add_log_message_safe(f"No se pudo exportar los logs: {e}")
 
 
-    # Clipboard operations
+    # Clipboard operations (updated for CTkTextbox)
     def copy_to_clipboard(self):
         try:
-            selected_text = self.url_entry.selection_get()
+            # CTkTextbox uses tk.SEL tag for selection
+            selected_text = self.url_entry.get("sel.first", "sel.last")
             if selected_text:
                 self.clipboard_clear()
                 self.clipboard_append(selected_text)
@@ -1136,7 +1161,7 @@ class ImageDownloaderApp(ctk.CTk):
             clipboard_text = self.clipboard_get()
             if clipboard_text:
                 try:
-                    self.url_entry.delete("sel.first", "sel.last")  # Elimina el texto seleccionado si hay alguno
+                    self.url_entry.delete("sel.first", "sel.last")  # Delete selected text if any
                 except tk.TclError:
                     pass
                 self.url_entry.insert(tk.INSERT, clipboard_text)
@@ -1147,7 +1172,7 @@ class ImageDownloaderApp(ctk.CTk):
 
     def cut_to_clipboard(self):
         try:
-            selected_text = self.url_entry.selection_get()
+            selected_text = self.url_entry.get("sel.first", "sel.last")
             if selected_text:
                 self.clipboard_clear()
                 self.clipboard_append(selected_text)

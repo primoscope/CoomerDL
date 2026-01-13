@@ -49,8 +49,12 @@ class InputPanel(ctk.CTkFrame):
         self.url_label = ctk.CTkLabel(self, text=self.tr("URL de la página web:"))
         self.url_label.grid(row=0, column=0, sticky='w')
         
-        # URL entry
-        self.url_entry = ctk.CTkEntry(self)
+        # URL entry (multi-line for batch URL support)
+        self.url_entry = ctk.CTkTextbox(
+            self,
+            height=80,
+            wrap="none"
+        )
         self.url_entry.grid(row=1, column=0, sticky='ew', padx=(0, 5))
         
         # Browse button
@@ -106,8 +110,15 @@ class InputPanel(ctk.CTkFrame):
         self.folder_path.configure(font=("Arial", 13))
     
     def get_url(self) -> str:
-        """Get the entered URL."""
-        return self.url_entry.get().strip()
+        """Get the entered URL(s). Returns newline-separated URLs for batch processing."""
+        return self.url_entry.get("1.0", "end-1c").strip()
+    
+    def get_urls(self) -> list:
+        """Get all entered URLs as a list, filtering out empty lines."""
+        raw_text = self.url_entry.get("1.0", "end-1c").strip()
+        if not raw_text:
+            return []
+        return [line.strip() for line in raw_text.split('\n') if line.strip()]
     
     def get_download_folder(self) -> str:
         """Get the selected download folder."""
