@@ -1,0 +1,279 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0, v2.1.3, etc.
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: write  # Required for creating releases
+
+jobs:
+  build-windows:
+    name: Build Windows Executable
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build executable with PyInstaller
+        run: |
+          pyinstaller CoomerDL.spec
+      
+      - name: Verify executable was created
+        run: |
+          if (Test-Path "dist/CoomerDL.exe") {
+            Write-Host "✓ Executable created successfully"
+            Get-Item "dist/CoomerDL.exe" | Select-Object Name, Length, LastWriteTime
+          } else {
+            Write-Error "✗ Executable not found!"
+            exit 1
+          }
+      
+      - name: Create zip archive
+        run: |
+          Compress-Archive -Path dist/CoomerDL.exe -DestinationPath CoomerDL-Windows.zip
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CoomerDL-Windows
+          path: CoomerDL-Windows.zip
+          retention-days: 90
+  
+  build-linux:
+    name: Build Linux Executable
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
+      
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build executable with PyInstaller
+        run: |
+          pyinstaller CoomerDL.spec
+      
+      - name: Verify executable was created
+        run: |
+          if [ -f "dist/CoomerDL" ]; then
+            echo "✓ Executable created successfully"
+            ls -lh dist/CoomerDL
+            chmod +x dist/CoomerDL
+          else
+            echo "✗ Executable not found!"
+            exit 1
+          fi
+      
+      - name: Create tar.gz archive
+        run: |
+          cd dist
+          tar -czf ../CoomerDL-Linux.tar.gz CoomerDL
+          cd ..
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CoomerDL-Linux
+          path: CoomerDL-Linux.tar.gz
+          retention-days: 90
+  
+  build-macos:
+    name: Build macOS Executable
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build executable with PyInstaller
+        run: |
+          pyinstaller CoomerDL.spec
+      
+      - name: Verify executable was created
+        run: |
+          if [ -f "dist/CoomerDL" ]; then
+            echo "✓ Executable created successfully"
+            ls -lh dist/CoomerDL
+            chmod +x dist/CoomerDL
+          else
+            echo "✗ Executable not found!"
+            exit 1
+          fi
+      
+      - name: Create tar.gz archive
+        run: |
+          cd dist
+          tar -czf ../CoomerDL-macOS.tar.gz CoomerDL
+          cd ..
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CoomerDL-macOS
+          path: CoomerDL-macOS.tar.gz
+          retention-days: 90
+  
+  create-release:
+    name: Create GitHub Release
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4.1.3
+        with:
+          name: CoomerDL-Windows
+          path: artifacts
+      
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4.1.3
+        with:
+          name: CoomerDL-Linux
+          path: artifacts
+      
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4.1.3
+        with:
+          name: CoomerDL-macOS
+          path: artifacts
+      
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat << EOF > release_notes.md
+          # CoomerDL ${{ steps.get_version.outputs.VERSION }}
+          
+          ## 📥 Downloads
+          
+          Choose the version for your operating system:
+          
+          - **Windows**: Download \`CoomerDL-Windows.zip\`, extract, and run \`CoomerDL.exe\`
+          - **Linux**: Download \`CoomerDL-Linux.tar.gz\`, extract, make executable, and run
+          - **macOS**: Download \`CoomerDL-macOS.tar.gz\`, extract, make executable, and run
+          
+          ## 🚀 What's New
+          
+          See the commit history for detailed changes.
+          
+          ## 📋 System Requirements
+          
+          - **Windows**: Windows 10 or later (64-bit)
+          - **Linux**: Ubuntu 20.04+ or equivalent (64-bit)
+          - **macOS**: macOS 11+ (Big Sur or later)
+          
+          ## ⚠️ Installation Notes
+          
+          ### Windows
+          1. Download \`CoomerDL-Windows.zip\`
+          2. Extract the ZIP file
+          3. Run \`CoomerDL.exe\`
+          
+          **Note**: Windows may show a SmartScreen warning for unsigned executables. Click "More info" → "Run anyway"
+          
+          ### Linux
+          1. Download \`CoomerDL-Linux.tar.gz\`
+          2. Extract: \`tar -xzf CoomerDL-Linux.tar.gz\`
+          3. Make executable: \`chmod +x CoomerDL\`
+          4. Run: \`./CoomerDL\`
+          
+          ### macOS
+          1. Download \`CoomerDL-macOS.tar.gz\`
+          2. Extract: \`tar -xzf CoomerDL-macOS.tar.gz\`
+          3. Make executable: \`chmod +x CoomerDL\`
+          4. Run: \`./CoomerDL\`
+          
+          **Note**: macOS may block unsigned apps. Go to System Preferences → Security & Privacy to allow.
+          
+          ## 🐛 Issues?
+          
+          Report bugs at: https://github.com/primoscope/CoomerDL/issues
+          EOF
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: CoomerDL ${{ steps.get_version.outputs.VERSION }}
+          body_path: release_notes.md
+          files: |
+            artifacts/CoomerDL-Windows.zip
+            artifacts/CoomerDL-Linux.tar.gz
+            artifacts/CoomerDL-macOS.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

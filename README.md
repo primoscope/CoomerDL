@@ -76,9 +76,11 @@ Support for **100+ image gallery sites** including:
 ## 📥 Quick Start
 
 ### For Windows Users (Easiest)
-1. Download the latest `.exe` from [Releases](https://github.com/primoscope/CoomerDL/releases)
-2. Run the installer
-3. Launch CoomerDL - that's it!
+1. Download the latest `CoomerDL-Windows.zip` from [Releases](https://github.com/primoscope/CoomerDL/releases)
+2. Extract the ZIP file to a folder
+3. Double-click `CoomerDL.exe` to launch - that's it!
+
+> **Note**: Windows may show a SmartScreen warning for unsigned executables. Click "More info" → "Run anyway" to proceed.
 
 ### For Python Users
 1. **Install Python 3.8+** ([Download Python](https://www.python.org/downloads/))
@@ -271,6 +273,18 @@ pip install -r requirements.txt
 pip install pytest  # For running tests
 python main.py      # Run the application
 ```
+
+### Building Executables
+
+Want to build your own executable? See [BUILDING.md](BUILDING.md) for detailed instructions.
+
+**Quick build:**
+```bash
+pip install pyinstaller
+python build.py
+```
+
+The executable will be in the `dist/` folder.
 
 ---
 
