@@ -47,6 +47,9 @@ exe = EXE(
 
 **Triggers**: Pushing version tags (e.g., `v1.0.0`, `v2.1.3`)
 
+**Security**: Uses patched versions of GitHub Actions to prevent vulnerabilities
+- `actions/download-artifact@v4.1.3` - Patched for CVE-2024-42471 (Arbitrary File Write)
+
 **Jobs**:
 
 #### Job 1-3: Build Platform Executables
