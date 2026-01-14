@@ -52,7 +52,7 @@ class QueuePage(ctk.CTkFrame):
         # But given the complexity limit, I'll stick to naive for now or optimize slightly.
 
         # Get all items
-        items = self.queue.get_all_items()
+        items = self.queue.get_all()
 
         # Clear (naive)
         for widget in self.scroll_frame.winfo_children():
