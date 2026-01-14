@@ -59,12 +59,12 @@ fi
 # Step 2: Run the container
 print_info "Step 2: Starting container..."
 CONTAINER_ID=$(docker run -d \
-    --name $CONTAINER_NAME \
+    --name "$CONTAINER_NAME" \
     -p $TEST_PORT:8080 \
     -p $VNC_PORT:5900 \
     -e VNC_PASSWORD="$VNC_PASSWORD" \
     -e PORT=8080 \
-    $IMAGE_NAME)
+    "$IMAGE_NAME")
 
 if [ -z "$CONTAINER_ID" ]; then
     print_error "Failed to start container"
@@ -78,23 +78,23 @@ sleep 30
 
 # Step 4: Check container health
 print_info "Step 4: Checking container health..."
-HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_NAME 2>/dev/null || echo "unknown")
+HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "unknown")
 if [ "$HEALTH_STATUS" = "healthy" ]; then
     print_success "Container is healthy"
 elif [ "$HEALTH_STATUS" = "starting" ]; then
     print_info "Container is still starting, waiting..."
     sleep 15
-    HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_NAME)
+    HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME")
     if [ "$HEALTH_STATUS" = "healthy" ]; then
         print_success "Container is now healthy"
     else
         print_error "Container health check failed: $HEALTH_STATUS"
-        docker logs $CONTAINER_NAME
+        docker logs "$CONTAINER_NAME"
         exit 1
     fi
 else
     print_error "Container health check failed: $HEALTH_STATUS"
-    docker logs $CONTAINER_NAME
+    docker logs "$CONTAINER_NAME"
     exit 1
 fi
 
@@ -115,7 +115,7 @@ SERVICES=("supervisord" "Xvfb" "fluxbox" "x11vnc" "websockify" "main.py")
 ALL_RUNNING=true
 
 for service in "${SERVICES[@]}"; do
-    if docker exec $CONTAINER_NAME pgrep -f "$service" > /dev/null 2>&1; then
+    if docker exec "$CONTAINER_NAME" pgrep -f "$service" > /dev/null 2>&1; then
         print_success "$service is running"
     else
         print_error "$service is NOT running"
@@ -125,13 +125,13 @@ done
 
 if [ "$ALL_RUNNING" = false ]; then
     print_error "Some services are not running"
-    docker logs $CONTAINER_NAME
+    docker logs "$CONTAINER_NAME"
     exit 1
 fi
 
 # Step 7: Check X11 display
 print_info "Step 7: Checking X11 display..."
-if docker exec $CONTAINER_NAME sh -c 'DISPLAY=:0 xdpyinfo' > /dev/null 2>&1; then
+if docker exec "$CONTAINER_NAME" sh -c 'DISPLAY=:0 xdpyinfo' > /dev/null 2>&1; then
     print_success "X11 display is working"
 else
     print_error "X11 display is not working"
@@ -141,12 +141,12 @@ fi
 # Step 8: Check logs for errors
 print_info "Step 8: Checking for critical errors in logs..."
 # Look for specific critical error patterns, excluding known benign warnings
-CRITICAL_ERRORS=$(docker logs $CONTAINER_NAME 2>&1 | grep -iE "fatal|critical|exception|traceback|segfault" | wc -l)
+CRITICAL_ERRORS=$(docker logs "$CONTAINER_NAME" 2>&1 | grep -iE "fatal|critical|exception|traceback|segfault" | wc -l)
 if [ "$CRITICAL_ERRORS" -eq 0 ]; then
     print_success "No critical errors found in logs"
 else
     print_error "Found $CRITICAL_ERRORS critical error(s) - review logs carefully"
-    docker logs $CONTAINER_NAME 2>&1 | grep -iE "fatal|critical|exception|traceback|segfault" | head -10
+    docker logs "$CONTAINER_NAME" 2>&1 | grep -iE "fatal|critical|exception|traceback|segfault" | head -10
 fi
 
 # Success!
@@ -161,9 +161,9 @@ echo "  - VNC Direct:  localhost:$VNC_PORT"
 echo "  - VNC Password: $VNC_PASSWORD"
 echo
 echo "To stop and remove the test container:"
-echo "  docker stop "$CONTAINER_NAME" && docker rm "$CONTAINER_NAME""
+echo "  docker stop \"$CONTAINER_NAME\" && docker rm \"$CONTAINER_NAME\""
 echo
 
 # Don't cleanup if tests passed - let user explore
 trap - EXIT
-print_info "Container left running for manual inspection. Run 'docker stop "$CONTAINER_NAME"' when done."
+print_info "Container left running for manual inspection. Run 'docker stop \"$CONTAINER_NAME\"' when done."
