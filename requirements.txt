@@ -10,3 +10,4 @@ cloudscraper
 selenium
 yt-dlp
 gallery-dl
+tkinterdnd2

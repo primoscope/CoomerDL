@@ -18,6 +18,12 @@ import psutil
 import functools
 import subprocess
 
+try:
+    from tkinterdnd2 import TkinterDnD, DND_FILES
+    dnd_available = True
+except ImportError:
+    dnd_available = False
+
 #from app.patch_notes import PatchNotes
 from app.settings_window import SettingsWindow
 #from app.user_panel import UserPanel
@@ -124,6 +130,11 @@ class ImageDownloaderApp(ctk.CTk):
             on_change=self.on_queue_changed,
             persist_file="resources/config/download_queue.json"
         )
+
+        # Queue processing flags/state
+        self._process_queue_all_active = False
+        self._queue_progress_last_update = 0.0
+        self._queue_progress_throttle_seconds = 0.25
 
         # Initialize UI
         self.initialize_ui()
@@ -686,9 +697,32 @@ class ImageDownloaderApp(ctk.CTk):
             self, 
             self.download_queue, 
             self.tr,
-            on_process_queue=self.process_queue
+            on_process_queue=self.process_queue,
+            on_process_all=self.process_queue_all,
+            on_pause_all=self.pause_all_queue,
+            on_resume_all=self.resume_all_queue,
+            on_stop_processing=self.stop_queue_processing
         )
         queue_dialog.focus_set()
+
+    def stop_queue_processing(self):
+        """Stop Process All mode (does not cancel an active download)."""
+        self._process_queue_all_active = False
+
+    def pause_all_queue(self):
+        """Pause all pending items (does not pause an active download)."""
+        from app.models.download_queue import QueueItemStatus
+        self._process_queue_all_active = False
+        for item in self.download_queue.get_all():
+            if item.status == QueueItemStatus.PENDING:
+                self.download_queue.update_status(item.id, QueueItemStatus.PAUSED)
+
+    def resume_all_queue(self):
+        """Resume all paused items back to pending."""
+        from app.models.download_queue import QueueItemStatus
+        for item in self.download_queue.get_all():
+            if item.status == QueueItemStatus.PAUSED:
+                self.download_queue.update_status(item.id, QueueItemStatus.PENDING)
     
     def add_to_queue(self):
         """Add URLs from input to the download queue."""
@@ -754,6 +788,9 @@ class ImageDownloaderApp(ctk.CTk):
                 self.tr("Queue Empty"),
                 self.tr("No pending items in queue to process.")
             )
+            # If we were running a batch queue process, stop it
+            if getattr(self, "_process_queue_all_active", False):
+                self._process_queue_all_active = False
             return
         
         # Update item status to downloading
@@ -788,6 +825,12 @@ class ImageDownloaderApp(ctk.CTk):
         finally:
             # Restore original folder (or reset if it was None)
             self.download_folder = original_folder
+
+    def process_queue_all(self):
+        """Process all pending queue items sequentially."""
+        self._process_queue_all_active = True
+        # Kick off first item
+        self.process_queue()
 
     # Image processing
     def create_photoimage(self, path, size=(32, 32)):
@@ -893,11 +936,53 @@ class ImageDownloaderApp(ctk.CTk):
     def update_progress(self, downloaded, total,file_id=None, file_path=None,speed=None, eta=None, status=None):
         self.progress_manager.update_progress(downloaded, total,file_id, file_path,speed, eta, status=status)
 
+        # Best-effort queue item progress (for per-file style downloaders)
+        if hasattr(self, '_current_queue_item_id') and self._current_queue_item_id:
+            try:
+                if total and total > 0:
+                    frac = min(max(downloaded / total, 0.0), 1.0)
+                    self._throttled_update_queue_item_progress(frac)
+            except Exception:
+                pass
+
     def remove_progress_bar(self, file_id):
         self.progress_manager.remove_progress_bar(file_id)
 
     def update_global_progress(self, completed_files, total_files):
         self.progress_manager.update_global_progress(completed_files, total_files)
+
+        # Queue item progress (for multi-file jobs)
+        if hasattr(self, '_current_queue_item_id') and self._current_queue_item_id:
+            try:
+                if total_files and total_files > 0:
+                    frac = min(max(completed_files / total_files, 0.0), 1.0)
+                    self._throttled_update_queue_item_progress(frac)
+            except Exception:
+                pass
+
+    def _throttled_update_queue_item_progress(self, progress: float):
+        """Update queue item progress with throttling to avoid excessive disk writes."""
+        try:
+            now = time.time()
+        except Exception:
+            return
+
+        if (now - getattr(self, '_queue_progress_last_update', 0.0)) < getattr(self, '_queue_progress_throttle_seconds', 0.25):
+            return
+
+        self._queue_progress_last_update = now
+
+        try:
+            if hasattr(self, '_current_queue_item_id') and self._current_queue_item_id:
+                from app.models.download_queue import QueueItemStatus
+                # Keep status as DOWNLOADING while updating progress
+                self.download_queue.update_status(
+                    self._current_queue_item_id,
+                    QueueItemStatus.DOWNLOADING,
+                    progress=float(progress)
+                )
+        except Exception:
+            pass
 
     def toggle_progress_details(self):
         self.progress_manager.toggle_progress_details()
@@ -948,7 +1033,24 @@ class ImageDownloaderApp(ctk.CTk):
         
         # For batch downloads, process URLs sequentially
         if len(urls) > 1:
-            self.add_log_message_safe(self.tr(f"Batch download: {len(urls)} URLs detected"))
+            # Check for duplicates
+            unique_urls = []
+            seen_urls = set()
+            duplicates_count = 0
+            
+            for url in urls:
+                normalized_url = url.strip()
+                if normalized_url in seen_urls:
+                    duplicates_count += 1
+                else:
+                    seen_urls.add(normalized_url)
+                    unique_urls.append(normalized_url)
+            
+            if duplicates_count > 0:
+                self.add_log_message_safe(self.tr(f"Removed {duplicates_count} duplicate URLs from the batch."))
+                urls = unique_urls
+
+            self.add_log_message_safe(self.tr(f"Batch download: {len(urls)} unique URLs detected"))
             for i, url in enumerate(urls, 1):
                 self.add_log_message_safe(self.tr(f"Processing URL {i}/{len(urls)}: {url[:60]}..."))
                 self._process_single_url(url)
@@ -1049,7 +1151,9 @@ class ImageDownloaderApp(ctk.CTk):
             )
             
             if downloader:
-                # Use the new BaseDownloader interface
+                # Successfully got a downloader
+                downloader_name = downloader.__class__.__name__
+                self.add_log_message_safe(self.tr(f"Using {downloader_name} for this URL"))
                 self.active_downloader = downloader
                 download_thread = threading.Thread(
                     target=self.wrapped_base_download, 
@@ -1360,7 +1464,26 @@ class ImageDownloaderApp(ctk.CTk):
                     progress=1.0
                 )
             self._current_queue_item_id = None
-    
+
+            # Auto-continue if Process All is active
+            if getattr(self, "_process_queue_all_active", False):
+                # Schedule next item after UI has re-enabled
+                self.after(0, self._continue_queue_all)
+
+    def _continue_queue_all(self):
+        if not getattr(self, "_process_queue_all_active", False):
+            return
+        # If no more pending items, stop
+        item = self.download_queue.get_next_pending()
+        if not item:
+            self._process_queue_all_active = False
+            messagebox.showinfo(
+                self.tr("Queue Complete"),
+                self.tr("All queued items have been processed.")
+            )
+            return
+        self.process_queue()
+
     # Save and load download folder
     def save_download_folder(self, folder_path):
         config = {'download_folder': folder_path}

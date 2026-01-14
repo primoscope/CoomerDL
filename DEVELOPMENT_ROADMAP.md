@@ -126,13 +126,13 @@ CoomerDL/
 
 | ID | Priority | Task | File(s) | Complexity |
 |----|----------|------|---------|------------|
-| BUG-001 | 🔴 | Fix undefined `log_message` variable | `downloader/downloader.py` | Low |
-| BUG-002 | 🔴 | Fix SimpCity missing `base_url` | `downloader/simpcity.py` | Low |
-| BUG-003 | 🟡 | Remove unused import | `downloader/jpg5.py` | Trivial |
-| BUG-004 | 🟡 | Fix EromeDownloader `folder_name` scope | `downloader/erome.py` | Low |
+| BUG-001 | 🔴 | Fix undefined `log_message` variable | `downloader/downloader.py` | ✅ DONE |
+| BUG-002 | 🔴 | Fix SimpCity missing `base_url` | `downloader/simpcity.py` | ✅ DONE |
+| BUG-003 | 🟡 | Remove unused import | `downloader/jpg5.py` | ✅ DONE |
+| BUG-004 | 🟡 | Fix EromeDownloader `folder_name` scope | `downloader/erome.py` | ✅ DONE |
 | REFACTOR-001 | ✅ | Standardize cancel mechanisms | `downloader/*.py` | DONE |
-| REFACTOR-002 | 🟡 | Fix database connection cleanup | `downloader/downloader.py` | Low |
-| REFACTOR-003 | 🟡 | Fix BunkrDownloader thread shutdown | `downloader/bunkr.py` | Low |
+| REFACTOR-002 | 🟡 | Fix database connection cleanup | `downloader/downloader.py` | ✅ DONE |
+| REFACTOR-003 | 🟡 | Fix BunkrDownloader thread shutdown | `downloader/bunkr.py` | ✅ DONE |
 | FEATURE-001 | ✅ | Add batch URL input | `app/ui.py` | DONE |
 | FEATURE-002 | ✅ | Create BaseDownloader class | `downloader/base.py` | DONE |
 | FEATURE-003 | ✅ | Add download queue manager | `downloader/queue.py` | DONE |

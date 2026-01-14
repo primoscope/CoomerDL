@@ -50,13 +50,13 @@ python main.py
 
 | ID | Task | Priority | Complexity | Status |
 |----|------|----------|------------|--------|
-| T001 | Fix undefined `log_message` variable | Critical | Low | Open |
-| T002 | Fix SimpCity missing `base_url` | Critical | Low | Open |
-| T003 | Remove unused import in jpg5.py | Low | Trivial | Open |
-| T004 | Standardize cancel mechanisms | Medium | Medium | Open |
-| T005 | Fix database connection cleanup | Medium | Low | Open |
-| T006 | Fix BunkrDownloader notification thread | Medium | Low | Open |
-| T007 | Fix EromeDownloader folder_name scope | Medium | Low | Open |
+| T001 | Fix undefined `log_message` variable | Critical | Low | Closed |
+| T002 | Fix SimpCity missing `base_url` | Critical | Low | Closed |
+| T003 | Remove unused import in jpg5.py | Low | Trivial | Closed |
+| T004 | Standardize cancel mechanisms | Medium | Medium | Closed |
+| T005 | Fix database connection cleanup | Medium | Low | Closed |
+| T006 | Fix BunkrDownloader notification thread | Medium | Low | Closed |
+| T007 | Fix EromeDownloader folder_name scope | Medium | Low | Closed |
 | T008 | Add batch URL input support | High | Medium | Open |
 | T009 | Create BaseDownloader abstract class | High | High | Open |
 | T010 | Split ui.py into modules | High | High | Open |

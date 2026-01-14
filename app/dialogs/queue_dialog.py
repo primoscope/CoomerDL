@@ -14,12 +14,20 @@ class QueueDialog(ctk.CTkToplevel):
         parent,
         queue: DownloadQueue,
         tr: Optional[Callable[[str], str]] = None,
-        on_process_queue: Optional[Callable[[], None]] = None
+        on_process_queue: Optional[Callable[[], None]] = None,
+        on_process_all: Optional[Callable[[], None]] = None,
+        on_pause_all: Optional[Callable[[], None]] = None,
+        on_resume_all: Optional[Callable[[], None]] = None,
+        on_stop_processing: Optional[Callable[[], None]] = None
     ):
         super().__init__(parent)
         self.queue = queue
         self.tr = tr or (lambda x: x)
         self.on_process_queue = on_process_queue
+        self.on_process_all = on_process_all
+        self.on_pause_all = on_pause_all
+        self.on_resume_all = on_resume_all
+        self.on_stop_processing = on_stop_processing
         self.selected_item_id = None
         
         # Setup window
@@ -75,6 +83,24 @@ class QueueDialog(ctk.CTkToplevel):
         # Left side buttons
         left_buttons = ctk.CTkFrame(controls_frame, fg_color="transparent")
         left_buttons.pack(side="left", fill="x", expand=True)
+
+        if self.on_pause_all:
+            self.btn_pause_all = ctk.CTkButton(
+                left_buttons,
+                text="⏸⏸ " + self.tr("Pause All"),
+                command=self.on_pause_all,
+                width=120
+            )
+            self.btn_pause_all.pack(side="left", padx=2)
+
+        if self.on_resume_all:
+            self.btn_resume_all = ctk.CTkButton(
+                left_buttons,
+                text="▶▶ " + self.tr("Resume All"),
+                command=self.on_resume_all,
+                width=120
+            )
+            self.btn_resume_all.pack(side="left", padx=2)
         
         self.btn_move_up = ctk.CTkButton(
             left_buttons,
@@ -131,6 +157,26 @@ class QueueDialog(ctk.CTkToplevel):
                 fg_color="green"
             )
             self.btn_process.pack(side="left", padx=2)
+
+        if self.on_process_all:
+            self.btn_process_all = ctk.CTkButton(
+                right_buttons,
+                text="▶▶ " + self.tr("Process All"),
+                command=self.on_process_all,
+                width=130,
+                fg_color="green"
+            )
+            self.btn_process_all.pack(side="left", padx=2)
+
+        if self.on_stop_processing:
+            self.btn_stop_processing = ctk.CTkButton(
+                right_buttons,
+                text="⏹ " + self.tr("Stop"),
+                command=self.on_stop_processing,
+                width=90,
+                fg_color="darkred"
+            )
+            self.btn_stop_processing.pack(side="left", padx=2)
         
         self.btn_clear = ctk.CTkButton(
             right_buttons,
