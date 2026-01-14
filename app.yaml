@@ -1,0 +1,50 @@
+runtime: custom
+env: flex
+
+# Cloud Run configuration
+service: coomerdl
+runtime_config:
+  operating_system: "ubuntu22"
+  runtime_version: "3.10"
+
+# Automatic scaling
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 10
+  cool_down_period_sec: 180
+  cpu_utilization:
+    target_utilization: 0.75
+  target_concurrent_requests: 100
+
+# Resources
+resources:
+  cpu: 2
+  memory_gb: 4
+  disk_size_gb: 20
+
+# Environment variables
+env_variables:
+  PORT: "8080"
+  STORAGE_TYPE: "gcs"
+  # GCS_BUCKET and other secrets should be set via Cloud Console or gcloud
+
+# Network
+network:
+  forwarded_ports:
+    - 8080
+
+# Health checks
+liveness_check:
+  path: "/health"
+  check_interval_sec: 30
+  timeout_sec: 10
+  failure_threshold: 3
+  success_threshold: 1
+
+readiness_check:
+  path: "/health"
+  check_interval_sec: 10
+  timeout_sec: 10
+  failure_threshold: 3
+  success_threshold: 1
+  app_start_timeout_sec: 300

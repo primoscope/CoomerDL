@@ -1,0 +1,70 @@
+steps:
+  # Step 1: Build frontend
+  - name: 'node:18'
+    dir: 'frontend'
+    entrypoint: 'npm'
+    args: ['ci']
+    id: 'install-frontend-deps'
+
+  - name: 'node:18'
+    dir: 'frontend'
+    entrypoint: 'npm'
+    args: ['run', 'build']
+    id: 'build-frontend'
+    waitFor: ['install-frontend-deps']
+
+  # Step 2: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'Dockerfile.webapp'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/coomerdl:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/coomerdl:latest'
+      - '.'
+    id: 'build-docker-image'
+    waitFor: ['build-frontend']
+
+  # Step 3: Push to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/coomerdl:$SHORT_SHA']
+    id: 'push-image-sha'
+    waitFor: ['build-docker-image']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/coomerdl:latest']
+    id: 'push-image-latest'
+    waitFor: ['build-docker-image']
+
+  # Step 4: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'coomerdl'
+      - '--image=gcr.io/$PROJECT_ID/coomerdl:$SHORT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=4Gi'
+      - '--cpu=2'
+      - '--max-instances=10'
+      - '--set-env-vars=STORAGE_TYPE=gcs,GCS_BUCKET=${_GCS_BUCKET}'
+    id: 'deploy-cloud-run'
+    waitFor: ['push-image-sha']
+
+images:
+  - 'gcr.io/$PROJECT_ID/coomerdl:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/coomerdl:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _GCS_BUCKET: '${PROJECT_ID}-coomerdl-downloads'
+
+timeout: '1800s'

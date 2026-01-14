@@ -5,11 +5,41 @@
 
 # CoomerDL - Universal Media Archiver 🎬
 
-> **Download media from 1000+ websites with a simple, user-friendly desktop application**
+> **Download media from 1000+ websites - Desktop App or Web Application**
 
-CoomerDL is a powerful Python desktop application for downloading images, videos, and galleries from over 1000 websites. Whether you're archiving content from YouTube, Twitter, DeviantArt, or specialized sites, CoomerDL handles it all with smart automation and an intuitive interface.
+CoomerDL is a powerful media downloader supporting over 1000 websites. Available as both a desktop application and a modern web application that can be deployed to the cloud.
 
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=for-the-badge)](https://github.com/primoscope/CoomerDL/releases)
+[![Download Desktop App](https://img.shields.io/badge/Download-Desktop%20App-brightgreen?style=for-the-badge)](https://github.com/primoscope/CoomerDL/releases)
+[![Deploy to Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/primoscope/CoomerDL)
+
+---
+
+## 🚀 NEW: Web Application
+
+CoomerDL is now available as a **modern web application** with cloud deployment!
+
+### ☁️ One-Click Cloud Deployment
+
+Deploy your own instance to Google Cloud Platform in minutes:
+
+```bash
+git clone https://github.com/primoscope/CoomerDL.git
+cd CoomerDL
+./scripts/deploy-gcp.sh
+```
+
+**Or click the button above** ☝️ to deploy directly from GitHub!
+
+### 🌐 Web App Features
+
+- ✅ **Modern React UI** - Responsive design works on desktop, tablet, and mobile
+- ✅ **Real-Time Updates** - WebSocket-powered live progress and logs
+- ✅ **Cloud Storage** - Direct upload to Google Cloud Storage
+- ✅ **Scalable** - Auto-scales based on demand
+- ✅ **No Installation** - Access from any browser
+- ✅ **All Features** - Same powerful downloading capabilities as desktop app
+
+[📚 Read the Web App Deployment Guide →](DEPLOYMENT.md)
 
 ---
 
@@ -78,7 +108,23 @@ Support for **100+ image gallery sites** including:
 
 ---
 
-## 📥 Quick Start
+## 📥 Getting Started
+
+### Choose Your Version
+
+CoomerDL is available in two versions:
+
+| Feature | Desktop App | Web Application |
+|---------|------------|-----------------|
+| **Installation** | Download & run .exe | One-click cloud deploy |
+| **Interface** | Native desktop GUI | Modern web browser |
+| **Platform** | Windows/Mac/Linux | Any device with browser |
+| **Storage** | Local filesystem | Cloud storage (GCS) |
+| **Deployment** | Run locally | Cloud-hosted (scalable) |
+| **Updates** | Manual download | Auto-deploy |
+| **Best For** | Personal use, privacy | Remote access, sharing |
+
+### Desktop App - Quick Start
 
 ### For Windows Users (Easiest)
 1. Download the latest `CoomerDL-Windows.zip` from [Releases](https://github.com/primoscope/CoomerDL/releases)
