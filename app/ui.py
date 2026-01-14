@@ -666,11 +666,11 @@ class ImageDownloaderApp(ctk.CTk):
         # Show success message
         if added_count > 0:
             self.add_log_message_safe(
-                self.tr(f"{added_count} URL(s) added to queue")
+                self.tr("{count} URL(s) added to queue", count=added_count)
             )
             messagebox.showinfo(
                 self.tr("Success"),
-                self.tr(f"{added_count} URL(s) added to queue. Open Queue Manager to view and process.")
+                self.tr("{count} URL(s) added to queue. Open Queue Manager to view and process.", count=added_count)
             )
             
             # Clear input after adding to queue
@@ -709,7 +709,7 @@ class ImageDownloaderApp(ctk.CTk):
         
         # Log the start
         self.add_log_message_safe(
-            self.tr(f"Processing queue item: {item.url[:60]}...")
+            self.tr("Processing queue item: {url}...", url=item.url[:60])
         )
         
         # Set the download folder for this item
@@ -725,7 +725,7 @@ class ImageDownloaderApp(ctk.CTk):
             # Note: The actual completion/failure will be handled in the download callbacks
         except Exception as e:
             self.add_log_message_safe(
-                self.tr(f"Error processing queue item: {str(e)}")
+                self.tr("Error processing queue item: {error}", error=str(e))
             )
             self.download_queue.update_status(
                 item.id, 

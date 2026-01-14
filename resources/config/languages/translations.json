@@ -1097,5 +1097,37 @@
         "ja": "成功",
         "ru": "Успех",
         "zh": "成功"
+    },
+    "{count} URL(s) added to queue": {
+        "es": "{count} URL(s) añadidas a la cola",
+        "en": "{count} URL(s) added to queue",
+        "fr": "{count} URL(s) ajoutées à la file",
+        "ja": "{count} 個のURLがキューに追加されました",
+        "ru": "{count} URL(ов) добавлено в очередь",
+        "zh": "{count} 个URL已添加到队列"
+    },
+    "{count} URL(s) added to queue. Open Queue Manager to view and process.": {
+        "es": "{count} URL(s) añadidas a la cola. Abre el Gestor de Cola para ver y procesar.",
+        "en": "{count} URL(s) added to queue. Open Queue Manager to view and process.",
+        "fr": "{count} URL(s) ajoutées à la file. Ouvrez le Gestionnaire de file pour voir et traiter.",
+        "ja": "{count} 個のURLがキューに追加されました。キューマネージャーを開いて表示・処理してください。",
+        "ru": "{count} URL(ов) добавлено в очередь. Откройте Менеджер очереди для просмотра и обработки.",
+        "zh": "{count} 个URL已添加到队列。打开队列管理器查看和处理。"
+    },
+    "Processing queue item: {url}...": {
+        "es": "Procesando elemento de cola: {url}...",
+        "en": "Processing queue item: {url}...",
+        "fr": "Traitement de l'élément de file : {url}...",
+        "ja": "キューアイテムを処理中: {url}...",
+        "ru": "Обработка элемента очереди: {url}...",
+        "zh": "正在处理队列项目：{url}..."
+    },
+    "Error processing queue item: {error}": {
+        "es": "Error al procesar elemento de cola: {error}",
+        "en": "Error processing queue item: {error}",
+        "fr": "Erreur lors du traitement de l'élément de file : {error}",
+        "ja": "キューアイテムの処理中にエラーが発生しました: {error}",
+        "ru": "Ошибка обработки элемента очереди: {error}",
+        "zh": "处理队列项目时出错：{error}"
     }
 }
