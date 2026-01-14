@@ -36,7 +36,12 @@ CoomerDL is a powerful Python desktop application for downloading images, videos
 - **Download History** - Browse and search everything you've downloaded
 
 ### ⚙️ Advanced Configuration
-- **Proxy Support** - Use HTTP/HTTPS/SOCKS proxies (NEW!)
+- **Proxy Support** - Use HTTP/HTTPS/SOCKS proxies
+- **Bandwidth Limiting** - Cap download speeds to avoid overwhelming your connection (NEW!)
+- **Custom Timeouts** - Configure connection and read timeouts (NEW!)
+- **File Size Filters** - Skip files smaller or larger than specified sizes (NEW!)
+- **Date Range Filters** - Download only posts from specific time periods (NEW!)
+- **File Type Exclusions** - Exclude specific file types like WEBM, GIF, or ZIP (NEW!)
 - **Custom User Agent** - Customize your browser identity
 - **File Filtering** - Choose which file types to download
 - **Format Selection** - Pick video quality and audio formats
@@ -111,7 +116,8 @@ Support for **100+ image gallery sites** including:
 
 ### Pro Tips
 - 📝 **Batch Downloads**: Paste multiple URLs (one per line) to download them all at once
-- 🌐 **Proxy Configuration**: Go to Settings → Network to configure proxy settings
+- 🌐 **Network Settings**: Go to Settings → Network to configure proxy, bandwidth limits, and timeouts
+- 🔍 **Advanced Filters**: Use Settings → Filters to set file size limits, date ranges, and exclude specific file types
 - 🍪 **Cookie Import**: Settings → Universal → Import cookies from your browser for authenticated downloads
 - 📋 **Queue Management**: Click the Queue button to manage, reorder, and control your downloads
 - ⚙️ **Custom Filters**: Use Settings → Downloads to configure file type filters and download options

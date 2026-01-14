@@ -103,13 +103,13 @@ Making CoomerDL easier and more pleasant to use:
 
 #### 🌐 Network Options
 - ~~**Proxy Support** - Use HTTP, HTTPS, or custom proxies~~ ✅ **COMPLETED**
-- **Bandwidth Limiting** - Cap download speeds to not overwhelm your connection
-- **Custom Timeouts** - Configure connection and read timeouts
+- ~~**Bandwidth Limiting** - Cap download speeds to not overwhelm your connection~~ ✅ **COMPLETED**
+- ~~**Custom Timeouts** - Configure connection and read timeouts~~ ✅ **COMPLETED**
 
 #### 🔍 Advanced Filtering
-- **File Size Filters** - Skip files smaller/larger than specified sizes
-- **Date Range Filters** - Download only posts from specific time periods
-- **File Type Filters** - More granular control over what gets downloaded
+- ~~**File Size Filters** - Skip files smaller/larger than specified sizes~~ ✅ **COMPLETED**
+- ~~**Date Range Filters** - Download only posts from specific time periods~~ ✅ **COMPLETED**
+- ~~**File Type Filters** - More granular control over what gets downloaded~~ ✅ **COMPLETED**
 
 #### ⚙️ Enhanced Settings
 - **Settings Profiles** - Save and load different configuration presets
