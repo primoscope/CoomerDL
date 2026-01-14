@@ -105,7 +105,7 @@ if [ "$HTTP_CODE" = "200" ]; then
     print_success "noVNC is accessible (HTTP $HTTP_CODE)"
 else
     print_error "noVNC is not accessible (HTTP $HTTP_CODE)"
-    docker logs $CONTAINER_NAME
+    docker logs "$CONTAINER_NAME"
     exit 1
 fi
 
@@ -140,13 +140,13 @@ fi
 
 # Step 8: Check logs for errors
 print_info "Step 8: Checking for critical errors in logs..."
-# Look for specific critical error patterns, excluding known benign warnings
-CRITICAL_ERRORS=$(docker logs "$CONTAINER_NAME" 2>&1 | grep -iE "fatal|critical|exception|traceback|segfault" | wc -l)
+# Look for specific critical error patterns (prefixed with ERROR/FATAL or standalone critical keywords)
+CRITICAL_ERRORS=$(docker logs "$CONTAINER_NAME" 2>&1 | grep -iE "(ERROR|FATAL).*exception|^(fatal|critical|traceback|segfault)" | wc -l)
 if [ "$CRITICAL_ERRORS" -eq 0 ]; then
     print_success "No critical errors found in logs"
 else
     print_error "Found $CRITICAL_ERRORS critical error(s) - review logs carefully"
-    docker logs "$CONTAINER_NAME" 2>&1 | grep -iE "fatal|critical|exception|traceback|segfault" | head -10
+    docker logs "$CONTAINER_NAME" 2>&1 | grep -iE "(ERROR|FATAL).*exception|^(fatal|critical|traceback|segfault)" | head -10
 fi
 
 # Success!

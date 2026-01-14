@@ -336,7 +336,7 @@ If issues persist:
 
 ## 💰 Cost Considerations
 
-**Cloud Run Pricing** (us-central1 region, as of 2025):
+**Cloud Run Pricing** (us-central1 region, approximate as of January 2024):
 - CPU: $0.00002400 per vCPU-second
 - Memory: $0.00000250 per GiB-second
 - Requests: $0.40 per million
