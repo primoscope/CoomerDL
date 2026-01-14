@@ -30,6 +30,7 @@ CoomerDL has evolved from a site-specific downloader into a **Universal Media Ar
 | 🍪 **Browser Cookie Import** | Automatically use your login credentials from Chrome, Firefox, or Edge |
 | 📝 **Batch URL Input** | Paste multiple URLs at once for batch downloading (NEW in v2.1!) |
 | 🌐 **Proxy Support** | Configure HTTP/HTTPS proxies and custom user agents (NEW in v2.1!) |
+| ☁️ **Cloud Ready** | Deploy to Google Cloud with one click using Docker & VNC (NEW!) |
 
 ---
 
@@ -66,6 +67,7 @@ CoomerDL has evolved from a site-specific downloader into a **Universal Media Ar
 
 | Feature | Status | Description |
 |---------|--------|-------------|
+| **Cloud Deployment** | ✅ Ready | Deploy to Google Cloud (or Docker) with full GUI access via browser (VNC) |
 | **Cookie Management** | ✅ Ready | Use site cookies for authenticated access |
 | **Custom File Naming** | ✅ Ready | 4 different naming schemes to organize your downloads |
 | **Folder Organization** | ✅ Ready | Automatically organize downloads by site/user/post |
@@ -193,7 +195,7 @@ These are features we're considering for future versions. Vote for your favorite
 |------|-------------|------------|
 | **macOS Native** | Native macOS application | Hard |
 | **Linux Native** | Native Linux application | Medium |
-| **Web Interface** | Control CoomerDL from a browser | Hard |
+| **Native Web Interface** | Re-write UI in Flask/React for true headless web support | Very Hard |
 | **Mobile App** | iOS/Android companion app | Very Hard |
 
 ---
