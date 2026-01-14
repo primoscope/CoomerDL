@@ -45,10 +45,7 @@ tests/
 *.swo
 *~
 
-# Documentation
-*.md
-!README.md
-docs/
+# Documentation (include DEPLOYMENT.md and API.md)
 PHASE*.txt
 PHASE*.md
 *_SUMMARY.md
@@ -75,7 +72,6 @@ AI_*.md
 # Build artifacts
 *.spec
 build.py
-scripts/
 
 # Environment
 .env
@@ -95,3 +91,27 @@ temp/
 *.tmp
 *.log
 test_*.py
+
+# Frontend build artifacts (will be built in Docker)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# Desktop app specific (not needed for web app)
+Dockerfile
+entrypoint.sh
+supervisord.conf
+healthcheck.sh
+app/ui.py
+app/sidebar_app.py
+
+# Media files from testing
+*.mp4
+*.mkv
+*.webm
+*.jpg
+*.jpeg
+*.png
+*.gif
+

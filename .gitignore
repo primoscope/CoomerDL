@@ -2,6 +2,8 @@
 myenv/
 venv/
 .venv/
+env/
+ENV/
 
 # Python cache and compiled files
 *.py[cod]
@@ -27,20 +29,49 @@ Thumbs.db
 
 # Sensitive configuration files
 .env
+.env.local
+.env.*.local
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/package-lock.json
+frontend/yarn.lock
+
+# Database
+*.db
+*.sqlite3
+resources/config/downloads.db
+
+# Logs
+*.log
+resources/config/logs/*
+
+# Downloads
+downloads/
+descargas_test/
+
+# Cookies
+resources/config/cookies/*
 
 # Other files to ignore
 *.csv
-*.log
 coomer.py
-descargas_test/
 list.txt
-resources/config/logs/*
+resources/config/download_path/download_folder.json
+CLI/
 setup.py
 test/
 test.py
 test/parse.py
 app/user_panel.py
-resources/config/download_path/download_folder.json
-CLI/
-resources/config/downloads.db
-resources/config/cookies/*
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
