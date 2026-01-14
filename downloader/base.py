@@ -573,7 +573,7 @@ class BaseDownloader(ABC):
     
     def download_file(self, url: str, filepath: str, chunk_size: int = None) -> bool:
         """
-        Download a file from URL to filepath.
+        Download a file from URL to filepath with bandwidth throttling.
         
         Args:
             url: The file URL
@@ -588,8 +588,14 @@ class BaseDownloader(ABC):
         
         try:
             import os
+            from downloader.throttle import BandwidthThrottle
             
             chunk_size = chunk_size or self.options.chunk_size
+            
+            # Initialize bandwidth throttle if limit is set
+            throttle = None
+            if self.options.bandwidth_limit_kbps > 0:
+                throttle = BandwidthThrottle(self.options.bandwidth_limit_kbps * 1024)
             
             response = self.safe_request(url, stream=True)
             if not response:
@@ -598,7 +604,7 @@ class BaseDownloader(ABC):
             # Create directory if needed
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             
-            # Download file in chunks
+            # Download file in chunks with throttling
             with open(filepath, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=chunk_size):
                     if self.is_cancelled():
@@ -612,6 +618,9 @@ class BaseDownloader(ABC):
                     
                     if chunk:
                         f.write(chunk)
+                        # Apply bandwidth throttle if configured
+                        if throttle:
+                            throttle.throttle(len(chunk))
             
             return True
             

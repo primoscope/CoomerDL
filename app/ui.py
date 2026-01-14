@@ -247,6 +247,59 @@ class ImageDownloaderApp(ctk.CTk):
             translated_text = translated_text.format(**kwargs)
         return translated_text
     
+    def build_download_options(self):
+        """
+        Build DownloadOptions from current settings.
+        
+        Returns:
+            DownloadOptions configured from UI and settings
+        """
+        from downloader.base import DownloadOptions
+        
+        # Get network settings
+        network_settings = self.settings.get('network', {})
+        
+        # Get filter settings
+        filter_settings = self.settings.get('filters', {})
+        
+        # Build excluded extensions set
+        excluded_extensions = set()
+        if filter_settings.get('exclude_webm', False):
+            excluded_extensions.add('.webm')
+        if filter_settings.get('exclude_gif', False):
+            excluded_extensions.add('.gif')
+        if filter_settings.get('exclude_webp', False):
+            excluded_extensions.add('.webp')
+        if filter_settings.get('exclude_zip', False):
+            excluded_extensions.add('.zip')
+        if filter_settings.get('exclude_rar', False):
+            excluded_extensions.add('.rar')
+        
+        # Build options
+        options = DownloadOptions(
+            download_images=self.download_images_check.get() if hasattr(self, 'download_images_check') else True,
+            download_videos=self.download_videos_check.get() if hasattr(self, 'download_videos_check') else True,
+            download_compressed=self.download_compressed_check.get() if hasattr(self, 'download_compressed_check') else True,
+            download_documents=True,  # Always download documents
+            max_retries=network_settings.get('max_retries', 3),
+            retry_interval=float(network_settings.get('base_delay', 2.0)),
+            chunk_size=1048576,  # 1MB
+            timeout=network_settings.get('connection_timeout', 30),
+            min_file_size=int(filter_settings.get('min_file_size_mb', 0)) * 1024 * 1024,
+            max_file_size=int(filter_settings.get('max_file_size_mb', 0)) * 1024 * 1024,
+            date_from=filter_settings.get('date_from', '') or None,
+            date_to=filter_settings.get('date_to', '') or None,
+            excluded_extensions=excluded_extensions,
+            proxy_type=network_settings.get('proxy_type', 'none'),
+            proxy_url=network_settings.get('proxy_url', ''),
+            user_agent=network_settings.get('user_agent', None),
+            bandwidth_limit_kbps=network_settings.get('bandwidth_limit_kbps', 0),
+            connection_timeout=network_settings.get('connection_timeout', 30),
+            read_timeout=network_settings.get('read_timeout', 60),
+        )
+        
+        return options
+    
     def apply_runtime_settings(self, new_settings: dict):
         """
         Se llama cuando se guardan cambios en Settings.
