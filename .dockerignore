@@ -1,0 +1,97 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+tests/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation
+*.md
+!README.md
+docs/
+PHASE*.txt
+PHASE*.md
+*_SUMMARY.md
+*_GUIDE.md
+*_IMPLEMENTATION.md
+*_ANALYSIS.md
+*_ROADMAP.md
+*_WORKFLOW.md
+TASKS.md
+SPECIFICATIONS.md
+SESSION*.md
+COMPLETE*.md
+FEATURE*.md
+UI_*.md
+PROXY*.md
+POTENTIAL*.md
+WINDOWS*.md
+RELEASE*.md
+DASHBOARD*.md
+NEW_*.md
+MCP_*.md
+AI_*.md
+
+# Build artifacts
+*.spec
+build.py
+scripts/
+
+# Environment
+.env
+.env.*
+environment.yml
+
+# MCP and Agents
+.mcp/
+
+# Resources that may be large
+resources/icons/
+resources/assets/
+
+# Temporary and test files
+tmp/
+temp/
+*.tmp
+*.log
+test_*.py

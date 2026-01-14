@@ -64,10 +64,23 @@ def main():
     # 2. Check for Headless/Render environment
     # Render sets 'RENDER' to 'true'
     is_render = os.environ.get("RENDER") == "true"
-    is_headless = os.environ.get("HEADLESS") == "true" or not tkinter_available
 
-    if is_render or is_headless:
-        print("Detected Headless/Render environment.")
+    # Check if a display is available (X11)
+    # If DISPLAY is set (e.g., in our Docker container with Xvfb), we can run the GUI
+    has_display = os.environ.get("DISPLAY") is not None
+
+    # We force headless if explicit HEADLESS env or if no tkinter
+    is_headless_env = os.environ.get("HEADLESS") == "true"
+
+    # Determine if we should run in headless mode
+    # Run headless if:
+    # 1. Tkinter is missing OR
+    # 2. Explicit HEADLESS=true OR
+    # 3. Running on Render AND no DISPLAY is available
+    should_run_headless = not tkinter_available or is_headless_env or (is_render and not has_display)
+
+    if should_run_headless:
+        print("Detected Headless/Render environment (and no DISPLAY found).")
         print("Starting placeholder web server...")
         run_headless_server()
         return
