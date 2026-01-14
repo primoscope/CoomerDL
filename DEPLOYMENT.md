@@ -9,6 +9,7 @@ This guide covers deploying CoomerDL as a modern web application to Google Cloud
 - [Manual Deployment](#manual-deployment)
 - [Local Development](#local-development)
 - [Configuration](#configuration)
+- [Firebase Hosting](#firebase-hosting)
 - [Troubleshooting](#troubleshooting)
 - [Cost Estimates](#cost-estimates)
 
@@ -233,6 +234,56 @@ Or via Cloud Console:
 1. Go to Cloud Run → coomerdl service
 2. Click "Edit & Deploy New Revision"
 3. Add environment variables in "Container" tab
+
+---
+
+## Firebase Hosting
+
+You can also deploy the frontend to Firebase Hosting for CDN-backed static asset delivery.
+
+### 1. Install Firebase CLI
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+```
+
+### 2. Configure firebase.json
+The `firebase.json` file controls how your app is hosted.
+
+```json
+{
+  "hosting": {
+    "public": "frontend/dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
+```
+
+**Key Settings:**
+- `"public": "frontend/dist"` - Points to the Vite build output directory
+- `"rewrites": [...]` - Directs all traffic to index.html (required for React Router SPA)
+
+### 3. Deploy
+```bash
+# Build the frontend first
+cd frontend
+npm run build
+cd ..
+
+# Deploy to Firebase
+firebase deploy --only hosting
+```
 
 ---
 

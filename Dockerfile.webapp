@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     chromium-driver \
     curl \
+    tk \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
@@ -44,6 +45,10 @@ COPY backend/ ./backend/
 COPY downloader/ ./downloader/
 COPY app/models/ ./app/models/
 COPY resources/ ./resources/
+# Create a dummy app/utils/logging_manager.py if it's imported but not needed, or better, copy app if it has dependencies. 
+# Looking at the file list, app/utils seems used. Let's copy the whole app folder but maybe exclude UI parts if possible.
+# For now, to be safe and given previous list, let's copy app folder too as it contains models and utils.
+COPY app/ ./app/
 
 # Copy frontend build from previous stage
 COPY --from=frontend-builder /frontend/dist ./frontend/dist

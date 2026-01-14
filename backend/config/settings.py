@@ -2,8 +2,9 @@
 Configuration settings for the backend application.
 """
 import os
-from typing import Optional
+from typing import Optional, List, Union
 from pydantic_settings import BaseSettings
+from pydantic import AnyHttpUrl, field_validator
 
 
 class Settings(BaseSettings):
@@ -37,7 +38,15 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
     
     # CORS
-    cors_origins: list = ["*"]  # Configure properly in production
+    cors_origins: List[str] = ["*"]
+
+    @field_validator("cors_origins", mode="before")
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
     
     class Config:
         env_file = ".env"

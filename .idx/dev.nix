@@ -6,36 +6,39 @@
 
   # Use https://search.nixos.org/packages to find packages
   packages = [
-    # pkgs.go
-    # pkgs.python311
-    # pkgs.python311Packages.pip
-    # pkgs.nodejs_20
-    # pkgs.nodePackages.nodemon
+    pkgs.python310
+    pkgs.python310Packages.pip
+    pkgs.nodejs_20
+    pkgs.nodePackages.npm
     pkgs.jest
+    pkgs.python310Packages.virtualenv
   ];
 
   # Sets environment variables in the workspace
-  env = {};
+  env = {
+      PYTHONPATH = "/home/user/coomerdl";
+  };
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
-      # "vscodevim.vim"
+        "ms-python.python"
+        "ms-python.debugpy"
     ];
 
     # Enable previews
     previews = {
       enable = true;
       previews = {
-        # web = {
-        #   # Example: run "npm run dev" with PORT set to IDX's defined port for previews,
-        #   # and show it in IDX's web preview panel
-        #   command = ["npm" "run" "dev"];
-        #   manager = "web";
-        #   env = {
-        #     # Environment variables to set for your server
-        #     PORT = "$PORT";
-        #   };
-        # };
+        web = {
+          # Example: run "npm run dev" with PORT set to IDX's defined port for previews,
+          # and show it in IDX's web preview panel
+          command = ["uvicorn" "backend.api.main:app" "--reload" "--port" "$PORT"];
+          manager = "web";
+          env = {
+            # Environment variables to set for your server
+            PORT = "$PORT";
+          };
+        };
       };
     };
 
@@ -45,6 +48,7 @@
       onCreate = {
         # Example: install JS dependencies from NPM
         # npm-install = "npm install";
+        setup-venv = "python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt";
       };
       # Runs when the workspace is (re)started
       onStart = {
