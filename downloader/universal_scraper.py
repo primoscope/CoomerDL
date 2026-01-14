@@ -89,6 +89,8 @@ class UniversalScraper(BaseDownloader):
         'html5_video_extraction',
         'html5_audio_extraction',
         'image_extraction',
+        'playwright_extraction', # New dynamic strategy (preferred)
+        'selenium_extraction', # Legacy dynamic strategy
         'link_extraction',
         'iframe_extraction',
     ]
@@ -534,6 +536,11 @@ class UniversalScraper(BaseDownloader):
         self._seen_urls.clear()
         
         try:
+            # Check for crawl mode
+            if self.options.crawl_depth > 0:
+                self.log(self.tr(f"Starting deep crawl with depth {self.options.crawl_depth}"))
+                return self._download_recursive(url, depth=0)
+
             # Analyze the page first
             analysis = self.analyze_page(url)
             
@@ -624,3 +631,204 @@ class UniversalScraper(BaseDownloader):
         # For now, this is the same as download()
         # In the future, could add filtering by media_types
         return self.download(url)
+
+    def _strategy_playwright_extraction(self, url: str) -> List[str]:
+        """
+        Extract media using Playwright headless browser.
+        Includes network sniffing for API/m3u8 calls.
+        """
+        if not self.options.use_headless_browser or self.options.headless_browser_type != "playwright":
+            return []
+
+        urls = []
+        try:
+            from playwright.sync_api import sync_playwright
+
+            self.log(self.tr("Starting Playwright for dynamic content and network sniffing..."))
+
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
+
+                # Network sniffing handler
+                def handle_response(response):
+                    try:
+                        content_type = response.headers.get("content-type", "")
+                        resp_url = response.url
+
+                        # Check for media content types
+                        if any(t in content_type for t in ["video/", "audio/", "image/"]):
+                            # Filter out small icons/tracking pixels if size is known (hard in response event without body)
+                            # But we can filter by extension or pattern
+                            urls.append(resp_url)
+
+                        # Check for streaming manifests
+                        if ".m3u8" in resp_url or ".mpd" in resp_url:
+                            urls.append(resp_url)
+
+                    except Exception:
+                        pass
+
+                page.on("response", handle_response)
+
+                try:
+                    page.goto(url, wait_until="networkidle", timeout=30000)
+
+                    # Scroll to trigger lazy loading
+                    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                    time.sleep(2) # Wait for lazy load
+
+                    # DOM Extraction (fallback if network sniffing missed it)
+                    # Extract image tags
+                    for img in page.query_selector_all("img"):
+                        src = img.get_attribute("src")
+                        if src:
+                            urls.append(urljoin(url, src))
+
+                    # Extract video tags
+                    for video in page.query_selector_all("video"):
+                        src = video.get_attribute("src")
+                        if src:
+                            urls.append(urljoin(url, src))
+                        # Sources
+                        for source in video.query_selector_all("source"):
+                            src = source.get_attribute("src")
+                            if src:
+                                urls.append(urljoin(url, src))
+
+                except Exception as e:
+                    logger.debug(f"Playwright navigation error: {e}")
+                finally:
+                    browser.close()
+
+        except ImportError:
+            logger.warning("Playwright not installed. Install with 'pip install playwright'")
+        except Exception as e:
+            logger.debug(f"Playwright extraction failed: {e}")
+
+        return urls
+
+    def _strategy_selenium_extraction(self, url: str) -> List[str]:
+        """Extract media using Selenium headless browser."""
+        if not self.options.use_headless_browser or self.options.headless_browser_type != "selenium":
+            return []
+
+        urls = []
+        try:
+            from selenium import webdriver
+            from selenium.webdriver.chrome.service import Service as ChromeService
+            from selenium.webdriver.chrome.options import Options
+            from webdriver_manager.chrome import ChromeDriverManager
+            from bs4 import BeautifulSoup
+
+            self.log(self.tr("Starting Selenium for dynamic content..."))
+
+            chrome_options = Options()
+            chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+
+            driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+
+            try:
+                driver.get(url)
+                time.sleep(3)
+
+                html = driver.page_source
+                soup = BeautifulSoup(html, 'html.parser')
+
+                for img in soup.find_all('img'):
+                    src = img.get('src')
+                    if src:
+                        urls.append(urljoin(url, src))
+
+                for video in soup.find_all('video'):
+                    src = video.get('src')
+                    if src:
+                        urls.append(urljoin(url, src))
+                    for source in video.find_all('source'):
+                        src = source.get('src')
+                        if src:
+                            urls.append(urljoin(url, src))
+
+            finally:
+                driver.quit()
+
+        except Exception as e:
+            logger.debug(f"Selenium extraction failed: {e}")
+
+        return urls
+
+    def _download_recursive(self, start_url: str, depth: int) -> DownloadResult:
+        """
+        Recursively crawl and download media.
+        """
+        visited = set()
+        queue = [(start_url, 0)]
+        results = DownloadResult(success=True, total_files=0, completed_files=0, failed_files=[], skipped_files=[])
+
+        start_time = time.time()
+        pages_crawled = 0
+
+        while queue and pages_crawled < self.options.max_crawl_pages:
+            if self.is_cancelled():
+                break
+
+            current_url, current_depth = queue.pop(0)
+
+            if current_url in visited:
+                continue
+            visited.add(current_url)
+
+            self.log(self.tr(f"Crawling: {current_url} (Depth: {current_depth})"))
+            pages_crawled += 1
+
+            analysis = self.analyze_page(current_url)
+
+            self.total_files += analysis.total_items
+            results.total_files += analysis.total_items
+
+            for item in analysis.all_media:
+                if self.is_cancelled(): break
+                try:
+                    subfolder = os.path.join(self.download_folder, item.media_type.value)
+                    os.makedirs(subfolder, exist_ok=True)
+                    filepath = os.path.join(subfolder, item.filename)
+                    if self.download_file(item.url, filepath):
+                        self.completed_files += 1
+                        results.completed_files += 1
+                    else:
+                        self.failed_files.append(item.url)
+                        results.failed_files.append(item.url)
+                    self.report_global_progress()
+                except Exception:
+                    pass
+
+            if current_depth < self.options.crawl_depth:
+                new_links = self._extract_internal_links(current_url)
+                for link in new_links:
+                    if link not in visited:
+                        queue.append((link, current_depth + 1))
+
+        results.elapsed_seconds = time.time() - start_time
+        return results
+
+    def _extract_internal_links(self, url: str) -> List[str]:
+        """Extract internal links from a page."""
+        links = []
+        try:
+            response = self.safe_request(url)
+            if response:
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(response.content, 'html.parser')
+                base_domain = urlparse(url).netloc
+
+                for a in soup.find_all('a', href=True):
+                    href = a['href']
+                    full_url = urljoin(url, href)
+                    if urlparse(full_url).netloc == base_domain:
+                        links.append(full_url)
+        except Exception:
+            pass
+        return links

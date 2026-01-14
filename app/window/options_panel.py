@@ -64,6 +64,49 @@ class OptionsPanel(ctk.CTkFrame):
         )
         self.download_documents_check.pack(side='left', padx=10)
         self.download_documents_check.select()
+
+        # Advanced options frame
+        self.advanced_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.advanced_frame.pack(side='top', fill='x', pady=(10, 0), padx=10)
+
+        # Dynamic Mode (Headless)
+        self.use_dynamic_mode_check = ctk.CTkCheckBox(
+            self.advanced_frame,
+            text=self.tr("Dynamic Mode (Slow)"),
+            command=self._on_dynamic_mode_toggle
+        )
+        self.use_dynamic_mode_check.pack(side='left', padx=10)
+
+        # Headless Engine Selection (Selenium vs Playwright)
+        self.headless_engine_combo = ctk.CTkComboBox(
+            self.advanced_frame,
+            values=["playwright", "selenium"],
+            width=100
+        )
+        self.headless_engine_combo.pack(side='left', padx=5)
+        self.headless_engine_combo.set("playwright")
+
+        # Crawl Depth
+        self.crawl_depth_label = ctk.CTkLabel(self.advanced_frame, text=self.tr("Crawl Depth: 0"))
+        self.crawl_depth_label.pack(side='left', padx=(20, 5))
+
+        self.crawl_depth_slider = ctk.CTkSlider(
+            self.advanced_frame,
+            from_=0,
+            to=5,
+            number_of_steps=5,
+            width=100,
+            command=self._on_depth_change
+        )
+        self.crawl_depth_slider.pack(side='left', padx=5)
+        self.crawl_depth_slider.set(0)
+
+    def _on_depth_change(self, value):
+        self.crawl_depth_label.configure(text=self.tr(f"Crawl Depth: {int(value)}"))
+
+    def _on_dynamic_mode_toggle(self):
+        # Could show warning about speed
+        pass
     
     def get_download_images(self) -> bool:
         """Get the download images checkbox state."""
@@ -80,6 +123,18 @@ class OptionsPanel(ctk.CTkFrame):
     def get_download_documents(self) -> bool:
         """Get the download documents checkbox state."""
         return bool(self.download_documents_check.get())
+
+    def get_use_dynamic_mode(self) -> bool:
+        """Get dynamic mode state."""
+        return bool(self.use_dynamic_mode_check.get())
+
+    def get_crawl_depth(self) -> int:
+        """Get crawl depth."""
+        return int(self.crawl_depth_slider.get())
+
+    def get_headless_browser_type(self) -> str:
+        """Get headless browser type."""
+        return self.headless_engine_combo.get()
     
     def get_options(self) -> Dict[str, bool]:
         """Get all download options as a dictionary."""
@@ -88,6 +143,9 @@ class OptionsPanel(ctk.CTkFrame):
             'download_videos': self.get_download_videos(),
             'download_compressed': self.get_download_compressed(),
             'download_documents': self.get_download_documents(),
+            'use_headless_browser': self.get_use_dynamic_mode(),
+            'headless_browser_type': self.get_headless_browser_type(),
+            'crawl_depth': self.get_crawl_depth(),
         }
     
     def set_options(self, options: Dict[str, bool]):
