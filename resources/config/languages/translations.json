@@ -1049,5 +1049,53 @@
         "ja": "❌ {domain} のテスト中にエラーが発生しました: {error}",
         "ru": "❌ Ошибка при проверке {domain}: {error}",
         "zh": "❌ 测试 {domain} 时出错：{error}"
+    },
+    "Add to Queue": {
+        "es": "Añadir a Cola",
+        "en": "Add to Queue",
+        "fr": "Ajouter à la file",
+        "ja": "キューに追加",
+        "ru": "Добавить в очередь",
+        "zh": "添加到队列"
+    },
+    "Queue": {
+        "es": "Cola",
+        "en": "Queue",
+        "fr": "File d'attente",
+        "ja": "キュー",
+        "ru": "Очередь",
+        "zh": "队列"
+    },
+    "Process Queue": {
+        "es": "Procesar Cola",
+        "en": "Process Queue",
+        "fr": "Traiter la file",
+        "ja": "キューを処理",
+        "ru": "Обработать очередь",
+        "zh": "处理队列"
+    },
+    "Queue Empty": {
+        "es": "Cola Vacía",
+        "en": "Queue Empty",
+        "fr": "File d'attente vide",
+        "ja": "キューが空です",
+        "ru": "Очередь пуста",
+        "zh": "队列为空"
+    },
+    "No pending items in queue to process.": {
+        "es": "No hay elementos pendientes en la cola para procesar.",
+        "en": "No pending items in queue to process.",
+        "fr": "Aucun élément en attente dans la file pour traiter.",
+        "ja": "処理する保留中のアイテムがキューにありません。",
+        "ru": "В очереди нет ожидающих элементов для обработки.",
+        "zh": "队列中没有待处理的项目。"
+    },
+    "Success": {
+        "es": "Éxito",
+        "en": "Success",
+        "fr": "Succès",
+        "ja": "成功",
+        "ru": "Успех",
+        "zh": "成功"
     }
 }
