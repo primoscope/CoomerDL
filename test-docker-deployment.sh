@@ -60,8 +60,8 @@ fi
 print_info "Step 2: Starting container..."
 CONTAINER_ID=$(docker run -d \
     --name "$CONTAINER_NAME" \
-    -p $TEST_PORT:8080 \
-    -p $VNC_PORT:5900 \
+    -p "$TEST_PORT":8080 \
+    -p "$VNC_PORT":5900 \
     -e VNC_PASSWORD="$VNC_PASSWORD" \
     -e PORT=8080 \
     "$IMAGE_NAME")
@@ -100,7 +100,7 @@ fi
 
 # Step 5: Test HTTP accessibility
 print_info "Step 5: Testing HTTP accessibility..."
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$TEST_PORT/vnc.html)
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$TEST_PORT/vnc.html")
 if [ "$HTTP_CODE" = "200" ]; then
     print_success "noVNC is accessible (HTTP $HTTP_CODE)"
 else

@@ -1,10 +1,8 @@
 # Use Python 3.10 slim as base
 FROM python:3.10-slim
 
-# Build arguments for security
+# Build argument for VNC password security
 ARG VNC_PASSWORD_ARG=coomerdl
-ARG USER_ID=1000
-ARG GROUP_ID=1000
 
 # Prevent Python from writing pyc files and buffering stdout
 ENV PYTHONDONTWRITEBYTECODE=1
