@@ -177,7 +177,7 @@ class Downloader:
 	
 	def set_retry_settings(self, max_retries, retry_interval):
 		self.max_retries = max_retries
-		self.rate_limit_interval = retry_interval 
+		self.retry_interval = retry_interval 
 
 	def request_cancel(self):
 		self.cancel_requested.set()

@@ -10,5 +10,29 @@
     "added_at": "2025-12-27T18:31:57.773975",
     "started_at": null,
     "completed_at": null
+  },
+  {
+    "id": "46cd0d8c-36b8-49b0-98a6-359de0beaa83",
+    "url": "https://example.com/test1",
+    "download_folder": "/tmp/test1",
+    "status": "pending",
+    "priority": 2,
+    "progress": 0.0,
+    "error_message": null,
+    "added_at": "2026-01-14T10:18:07.846101",
+    "started_at": null,
+    "completed_at": null
+  },
+  {
+    "id": "68f61804-8f5a-407a-b1e5-dff135414912",
+    "url": "https://example.com/test2",
+    "download_folder": "/tmp/test2",
+    "status": "pending",
+    "priority": 2,
+    "progress": 0.0,
+    "error_message": null,
+    "added_at": "2026-01-14T10:18:07.846345",
+    "started_at": null,
+    "completed_at": null
   }
 ]

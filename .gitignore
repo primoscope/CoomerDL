@@ -44,3 +44,5 @@ resources/config/download_path/download_folder.json
 CLI/
 resources/config/downloads.db
 resources/config/cookies/*
+resources/config/queue.json
+resources/config/download_queue.json
