@@ -129,6 +129,7 @@ class SettingsWindow:
         self.render_logging_tab(self.logging_tab)
     
     def render_db_tab(self, tab):
+        if not hasattr(tab, 'winfo_exists') or not tab.winfo_exists(): return
         tab.grid_columnconfigure(0, weight=1)
         tab.grid_rowconfigure(0, weight=1)
         db_frame = ctk.CTkFrame(tab, fg_color="transparent")
@@ -552,6 +553,7 @@ class SettingsWindow:
                     self.db_tree.insert(sin_post_node, "end", values=(rec_id, file_name, file_type, size_str, downloaded_at))
 
     def render_general_tab(self, tab):
+        if not hasattr(tab, 'winfo_exists') or not tab.winfo_exists(): return
         tab.grid_columnconfigure(0, weight=1)
         tab.grid_rowconfigure(0, weight=0)
 
@@ -611,6 +613,7 @@ class SettingsWindow:
 
 
     def render_downloads_tab(self, tab):
+        if not hasattr(tab, 'winfo_exists') or not tab.winfo_exists(): return
         tab.grid_columnconfigure(0, weight=1)
         tab.grid_rowconfigure(0, weight=1)
 
@@ -987,6 +990,7 @@ class SettingsWindow:
 
 
     def render_structure_tab(self, tab):
+        if not hasattr(tab, 'winfo_exists') or not tab.winfo_exists(): return
         tab.grid_columnconfigure(0, weight=1)
         tab.grid_rowconfigure(1, weight=1)
 

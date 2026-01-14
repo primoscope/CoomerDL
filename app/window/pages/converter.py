@@ -32,7 +32,12 @@ class ConverterPage(ctk.CTkFrame):
 
         self.input_entry = ctk.CTkEntry(input_frame)
         self.input_entry.pack(side="left", fill="x", expand=True)
-        ctk.CTkButton(input_frame, text="Browse", width=100, command=self.browse_input).pack(side="left", padx=(10,0))
+        ctk.CTkButton(input_frame, text="File", width=80, command=self.browse_input).pack(side="left", padx=(5,0))
+        ctk.CTkButton(input_frame, text="Folder", width=80, command=self.browse_folder).pack(side="left", padx=(5,0))
+
+        # Info Box
+        info_label = ctk.CTkLabel(main, text="Supports conversion between common formats using FFmpeg.\nSelect 'Custom FFmpeg Args' in Advanced Mode for more control.", font=("Arial", 11), text_color="gray", justify="left")
+        info_label.pack(anchor="w", padx=20, pady=(0, 10))
 
         # Output Format
         ctk.CTkLabel(main, text="Output Settings:", font=("Arial", 12, "bold")).pack(anchor="w", padx=20, pady=(20, 5))
@@ -83,39 +88,70 @@ class ConverterPage(ctk.CTkFrame):
             self.input_entry.delete(0, "end")
             self.input_entry.insert(0, f)
 
+    def browse_folder(self):
+        d = filedialog.askdirectory()
+        if d:
+            self.input_entry.delete(0, "end")
+            self.input_entry.insert(0, d)
+
     def start_conversion(self):
         inp = self.input_entry.get().strip()
         if not inp or not os.path.exists(inp):
-            messagebox.showerror("Error", "Invalid input file.")
+            messagebox.showerror("Error", "Invalid input file or folder.")
             return
 
         fmt = self.format_combo.get()
-        # Auto-generate output path
-        base, _ = os.path.splitext(inp)
-        out = f"{base}_converted.{fmt}"
-
         args = self.adv_entry.get().strip() if self.app.advanced_mode else ""
         options = {"args": args}
+
+        files_to_convert = []
+        if os.path.isdir(inp):
+            # Batch mode
+            valid_exts = {'.mp4', '.mkv', '.webm', '.avi', '.mov', '.flv', '.wmv', '.m4v', '.mp3', '.wav', '.m4a'}
+            for f in os.listdir(inp):
+                if os.path.splitext(f)[1].lower() in valid_exts:
+                    full_path = os.path.join(inp, f)
+                    base, _ = os.path.splitext(full_path)
+                    out_path = f"{base}_converted.{fmt}"
+                    files_to_convert.append((full_path, out_path))
+        else:
+            # Single file
+            base, _ = os.path.splitext(inp)
+            out_path = f"{base}_converted.{fmt}"
+            files_to_convert.append((inp, out_path))
+
+        if not files_to_convert:
+            messagebox.showinfo("Info", "No valid media files found to convert.")
+            return
 
         self.converting = True
         self.convert_btn.configure(state="disabled")
         self.cancel_btn.configure(state="normal")
         self.progress_bar.set(0)
-        self.status_label.configure(text="Starting...")
+        self.status_label.configure(text=f"Starting batch ({len(files_to_convert)} files)...")
 
         # Run in thread
-        threading.Thread(target=self.run_conversion, args=(inp, out, options)).start()
+        threading.Thread(target=self.run_batch_conversion, args=(files_to_convert, options)).start()
 
-    def run_conversion(self, inp, out, options):
-        def update(p, msg):
-            self.app.after(0, lambda: self.update_ui(p, msg))
+    def run_batch_conversion(self, file_list, options):
+        total = len(file_list)
+        success_count = 0
 
-        try:
-            success = self.converter.convert(inp, out, options, update)
-            self.app.after(0, lambda: self.finish_conversion(success))
-        except Exception as e:
-            self.app.after(0, lambda: self.update_ui(0, f"Error: {e}"))
-            self.app.after(0, lambda: self.finish_conversion(False))
+        for i, (inp, out) in enumerate(file_list):
+            if not self.converting: break
+
+            def update(p, msg):
+                # Calculate global progress
+                global_p = (i + p) / total
+                self.app.after(0, lambda: self.update_ui(global_p, f"File {i+1}/{total}: {msg}"))
+
+            try:
+                if self.converter.convert(inp, out, options, update):
+                    success_count += 1
+            except Exception as e:
+                print(f"Error converting {inp}: {e}")
+
+        self.app.after(0, lambda: self.finish_conversion(success_count == total))
 
     def update_ui(self, p, msg):
         self.progress_bar.set(p)

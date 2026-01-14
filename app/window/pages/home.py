@@ -31,6 +31,9 @@ class HomePage(ctk.CTkFrame):
         self.url_textbox.insert("1.0", self.tr("Enter one URL per line..."))
         self.url_textbox.bind("<FocusIn>", self.on_url_focus)
 
+        # Tip label
+        ctk.CTkLabel(url_frame, text=self.tr("Tip: You can paste multiple URLs, one per line."), font=("Arial", 10), text_color="gray").pack(anchor="w", padx=10)
+
         # --- Folder Selection ---
         folder_frame = ctk.CTkFrame(url_frame, fg_color="transparent")
         folder_frame.pack(fill="x", padx=10, pady=5)
@@ -68,21 +71,50 @@ class HomePage(ctk.CTkFrame):
         self.format_combo = ctk.CTkComboBox(self.advanced_options_frame, values=["Best", "Video", "Audio Only"])
         self.format_combo.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
 
+        # Quality
+        ctk.CTkLabel(self.advanced_options_frame, text="Quality:").grid(row=0, column=2, padx=10, pady=5, sticky="w")
+        self.quality_combo = ctk.CTkComboBox(self.advanced_options_frame, values=["Best", "1080p", "720p", "480p", "Worst"])
+        self.quality_combo.grid(row=0, column=3, padx=10, pady=5, sticky="ew")
+
         # Container
-        ctk.CTkLabel(self.advanced_options_frame, text="Container:").grid(row=0, column=2, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(self.advanced_options_frame, text="Container:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
         self.container_combo = ctk.CTkComboBox(self.advanced_options_frame, values=["Auto", "mp4", "mkv", "webm", "mp3"])
-        self.container_combo.grid(row=0, column=3, padx=10, pady=5, sticky="ew")
+        self.container_combo.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
 
         # Priority
-        ctk.CTkLabel(self.advanced_options_frame, text="Priority:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(self.advanced_options_frame, text="Priority:").grid(row=1, column=2, padx=10, pady=5, sticky="w")
         self.priority_combo = ctk.CTkComboBox(self.advanced_options_frame, values=["High", "Normal", "Low"])
         self.priority_combo.set("Normal")
-        self.priority_combo.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+        self.priority_combo.grid(row=1, column=3, padx=10, pady=5, sticky="ew")
 
         # FFmpeg Args
         ctk.CTkLabel(self.advanced_options_frame, text="FFmpeg Args:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
         self.ffmpeg_args_entry = ctk.CTkEntry(self.advanced_options_frame, placeholder_text="-vcodec libx264 ...")
         self.ffmpeg_args_entry.grid(row=2, column=1, columnspan=3, padx=10, pady=5, sticky="ew")
+
+        # New Advanced Options
+        # Bandwidth Limit
+        ctk.CTkLabel(self.advanced_options_frame, text="Speed Limit (MB/s):").grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        self.speed_slider = ctk.CTkSlider(self.advanced_options_frame, from_=0, to=10, number_of_steps=20)
+        self.speed_slider.set(0) # 0 = Unlimited
+        self.speed_slider.grid(row=3, column=1, padx=10, pady=5, sticky="ew")
+
+        # Date Range
+        ctk.CTkLabel(self.advanced_options_frame, text="Date Range:").grid(row=3, column=2, padx=10, pady=5, sticky="w")
+        date_frame = ctk.CTkFrame(self.advanced_options_frame, fg_color="transparent")
+        date_frame.grid(row=3, column=3, padx=10, pady=5, sticky="ew")
+        self.date_start = ctk.CTkEntry(date_frame, placeholder_text="YYYYMMDD", width=70)
+        self.date_start.pack(side="left", padx=2)
+        ctk.CTkLabel(date_frame, text="-").pack(side="left")
+        self.date_end = ctk.CTkEntry(date_frame, placeholder_text="YYYYMMDD", width=70)
+        self.date_end.pack(side="left", padx=2)
+
+        # Proxy Toggle
+        self.proxy_var = ctk.BooleanVar(value=False)
+        self.proxy_check = ctk.CTkCheckBox(self.advanced_options_frame, text="Use Proxy", variable=self.proxy_var)
+        self.proxy_check.grid(row=4, column=0, padx=10, pady=5, sticky="w")
+
+        ctk.CTkLabel(self.advanced_options_frame, text="(Configure in Settings -> Network)", font=("Arial", 10), text_color="gray").grid(row=4, column=1, padx=0, pady=5, sticky="w")
 
         # --- Download Button ---
         self.download_btn = ctk.CTkButton(

@@ -44,7 +44,7 @@ class SidebarApp(ctk.CTk):
             None, # Downloader set later
             lambda x: None # check_update placeholder
         )
-        self.settings = self.settings_helper.load_settings()
+        self.settings = self.settings_helper.settings
 
         # Load Language
         lang = self.load_language_preference()
@@ -89,6 +89,7 @@ class SidebarApp(ctk.CTk):
         self.create_nav_button("History", self.show_history, 3, icon_name="history")
         self.create_nav_button("Converter", self.show_converter, 4, icon_name="movie")
         self.create_nav_button("Settings", self.show_settings, 5, icon_name="settings")
+        self.create_nav_button("Help", self.show_help, 6, icon_name="help")
 
         # Main Content Frame
         self.content_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
@@ -179,6 +180,13 @@ class SidebarApp(ctk.CTk):
             self.show_page("Settings", SettingsPage)
         except ImportError:
             self.show_placeholder("Settings")
+
+    def show_help(self):
+        try:
+            from app.window.pages.help import HelpPage
+            self.show_page("Help", HelpPage)
+        except ImportError:
+            self.show_placeholder("Help")
 
     def show_placeholder(self, name):
         self.select_nav_button(name)
