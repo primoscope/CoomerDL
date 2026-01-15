@@ -4,6 +4,8 @@ Menu Bar Component Module
 This module provides a reusable menu bar component that can be integrated into the main UI.
 Extracted from ui.py to improve modularity and maintainability.
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 import webbrowser
 from typing import Callable, Optional

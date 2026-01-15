@@ -1,6 +1,8 @@
 """
 Download queue management with persistence.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import List, Optional, Callable
 from enum import Enum

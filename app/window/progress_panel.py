@@ -4,6 +4,8 @@ Progress Panel Component Module
 Handles progress bar, percentage display, and details toggle.
 Extracted from ui.py to improve modularity.
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 from PIL import Image
 from typing import Callable, Optional

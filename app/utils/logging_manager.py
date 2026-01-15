@@ -3,6 +3,8 @@ Logging Manager for CoomerDL.
 
 Provides centralized logging with file rotation, console output, and real-time callbacks.
 """
+from __future__ import annotations
+
 import logging
 import os
 from datetime import datetime

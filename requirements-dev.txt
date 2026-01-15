@@ -1,0 +1,40 @@
+# Development dependencies for CoomerDL
+# Install with: pip install -r requirements-dev.txt
+
+# Include main dependencies
+-r requirements.txt
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.11.1
+
+# Code quality
+black>=23.12.0
+isort>=5.13.0
+flake8>=7.0.0
+mypy>=1.8.0
+
+# Type stubs
+types-requests>=2.31.0
+types-beautifulsoup4>=4.12.0
+types-Pillow>=10.2.0
+
+# Pre-commit hooks
+pre-commit>=3.6.0
+
+# Security
+bandit[toml]>=1.7.6
+
+# Documentation coverage
+interrogate>=1.5.0
+
+# Linting plugins
+flake8-docstrings>=1.7.0
+flake8-bugbear>=23.12.0
+flake8-comprehensions>=3.14.0
+
+# Additional development tools
+ipython>=8.18.0
+ipdb>=0.13.13

@@ -4,6 +4,8 @@ Status Bar Component Module
 Handles ETA and download speed display in the footer.
 Extracted from ui.py to improve modularity.
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 from typing import Callable
 

@@ -1,6 +1,8 @@
 """
 Download Queue Manager Dialog
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 from typing import Optional, Callable
 from app.models.download_queue import DownloadQueue, QueueItem, QueueItemStatus

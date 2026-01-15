@@ -3,6 +3,8 @@ Generic Downloader - Fallback for unsupported sites.
 
 Attempts to extract media from any URL by parsing HTML for common media tags.
 """
+from __future__ import annotations
+
 import os
 import re
 from typing import Optional

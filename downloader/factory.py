@@ -1,6 +1,8 @@
 """
 Factory for creating downloader instances based on URL.
 """
+from __future__ import annotations
+
 import logging
 from typing import Optional, List, Type
 from downloader.base import BaseDownloader, DownloadOptions

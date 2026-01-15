@@ -3,6 +3,8 @@ Universal Scraper - Intelligent media detection for any webpage.
 
 Uses multiple extraction strategies to find and download media from any URL.
 """
+from __future__ import annotations
+
 import os
 import re
 import json

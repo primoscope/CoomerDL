@@ -4,6 +4,8 @@ Download Queue Manager - Unified job queue for all download engines.
 Provides a single queue that works with all downloaders (native + yt-dlp + generic),
 emits consistent events, and persists history.
 """
+from __future__ import annotations
+
 import threading
 import queue
 import logging

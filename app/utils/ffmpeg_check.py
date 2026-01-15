@@ -3,6 +3,8 @@ FFmpeg Check Utility - Verify FFmpeg availability.
 
 Provides functions to check if FFmpeg is installed and accessible.
 """
+from __future__ import annotations
+
 import shutil
 import subprocess
 import logging

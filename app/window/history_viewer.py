@@ -2,6 +2,8 @@
 History Viewer Component
 Displays searchable download history from database
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 from typing import Optional, Callable, List
 import sqlite3

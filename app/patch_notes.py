@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import tkinter as tk
 import requests
 from tkinterweb import HtmlFrame

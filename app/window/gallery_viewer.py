@@ -2,6 +2,8 @@
 Gallery Viewer Component
 Displays downloaded media with thumbnails and preview functionality
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 from typing import Optional, Callable, List
 from pathlib import Path

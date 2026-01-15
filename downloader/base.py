@@ -2,6 +2,8 @@
 Base downloader class that all site-specific downloaders must inherit from.
 Provides standardized interface and common functionality.
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Optional, Callable, Dict, Any

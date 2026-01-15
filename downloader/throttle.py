@@ -1,6 +1,8 @@
 """
 Bandwidth throttling for download operations.
 """
+from __future__ import annotations
+
 import time
 import threading
 from typing import Optional

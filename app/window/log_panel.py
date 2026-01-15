@@ -4,6 +4,8 @@ Log Panel Component Module
 Handles log textbox with auto-scroll functionality.
 Extracted from ui.py to improve modularity.
 """
+from __future__ import annotations
+
 import tkinter as tk
 import customtkinter as ctk
 from typing import Callable

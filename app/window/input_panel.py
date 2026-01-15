@@ -4,6 +4,8 @@ Input Panel Component Module
 Handles URL entry and folder selection for downloads.
 Extracted from ui.py to improve modularity.
 """
+from __future__ import annotations
+
 import os
 import sys
 import subprocess

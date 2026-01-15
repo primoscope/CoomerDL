@@ -3,6 +3,8 @@ Download History Database - Persistent storage for jobs and events.
 
 Uses SQLite for thread-safe persistence of download history.
 """
+from __future__ import annotations
+
 import json
 import os
 import sqlite3

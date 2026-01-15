@@ -4,6 +4,8 @@ Download Job and Event models for the Universal Archiver.
 Provides dataclasses and enums for the unified job queue system.
 All models are JSON-serializable for persistence and event transmission.
 """
+from __future__ import annotations
+
 import json
 import uuid
 from dataclasses import dataclass, field, asdict

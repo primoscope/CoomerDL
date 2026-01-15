@@ -4,6 +4,8 @@ yt-dlp Adapter - Universal downloader using yt-dlp library.
 Provides support for 1000+ sites by integrating yt-dlp as a Python library.
 Used as a fallback when native downloaders don't support the URL.
 """
+from __future__ import annotations
+
 import os
 import time
 import logging

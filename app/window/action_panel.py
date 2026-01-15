@@ -4,6 +4,8 @@ Action Panel Component Module
 Handles download and cancel buttons with progress label.
 Extracted from ui.py to improve modularity.
 """
+from __future__ import annotations
+
 import tkinter as tk
 import customtkinter as ctk
 from typing import Callable, Optional

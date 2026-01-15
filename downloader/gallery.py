@@ -3,6 +3,8 @@ Gallery Downloader - Universal gallery/image board downloader using gallery-dl.
 
 Provides support for hundreds of image hosting sites through gallery-dl's extractor framework.
 """
+from __future__ import annotations
+
 import os
 import time
 import logging

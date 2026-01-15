@@ -1,6 +1,8 @@
 """
 Advanced Filters Settings Tab for Settings Window.
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 from tkinter import StringVar, IntVar, BooleanVar
 from datetime import datetime

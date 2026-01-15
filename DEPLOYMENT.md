@@ -1,17 +1,49 @@
 # CoomerDL Web Application - Deployment Guide
 
-This guide covers deploying CoomerDL as a modern web application to Google Cloud Platform.
+This guide covers deploying CoomerDL as a modern web application to multiple cloud platforms.
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Quick Start - One-Click Deploy](#quick-start---one-click-deploy)
-- [Manual Deployment](#manual-deployment)
+- [Cloud Platform Comparison](#cloud-platform-comparison)
+- [Google Cloud Platform](#google-cloud-platform-gcp)
+- [Amazon Web Services](#amazon-web-services-aws)
+- [Microsoft Azure](#microsoft-azure)
+- [Heroku](#heroku)
 - [Local Development](#local-development)
 - [Configuration](#configuration)
-- [Firebase Hosting](#firebase-hosting)
 - [Troubleshooting](#troubleshooting)
 - [Cost Estimates](#cost-estimates)
+
+---
+
+## Cloud Platform Comparison
+
+Choose the platform that best fits your needs:
+
+| Feature | Google Cloud | AWS | Azure | Heroku |
+|---------|-------------|-----|-------|--------|
+| **Ease of Setup** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Cost (Light Use)** | $5-10/mo | $10-15/mo | $10-15/mo | Free-$7/mo |
+| **Scalability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Free Tier** | Generous | Limited | Generous | Limited |
+| **Auto-scaling** | ✅ | ✅ | ✅ | ✅ |
+| **Container Support** | Cloud Run | ECS Fargate | Container Apps | Dynos |
+| **Storage** | Cloud Storage | S3 | Blob Storage | Add-ons |
+| **Database** | Cloud SQL | RDS | Azure SQL | Add-ons |
+| **Global CDN** | Yes | CloudFront | Front Door | No (add-on) |
+| **Monitoring** | Cloud Monitoring | CloudWatch | Monitor | Basic |
+| **Deployment Time** | 5-10 min | 10-15 min | 10-15 min | 2-5 min |
+
+### Recommendation by Use Case
+
+- **Hobby/Testing**: Heroku (easiest, free tier)
+- **Production (Small)**: Google Cloud Run (best free tier, simple)
+- **Production (Large)**: AWS ECS or Azure Container Apps (mature ecosystem)
+- **Enterprise**: AWS or Azure (compliance, advanced features)
+
+---
+
+## Google Cloud Platform (GCP)
 
 ---
 
@@ -283,6 +315,320 @@ cd ..
 
 # Deploy to Firebase
 firebase deploy --only hosting
+```
+
+---
+
+## Amazon Web Services (AWS)
+
+Deploy CoomerDL to AWS ECS Fargate for production-grade container orchestration.
+
+### Prerequisites
+
+1. **AWS CLI** - [Installation Guide](https://aws.amazon.com/cli/)
+   ```bash
+   # Verify installation
+   aws --version
+   
+   # Configure credentials
+   aws configure
+   ```
+
+2. **Docker** - Required for building images
+   ```bash
+   docker --version
+   ```
+
+### Quick Start - Automated Deployment
+
+```bash
+# Clone the repository
+git clone https://github.com/primoscope/CoomerDL.git
+cd CoomerDL
+
+# Set environment variables (optional)
+export PROJECT_NAME=coomerdl
+export ENVIRONMENT=production
+export AWS_REGION=us-east-1
+
+# Run the deployment script
+./scripts/deploy-aws.sh
+```
+
+The script will:
+1. ✅ Create ECR repository for Docker images
+2. 🐳 Build and push Docker image to ECR
+3. ☁️ Deploy CloudFormation stack with:
+   - VPC with public subnets
+   - Application Load Balancer
+   - ECS Fargate cluster and service
+   - S3 bucket for downloads
+   - CloudWatch logs
+   - IAM roles and security groups
+4. 🌐 Provide your application URL
+
+**Deployment time:** ~10-15 minutes
+
+### Manual Deployment
+
+1. **Create ECR Repository**
+   ```bash
+   aws ecr create-repository --repository-name coomerdl
+   ```
+
+2. **Build and Push Image**
+   ```bash
+   # Login to ECR
+   aws ecr get-login-password --region us-east-1 | \
+     docker login --username AWS --password-stdin \
+     <account-id>.dkr.ecr.us-east-1.amazonaws.com
+   
+   # Build and push
+   docker build -t coomerdl:latest -f Dockerfile.webapp .
+   docker tag coomerdl:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/coomerdl:latest
+   docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/coomerdl:latest
+   ```
+
+3. **Deploy CloudFormation Stack**
+   ```bash
+   aws cloudformation deploy \
+     --template-file aws/cloudformation.yaml \
+     --stack-name coomerdl-production \
+     --parameter-overrides \
+       ProjectName=coomerdl \
+       EnvironmentName=production \
+       ContainerImage=<account-id>.dkr.ecr.us-east-1.amazonaws.com/coomerdl:latest \
+     --capabilities CAPABILITY_NAMED_IAM
+   ```
+
+4. **Get Application URL**
+   ```bash
+   aws cloudformation describe-stacks \
+     --stack-name coomerdl-production \
+     --query 'Stacks[0].Outputs[?OutputKey==`ApplicationURL`].OutputValue' \
+     --output text
+   ```
+
+### AWS Configuration
+
+The CloudFormation template includes:
+
+- **Compute**: ECS Fargate (2 vCPU, 4GB RAM by default)
+- **Networking**: VPC, subnets, load balancer, security groups
+- **Storage**: S3 bucket with 30-day lifecycle policy
+- **Monitoring**: CloudWatch logs and container insights
+- **Security**: IAM roles with least-privilege access
+
+### Scaling
+
+```bash
+# Update service desired count
+aws ecs update-service \
+  --cluster coomerdl-production-cluster \
+  --service coomerdl-production-service \
+  --desired-count 3
+```
+
+### Cleanup
+
+```bash
+# Delete the stack
+aws cloudformation delete-stack --stack-name coomerdl-production
+
+# Delete ECR repository
+aws ecr delete-repository --repository-name coomerdl --force
+```
+
+---
+
+## Microsoft Azure
+
+Deploy CoomerDL to Azure Container Apps for serverless container hosting.
+
+### Prerequisites
+
+1. **Azure CLI** - [Installation Guide](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+   ```bash
+   # Verify installation
+   az --version
+   
+   # Login
+   az login
+   ```
+
+2. **Docker** - Required for building images
+   ```bash
+   docker --version
+   ```
+
+### Quick Start - Automated Deployment
+
+```bash
+# Clone the repository
+git clone https://github.com/primoscope/CoomerDL.git
+cd CoomerDL
+
+# Set environment variables (optional)
+export PROJECT_NAME=coomerdl
+export ENVIRONMENT=production
+export AZURE_LOCATION=eastus
+
+# Run the deployment script
+./scripts/deploy-azure.sh
+```
+
+The script will:
+1. ✅ Create resource group
+2. 📦 Create Azure Container Registry (ACR)
+3. 🐳 Build and push Docker image to ACR
+4. ☁️ Deploy ARM template with:
+   - Azure Container Apps environment
+   - Container app with auto-scaling
+   - Storage account with blob container
+   - Log Analytics workspace
+5. 🌐 Provide your application URL
+
+**Deployment time:** ~10-15 minutes
+
+### Manual Deployment
+
+1. **Create Resource Group**
+   ```bash
+   az group create --name coomerdl-production-rg --location eastus
+   ```
+
+2. **Create Container Registry**
+   ```bash
+   az acr create \
+     --resource-group coomerdl-production-rg \
+     --name coomerdlacr \
+     --sku Basic \
+     --admin-enabled true
+   ```
+
+3. **Build and Push Image**
+   ```bash
+   # Login to ACR
+   az acr login --name coomerdlacr
+   
+   # Build and push
+   docker build -t coomerdl:latest -f Dockerfile.webapp .
+   docker tag coomerdl:latest coomerdlacr.azurecr.io/coomerdl:latest
+   docker push coomerdlacr.azurecr.io/coomerdl:latest
+   ```
+
+4. **Deploy ARM Template**
+   ```bash
+   az deployment group create \
+     --resource-group coomerdl-production-rg \
+     --template-file azure/azuredeploy.json \
+     --parameters \
+       projectName=coomerdl \
+       environmentName=production \
+       containerImage=coomerdlacr.azurecr.io/coomerdl:latest
+   ```
+
+5. **Get Application URL**
+   ```bash
+   az deployment group show \
+     --resource-group coomerdl-production-rg \
+     --name azuredeploy \
+     --query properties.outputs.applicationUrl.value
+   ```
+
+### Azure Configuration
+
+The ARM template includes:
+
+- **Compute**: Azure Container Apps (2 cores, 4GB RAM by default)
+- **Storage**: Azure Blob Storage with 7-day soft delete
+- **Monitoring**: Log Analytics workspace
+- **Security**: Managed identities, HTTPS only
+- **Scaling**: HTTP-based auto-scaling (1-10 replicas)
+
+### Scaling
+
+```bash
+# Update replica count
+az containerapp update \
+  --name coomerdl-production-app \
+  --resource-group coomerdl-production-rg \
+  --max-replicas 10
+```
+
+### Cleanup
+
+```bash
+# Delete resource group (includes all resources)
+az group delete --name coomerdl-production-rg --yes
+```
+
+---
+
+## Heroku
+
+Deploy CoomerDL to Heroku for simple, managed hosting.
+
+### Prerequisites
+
+1. **Heroku CLI** - [Installation Guide](https://devcenter.heroku.com/articles/heroku-cli)
+   ```bash
+   # Verify installation
+   heroku --version
+   
+   # Login
+   heroku login
+   ```
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/primoscope/CoomerDL.git
+cd CoomerDL
+
+# Create Heroku app
+heroku create your-app-name
+
+# Deploy
+git push heroku main
+
+# Open the app
+heroku open
+```
+
+The `heroku.yml` file automatically configures:
+- Docker build from `Dockerfile.webapp`
+- Web dyno on port 8080
+- Release commands for database migrations
+
+**Deployment time:** ~2-5 minutes
+
+### Configuration
+
+```bash
+# Set environment variables
+heroku config:set STORAGE_TYPE=s3
+heroku config:set DATABASE_URL=postgresql://...
+
+# Scale dynos
+heroku ps:scale web=2
+
+# View logs
+heroku logs --tail
+```
+
+### Addons
+
+```bash
+# PostgreSQL database
+heroku addons:create heroku-postgresql:hobby-dev
+
+# Redis for sessions
+heroku addons:create heroku-redis:hobby-dev
+
+# S3 storage (via addon)
+heroku addons:create bucketeer:hobbyist
 ```
 
 ---

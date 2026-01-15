@@ -3,6 +3,8 @@ Domain Rate Limiter - Per-domain concurrency and request rate limiting.
 
 Provides thread-safe rate limiting for HTTP requests across domains.
 """
+from __future__ import annotations
+
 import threading
 import time
 from contextlib import contextmanager

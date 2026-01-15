@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import customtkinter as ctk
 import sqlite3
 import sys

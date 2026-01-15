@@ -1,6 +1,8 @@
 """
 Logging Settings Tab for Settings Window.
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 import os
 from tkinter import filedialog, messagebox

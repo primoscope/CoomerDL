@@ -4,6 +4,8 @@ Reddit Downloader - Official support for Reddit posts.
 Uses Reddit's public JSON API to extract media from posts.
 Falls back to yt-dlp if JSON API fails.
 """
+from __future__ import annotations
+
 import os
 import re
 import json

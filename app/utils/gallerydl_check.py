@@ -3,6 +3,8 @@ Gallery-dl Check Utility - Verify gallery-dl availability.
 
 Provides functions to check if gallery-dl is installed and accessible.
 """
+from __future__ import annotations
+
 import logging
 from typing import Tuple
 

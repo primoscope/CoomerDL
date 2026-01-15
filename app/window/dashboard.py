@@ -2,6 +2,8 @@
 Command Center Dashboard - Tabbed Interface
 Main window with tabs for Home, Queue, Gallery, and History
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 from typing import Optional, Callable
 from pathlib import Path

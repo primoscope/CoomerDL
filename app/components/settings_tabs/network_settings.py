@@ -1,6 +1,8 @@
 """
 Network Settings Tab for Settings Window.
 """
+from __future__ import annotations
+
 import customtkinter as ctk
 
 

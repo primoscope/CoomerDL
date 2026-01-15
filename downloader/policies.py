@@ -5,6 +5,8 @@ Provides centralized configuration for:
 - Retry behavior with exponential backoff and jitter
 - Per-domain concurrency limits and minimum intervals
 """
+from __future__ import annotations
+
 import random
 from dataclasses import dataclass, field
 from typing import Set, Tuple, Type

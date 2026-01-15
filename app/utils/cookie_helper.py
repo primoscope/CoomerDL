@@ -3,6 +3,8 @@ Cookie Helper - Automated cookie extraction from browsers.
 
 Uses browser_cookie3 to extract cookies from Chrome, Firefox, Edge, etc.
 """
+from __future__ import annotations
+
 import json
 from typing import List, Dict, Optional
 from pathlib import Path
