@@ -1,0 +1,3 @@
+## 2024-05-23 - [N+1 Disk Write Anti-Pattern in Queue Management]
+**Learning:** I discovered that the `DownloadQueue` class persists its state to a JSON file on *every* modification. The `HomePage` iterates through user-submitted URLs and adds them one by one, triggering a full disk write for each URL. This is a classic N+1 I/O performance antipattern.
+**Action:** Always check for batch operation support in data management classes. When implementing persistence, separate "update memory" from "persist to disk" or provide batch methods to commit changes once. Next time, I will look for loops calling state-modifying methods that trigger side effects (like I/O).
