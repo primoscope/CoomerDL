@@ -1,0 +1,96 @@
+# This file specifies files that are *not* uploaded to Google Cloud
+# using gcloud. It follows the same syntax as .gitignore, with the addition of
+# "#!include" directives (which insert the entries of the given .gitignore-style
+# file at that point).
+#
+# For more information, run:
+#   $ gcloud topic gcloudignore
+#
+.gcloudignore
+# If you would like to upload your .git directory, .gitignore file or files
+# from your .gitignore file, remove the corresponding line below:
+.git
+.gitignore
+
+# Python pycache:
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Development files
+.env
+.env.local
+.env.*.local
+*.log
+*.sqlite
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+*.spec
+
+# Node modules (frontend will be built during Cloud Build)
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+frontend/coverage/
+
+# Downloads directory
+downloads/
+*.tmp
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Deployment scripts (not needed on Cloud Run)
+scripts/deploy-*.sh
+scripts/test-*.sh
+
+# AWS and Azure specific files
+aws/
+azure/
+heroku.yml
+docker-compose.yml
+
+# Git workflows
+.github/
+
+# Pre-commit
+.pre-commit-config.yaml
+
+# MCP servers config
+.mcp/
+
+# IDX config
+.idx/
