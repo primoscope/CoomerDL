@@ -10,6 +10,7 @@
 CoomerDL is a powerful media downloader supporting over 1000 websites. Available as both a desktop application and a modern web application that can be deployed to the cloud.
 
 [![Download Desktop App](https://img.shields.io/badge/Download-Desktop%20App-brightgreen?style=for-the-badge)](https://github.com/primoscope/CoomerDL/releases)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/primoscope/CoomerDL)
 [![Deploy to Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/primoscope/CoomerDL)
 
 ---
@@ -20,26 +21,35 @@ CoomerDL is now available as a **modern web application** with cloud deployment!
 
 ### ☁️ One-Click Cloud Deployment
 
-Deploy your own instance to Google Cloud Platform in minutes:
+Deploy your own instance to the cloud platform of your choice:
 
+**Heroku (Easiest):**
+```bash
+git clone https://github.com/primoscope/CoomerDL.git
+cd CoomerDL
+./scripts/deploy-heroku.sh
+```
+
+**Google Cloud Platform:**
 ```bash
 git clone https://github.com/primoscope/CoomerDL.git
 cd CoomerDL
 ./scripts/deploy-gcp.sh
 ```
 
-**Or click the button above** ☝️ to deploy directly from GitHub!
+**Or click the deployment buttons above** ☝️ to deploy directly from GitHub!
 
 ### 🌐 Web App Features
 
 - ✅ **Modern React UI** - Responsive design works on desktop, tablet, and mobile
 - ✅ **Real-Time Updates** - WebSocket-powered live progress and logs
-- ✅ **Cloud Storage** - Direct upload to Google Cloud Storage
+- ✅ **Cloud Storage** - Google Cloud Storage or local filesystem
+- ✅ **Multiple Deployment Options** - Heroku, Google Cloud Platform, or Docker
 - ✅ **Scalable** - Auto-scales based on demand
 - ✅ **No Installation** - Access from any browser
 - ✅ **All Features** - Same powerful downloading capabilities as desktop app
 
-[📚 Read the Web App Deployment Guide →](DEPLOYMENT.md)
+[📚 Read the Full Deployment Guide →](DEPLOYMENT.md)
 
 ---
 
@@ -116,13 +126,13 @@ CoomerDL is available in two versions:
 
 | Feature | Desktop App | Web Application |
 |---------|------------|-----------------|
-| **Installation** | Download & run .exe | One-click cloud deploy |
+| **Installation** | Download & run .exe | One-click cloud deploy (Heroku/GCP) |
 | **Interface** | Native desktop GUI | Modern web browser |
 | **Platform** | Windows/Mac/Linux | Any device with browser |
-| **Storage** | Local filesystem | Cloud storage (GCS) |
+| **Storage** | Local filesystem | Local or Cloud storage (GCS) |
 | **Deployment** | Run locally | Cloud-hosted (scalable) |
 | **Updates** | Manual download | Auto-deploy |
-| **Best For** | Personal use, privacy | Remote access, sharing |
+| **Best For** | Personal use, privacy | Remote access, sharing, always-on |
 
 ### Desktop App - Quick Start
 
