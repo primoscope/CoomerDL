@@ -1,0 +1,82 @@
+{
+  "name": "CoomerDL",
+  "description": "Universal Media Downloader - Web Application supporting 1000+ websites",
+  "repository": "https://github.com/primoscope/CoomerDL",
+  "logo": "https://raw.githubusercontent.com/primoscope/CoomerDL/main/resources/icon.png",
+  "keywords": [
+    "media-downloader",
+    "web-scraper",
+    "video-downloader",
+    "fastapi",
+    "python"
+  ],
+  "success_url": "/",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    },
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-apt"
+    },
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "image": "heroku/python",
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini",
+      "as": "DATABASE"
+    }
+  ],
+  "env": {
+    "APP_NAME": {
+      "description": "Application name",
+      "value": "CoomerDL"
+    },
+    "DEBUG": {
+      "description": "Enable debug mode (not recommended for production)",
+      "value": "false"
+    },
+    "SECRET_KEY": {
+      "description": "Secret key for JWT tokens and session management. IMPORTANT: Change this!",
+      "generator": "secret"
+    },
+    "STORAGE_TYPE": {
+      "description": "Storage backend: 'local' for Heroku filesystem (temporary) or 'gcs' for Google Cloud Storage (recommended)",
+      "value": "local",
+      "required": false
+    },
+    "GCS_BUCKET": {
+      "description": "Google Cloud Storage bucket name (only required if STORAGE_TYPE=gcs)",
+      "required": false
+    },
+    "GOOGLE_CLOUD_PROJECT": {
+      "description": "Google Cloud project ID (only required if STORAGE_TYPE=gcs)",
+      "required": false
+    },
+    "DOWNLOAD_FOLDER": {
+      "description": "Local download folder (only used if STORAGE_TYPE=local)",
+      "value": "./downloads",
+      "required": false
+    },
+    "CORS_ORIGINS": {
+      "description": "Allowed CORS origins (comma-separated). Use * for development only.",
+      "value": "*",
+      "required": false
+    },
+    "PYTHONUNBUFFERED": {
+      "description": "Disable Python output buffering",
+      "value": "1"
+    }
+  },
+  "scripts": {
+    "postdeploy": "echo 'CoomerDL deployed successfully! Visit the app URL to access the web interface.'"
+  }
+}
