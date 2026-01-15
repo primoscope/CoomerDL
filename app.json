@@ -1,0 +1,27 @@
+{
+  "name": "coomerdl",
+  "description": "Universal Media Archiver - Download media from 1000+ websites with a modern web interface",
+  "repository": "https://github.com/primoscope/CoomerDL",
+  "env": {
+    "STORAGE_TYPE": {
+      "description": "Storage backend to use (gcs for Google Cloud Storage)",
+      "value": "gcs",
+      "required": true
+    },
+    "GCS_BUCKET": {
+      "description": "Google Cloud Storage bucket name for storing downloads",
+      "value": "",
+      "required": true
+    }
+  },
+  "options": {
+    "allow-unauthenticated": true,
+    "memory": "4Gi",
+    "cpu": "2",
+    "max-instances": 10,
+    "port": 8080
+  },
+  "build": {
+    "skip": false
+  }
+}
