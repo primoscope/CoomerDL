@@ -50,23 +50,23 @@ python main.py
 
 | ID | Task | Priority | Complexity | Status |
 |----|------|----------|------------|--------|
-| T001 | Fix undefined `log_message` variable | Critical | Low | Closed |
-| T002 | Fix SimpCity missing `base_url` | Critical | Low | Closed |
-| T003 | Remove unused import in jpg5.py | Low | Trivial | Closed |
-| T004 | Standardize cancel mechanisms | Medium | Medium | Closed |
-| T005 | Fix database connection cleanup | Medium | Low | Closed |
-| T006 | Fix BunkrDownloader notification thread | Medium | Low | Closed |
-| T007 | Fix EromeDownloader folder_name scope | Medium | Low | Closed |
-| T008 | Add batch URL input support | High | Medium | Open |
-| T009 | Create BaseDownloader abstract class | High | High | Open |
-| T010 | Split ui.py into modules | High | High | Open |
-| T011 | Add download queue manager | High | High | Open |
-| T012 | Add proxy support | Medium | Medium | Open |
-| T013 | Add bandwidth limiting | Medium | Medium | Open |
-| T014 | Add filter by file size | Medium | Medium | Open |
-| T015 | Add filter by date range | Medium | Medium | Open |
-| T016 | Add unit test infrastructure | High | Medium | Open |
-| T017 | Add type hints throughout codebase | Medium | Medium | Open |
+| T001 | Fix undefined `log_message` variable | Critical | Low | ✅ Closed |
+| T002 | Fix SimpCity missing `base_url` | Critical | Low | ✅ Closed |
+| T003 | Remove unused import in jpg5.py | Low | Trivial | ✅ Closed |
+| T004 | Standardize cancel mechanisms | Medium | Medium | ✅ Closed |
+| T005 | Fix database connection cleanup | Medium | Low | ✅ Closed |
+| T006 | Fix BunkrDownloader notification thread | Medium | Low | ✅ Closed |
+| T007 | Fix EromeDownloader folder_name scope | Medium | Low | ✅ Closed |
+| T008 | Add batch URL input support | High | Medium | ✅ Completed |
+| T009 | Create BaseDownloader abstract class | High | High | ✅ Closed |
+| T010 | Split ui.py into modules | High | High | 🚧 In Progress (70%) |
+| T011 | Add download queue manager | High | High | ✅ Closed |
+| T012 | Add proxy support | Medium | Medium | ✅ Closed |
+| T013 | Add bandwidth limiting | Medium | Medium | ✅ Closed |
+| T014 | Add filter by file size | Medium | Medium | ✅ Closed |
+| T015 | Add filter by date range | Medium | Medium | ✅ Closed |
+| T016 | Add unit test infrastructure | High | Medium | ✅ Closed |
+| T017 | Add type hints throughout codebase | Medium | Medium | 🚧 In Progress (60%) |
 
 ---
 

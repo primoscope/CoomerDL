@@ -67,11 +67,16 @@ CoomerDL has evolved from a site-specific downloader into a **Universal Media Ar
 
 | Feature | Status | Description |
 |---------|--------|-------------|
+| **Download Queue Manager** | ✅ Ready | Pause, resume, reorder downloads with persistent queue |
 | **Cloud Deployment** | ✅ Ready | Deploy to Google Cloud (or Docker) with full GUI access via browser (VNC) |
 | **Cookie Management** | ✅ Ready | Use site cookies for authenticated access |
 | **Custom File Naming** | ✅ Ready | 4 different naming schemes to organize your downloads |
 | **Folder Organization** | ✅ Ready | Automatically organize downloads by site/user/post |
 | **Download History** | ✅ Ready | Browse and search your download history |
+| **Bandwidth Limiting** | ✅ Ready | Control download speeds in Settings → Network |
+| **File Size Filters** | ✅ Ready | Skip files by size in Settings → Filters |
+| **Date Range Filters** | ✅ Ready | Filter by date in Settings → Filters |
+| **File Type Exclusions** | ✅ Ready | Exclude specific formats in Settings → Filters |
 
 ---
 
@@ -79,23 +84,15 @@ CoomerDL has evolved from a site-specific downloader into a **Universal Media Ar
 
 These features are actively being worked on and will be available soon!
 
-### 📥 Download Queue Manager
-**Status: 80% Complete**
-
-A new way to manage multiple downloads:
-- 📋 View all pending and active downloads in one place
-- ⏸️ Pause and resume individual downloads
-- 🔀 Reorder downloads by dragging and dropping
-- ⭐ Set download priorities (High, Normal, Low)
-- 💾 Queue persists across app restarts
-
-### 🎨 UI Improvements
-**Status: 30% Complete**
+### 🎨 UI Architecture Improvements
+**Status: 70% Complete**
 
 Making CoomerDL easier and more pleasant to use:
-- 🧩 Modular interface for better performance
-- 📊 Enhanced progress displays
-- 🔔 Better notifications and status updates
+- ✅ Modular interface components extracted (input, options, log, menu panels)
+- ✅ Enhanced progress displays implemented
+- ✅ Better notifications and status updates
+- 🚧 Further refactoring of main UI controller (in progress)
+- 🚧 Complete separation of concerns for maintainability
 
 ---
 
