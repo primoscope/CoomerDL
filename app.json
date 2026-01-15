@@ -12,6 +12,11 @@
       "description": "Google Cloud Storage bucket name for storing downloads",
       "value": "",
       "required": true
+    },
+    "PORT": {
+      "description": "Port for the web application",
+      "value": "8080",
+      "required": false
     }
   },
   "options": {
@@ -19,9 +24,21 @@
     "memory": "4Gi",
     "cpu": "2",
     "max-instances": 10,
-    "port": 8080
+    "min-instances": 0,
+    "port": 8080,
+    "http2": false
   },
   "build": {
     "skip": false
+  },
+  "hooks": {
+    "postcreate": {
+      "commands": [
+        "gcloud services enable run.googleapis.com",
+        "gcloud services enable cloudbuild.googleapis.com",
+        "gcloud services enable containerregistry.googleapis.com",
+        "gcloud services enable storage.googleapis.com"
+      ]
+    }
   }
 }
