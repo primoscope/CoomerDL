@@ -1,1 +1,2 @@
-# Models modulefrom __future__ import annotations
+# Models module
+from __future__ import annotations

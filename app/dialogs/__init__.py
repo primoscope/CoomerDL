@@ -1,1 +1,2 @@
-# Dialogs modulefrom __future__ import annotations
+# Dialogs module
+from __future__ import annotations

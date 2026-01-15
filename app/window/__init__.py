@@ -1,1 +1,2 @@
-# Window components modulefrom __future__ import annotations
+# Window components module
+from __future__ import annotations
