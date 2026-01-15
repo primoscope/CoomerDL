@@ -12,7 +12,9 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import threading
 import time
+from datetime import datetime
 import sqlite3
+from downloader.throttle import BandwidthThrottle
 
 class Downloader:
 	def __init__(self, download_folder: str, max_workers: int = 5, log_callback: Optional[Callable[[str], None]] = None,
@@ -21,7 +23,8 @@ class Downloader:
 				max_retries: int = 999999, retry_interval: float = 1.0, stream_read_timeout: int = 10,
 				download_images: bool = True, download_videos: bool = True, download_compressed: bool = True,
 				tr: Optional[Callable[[str, Any], str]] = None, folder_structure: str = 'default', rate_limit_interval: float = 1.0,
-				proxy_type: str = 'none', proxy_url: str = '', user_agent: Optional[str] = None) -> None:
+				proxy_type: str = 'none', proxy_url: str = '', user_agent: Optional[str] = None,
+				bandwidth_limit_kbps: int = 0, date_from: Optional[str] = None, date_to: Optional[str] = None) -> None:
 		
 		self.download_folder = download_folder
 		self.log_callback = log_callback
@@ -45,6 +48,12 @@ class Downloader:
 		self.max_size: int = 0
 		self.download_retry_attempts: int = max_retries
 		self.file_naming_mode: int = 0
+		self.bandwidth_limit_kbps: int = bandwidth_limit_kbps
+		self.throttle: Optional[BandwidthThrottle] = None
+		if self.bandwidth_limit_kbps > 0:
+			self.throttle = BandwidthThrottle(self.bandwidth_limit_kbps * 1024)
+		self.date_from: Optional[str] = date_from
+		self.date_to: Optional[str] = date_to
 		self.media_counter = 0
 		self.session = requests.Session()
 		
@@ -551,6 +560,15 @@ class Downloader:
 					self.log(f"Error getting total size: {e}")
 					total_size = 0
 
+				# Check file size filters
+				if self.size_filter_enabled and total_size > 0:
+					if self.min_size > 0 and total_size < self.min_size:
+						self.log(f"Skipping {media_url}: Size {total_size} bytes is less than minimum {self.min_size} bytes.")
+						return
+					if self.max_size > 0 and total_size > self.max_size:
+						self.log(f"Skipping {media_url}: Size {total_size} bytes is greater than maximum {self.max_size} bytes.")
+						return
+
 				downloaded_size = 0
 				self.start_time = time.time()
 
@@ -563,6 +581,10 @@ class Downloader:
 							f.write(chunk)
 							downloaded_size += len(chunk)
 							
+							# Apply bandwidth throttling
+							if self.throttle:
+								self.throttle.throttle(len(chunk))
+
 							# Throttle progress updates - only update if enough time has passed
 							current_time = time.time()
 							if self.update_progress_callback:
@@ -598,6 +620,10 @@ class Downloader:
 								f.write(chunk)
 								downloaded_size += len(chunk)
 								
+								# Apply bandwidth throttling
+								if self.throttle:
+									self.throttle.throttle(len(chunk))
+
 								# Throttle progress updates - only update if enough time has passed
 								current_time = time.time()
 								if self.update_progress_callback:
@@ -709,6 +735,20 @@ class Downloader:
 				current_post_id = post.get('id') or "unknown_id"
 				
 				title = post.get('title') or ""
+				published = post.get('published')
+
+				# Date filtering
+				if published and (self.date_from or self.date_to):
+					try:
+						# Assuming ISO format like "2024-01-01" or "2024-01-01T12:00:00"
+						# Simple string comparison works for ISO dates
+						post_date_str = published[:10]
+						if self.date_from and post_date_str < self.date_from:
+							continue
+						if self.date_to and post_date_str > self.date_to:
+							continue
+					except Exception as e:
+						self.log(self.tr(f"Error parsing date for post {current_post_id}: {e}"))
 
 				
 				media_urls = self.process_post(post, site)
@@ -730,6 +770,18 @@ class Downloader:
 				current_post_id = post.get('id') or "unknown_id"
 				title = post.get('title') or ""
 				time = post.get('published') or ""
+
+				# Date filtering
+				if time and (self.date_from or self.date_to):
+					try:
+						# Assuming ISO format like "2024-01-01"
+						post_date_str = time[:10]
+						if self.date_from and post_date_str < self.date_from:
+							continue
+						if self.date_to and post_date_str > self.date_to:
+							continue
+					except Exception:
+						pass
 
 				media_urls = self.process_post(post, site)
 				for media_url in media_urls:

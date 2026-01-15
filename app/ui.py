@@ -163,6 +163,12 @@ class ImageDownloaderApp(ctk.CTk):
         proxy_type = network_settings.get('proxy_type', 'none')
         proxy_url = network_settings.get('proxy_url', '')
         user_agent = network_settings.get('user_agent', None)
+        bandwidth_limit = int(network_settings.get('bandwidth_limit_kbps') or 0)
+
+        # Load filter settings
+        filter_settings = self.settings.get('filters', {})
+        date_from = filter_settings.get('date_from', '') or None
+        date_to = filter_settings.get('date_to', '') or None
         
         # Load download folder
         self.download_folder = self.load_download_folder() 
@@ -181,9 +187,17 @@ class ImageDownloaderApp(ctk.CTk):
             max_retries=max_retries_setting,
             proxy_type=proxy_type,
             proxy_url=proxy_url,
-            user_agent=user_agent
+            user_agent=user_agent,
+            bandwidth_limit_kbps=bandwidth_limit,
+            date_from=date_from,
+            date_to=date_to
         )
         
+        # Apply filters to default downloader
+        self.default_downloader.min_size = int(filter_settings.get('min_file_size_mb', 0) or 0) * 1024 * 1024
+        self.default_downloader.max_size = int(filter_settings.get('max_file_size_mb', 0) or 0) * 1024 * 1024
+        self.default_downloader.size_filter_enabled = True
+
         self.settings_window.downloader = self.default_downloader
 
         self.active_downloader = None  # Initialize active_downloader
@@ -331,9 +345,22 @@ class ImageDownloaderApp(ctk.CTk):
                 dd.max_workers = self.max_downloads
                 dd.folder_structure = new_settings.get("folder_structure", "default")
 
-                dd.size_filter_enabled = bool(new_settings.get("size_filter_enabled", False))
-                dd.min_size = float(new_settings.get("min_size_mb", 0) or 0) * 1024 * 1024
-                dd.max_size = float(new_settings.get("max_size_mb", 0) or 0) * 1024 * 1024
+                # Get filter settings from nested dict
+                filters = new_settings.get('filters', {})
+                dd.size_filter_enabled = True  # Always enabled if filters are present
+                dd.min_size = int(filters.get("min_file_size_mb", 0) or 0) * 1024 * 1024
+                dd.max_size = int(filters.get("max_file_size_mb", 0) or 0) * 1024 * 1024
+                dd.date_from = filters.get("date_from", "") or None
+                dd.date_to = filters.get("date_to", "") or None
+
+                # Get network settings from nested dict
+                network = new_settings.get('network', {})
+                dd.bandwidth_limit_kbps = int(network.get("bandwidth_limit_kbps", 0) or 0)
+                if dd.bandwidth_limit_kbps > 0:
+                    from downloader.throttle import BandwidthThrottle
+                    dd.throttle = BandwidthThrottle(dd.bandwidth_limit_kbps * 1024)
+                else:
+                    dd.throttle = None
 
                 # modo de nombre de archivo (si lo usas)
                 try:
@@ -911,8 +938,18 @@ class ImageDownloaderApp(ctk.CTk):
             folder_structure=self.settings.get('folder_structure', 'default'),
             proxy_type=proxy_type,
             proxy_url=proxy_url,
-            user_agent=user_agent
+            user_agent=user_agent,
+            bandwidth_limit_kbps=int(network_settings.get('bandwidth_limit_kbps') or 0),
+            date_from=self.settings.get('filters', {}).get('date_from', '') or None,
+            date_to=self.settings.get('filters', {}).get('date_to', '') or None
         )
+
+        # Apply filters to general downloader
+        filter_settings = self.settings.get('filters', {})
+        self.general_downloader.min_size = int(filter_settings.get('min_file_size_mb', 0) or 0) * 1024 * 1024
+        self.general_downloader.max_size = int(filter_settings.get('max_file_size_mb', 0) or 0) * 1024 * 1024
+        self.general_downloader.size_filter_enabled = True
+
         self.general_downloader.file_naming_mode = self.settings.get('file_naming_mode', 0)
 
     def setup_jpg5_downloader(self) -> None:
