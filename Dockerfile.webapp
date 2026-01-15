@@ -21,8 +21,7 @@ FROM python:3.10-slim AS backend
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PORT=8080
+    PYTHONUNBUFFERED=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -56,12 +55,12 @@ COPY --from=frontend-builder /frontend/dist ./frontend/dist
 # Create downloads directory
 RUN mkdir -p /app/downloads
 
-# Expose port
-EXPOSE 8080
+# Expose port (dynamically set by Heroku)
+EXPOSE ${PORT:-8080}
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
-# Run with uvicorn
-CMD ["uvicorn", "backend.api.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "4"]
+# Run with uvicorn - use PORT env var from Heroku, default to 8080
+CMD uvicorn backend.api.main:app --host 0.0.0.0 --port ${PORT:-8080}
