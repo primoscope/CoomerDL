@@ -99,7 +99,7 @@ def compute_backoff(attempt: int, policy: RetryPolicy) -> float:
         # Ensure delay doesn't go negative or exceed max
         delay = max(0.1, min(delay, policy.max_delay))
     
-    return delay
+    return float(delay)
 
 
 def compute_backoff_sequence(policy: RetryPolicy) -> list:
