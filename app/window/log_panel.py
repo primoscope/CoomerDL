@@ -65,7 +65,7 @@ class LogPanel(ctk.CTkTextbox):
     
     def get_logs(self) -> str:
         """Get all log text."""
-        return str(self.get("1.0", "end-1c"))
+        return self.get("1.0", "end-1c")
     
     def export_logs(self, filepath: str):
         """

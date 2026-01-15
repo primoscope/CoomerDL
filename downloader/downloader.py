@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed, Future
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Semaphore
 from urllib.parse import quote_plus, urlencode, urljoin, urlparse
-from typing import Optional, List, Dict, Any, Union, Tuple, Callable, Set
+from typing import Optional, List, Dict, Any, Tuple, Callable
 import os
 import re
 import requests
@@ -35,7 +35,11 @@ class Downloader:
 			"Accept": "text/css"
 		}
 
-		# Missing attributes expected by UI
+		# Attributes accessed by UI components (app/ui.py, app/window/options_panel.py)
+		# These attributes are read by the UI to display filter settings and configuration:
+		# - size_filter_enabled, min_size, max_size: Used by OptionsPanel for file size filtering UI
+		# - download_retry_attempts: Displayed in OptionsPanel to show retry configuration
+		# - file_naming_mode: Used by OptionsPanel to track the current naming mode selection
 		self.size_filter_enabled: bool = False
 		self.min_size: int = 0
 		self.max_size: int = 0

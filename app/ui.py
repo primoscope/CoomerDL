@@ -11,7 +11,7 @@ import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, scrolledtext
-from typing import Optional, List, Dict, Any, Union, Tuple, Callable
+from typing import Optional, List, Dict, Any, Tuple, Callable
 from urllib.parse import ParseResult, parse_qs, urlparse
 import webbrowser
 import requests
@@ -211,7 +211,7 @@ class ImageDownloaderApp(ctk.CTk):
 
     # Application close event
     def on_app_close(self) -> None:
-        if self.is_download_active() and self.active_downloader and not self.active_downloader.cancel_requested:
+        if self.is_download_active() and not self.active_downloader.cancel_requested:
             # Mostrar advertencia si hay una descarga activa
             messagebox.showwarning(
                 self.tr("Descarga Activa"),
