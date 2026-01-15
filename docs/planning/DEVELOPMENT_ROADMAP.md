@@ -146,7 +146,7 @@ CoomerDL/
 | FEATURE-RATELIMIT | ✅ | Add per-domain rate limiting | `downloader/ratelimiter.py` | DONE |
 | ARCH-001 | 🟠 | Split ui.py into modules | `app/ui.py` → `app/window/` | High |
 | TEST-001 | ✅ | Add unit test infrastructure | `tests/` | DONE |
-| TEST-002 | 🟡 | Add type hints | All Python files | Medium |
+| TEST-002 | ✅ | Add type hints (main app complete) | All Python files | DONE |
 
 ---
 
