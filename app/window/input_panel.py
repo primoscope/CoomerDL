@@ -11,7 +11,7 @@ import sys
 import subprocess
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 from urllib.parse import urlparse
 
 try:
@@ -28,8 +28,8 @@ class InputPanel(ctk.CTkFrame):
     
     def __init__(
         self,
-        parent,
-        tr: Callable[[str], str],
+        parent: Any,
+        tr: Callable[..., str],
         on_folder_change: Optional[Callable[[str], None]] = None,
     ):
         """

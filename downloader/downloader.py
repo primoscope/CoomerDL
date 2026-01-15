@@ -4,6 +4,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Semaphore
 from urllib.parse import quote_plus, urlencode, urljoin, urlparse
+from typing import Optional, List, Dict, Any, Tuple, Callable
 import os
 import re
 import requests
@@ -14,13 +15,13 @@ import time
 import sqlite3
 
 class Downloader:
-	def __init__(self, download_folder, max_workers=5, log_callback=None, 
-				enable_widgets_callback=None, update_progress_callback=None, 
-				update_global_progress_callback=None, headers=None,
-				max_retries=999999, retry_interval=1.0, stream_read_timeout=10,
-				download_images=True, download_videos=True, download_compressed=True, 
-				tr=None, folder_structure='default', rate_limit_interval=1.0,
-				proxy_type='none', proxy_url='', user_agent=None):
+	def __init__(self, download_folder: str, max_workers: int = 5, log_callback: Optional[Callable[[str], None]] = None,
+				enable_widgets_callback: Optional[Callable[[], None]] = None, update_progress_callback: Optional[Callable[..., None]] = None,
+				update_global_progress_callback: Optional[Callable[[int, int], None]] = None, headers: Optional[Dict[str, str]] = None,
+				max_retries: int = 999999, retry_interval: float = 1.0, stream_read_timeout: int = 10,
+				download_images: bool = True, download_videos: bool = True, download_compressed: bool = True,
+				tr: Optional[Callable[[str, Any], str]] = None, folder_structure: str = 'default', rate_limit_interval: float = 1.0,
+				proxy_type: str = 'none', proxy_url: str = '', user_agent: Optional[str] = None) -> None:
 		
 		self.download_folder = download_folder
 		self.log_callback = log_callback
@@ -33,6 +34,17 @@ class Downloader:
 			'Referer': 'https://coomer.st/',
 			"Accept": "text/css"
 		}
+
+		# Attributes accessed by UI components (app/ui.py, app/window/options_panel.py)
+		# These attributes are read by the UI to display filter settings and configuration:
+		# - size_filter_enabled, min_size, max_size: Used by OptionsPanel for file size filtering UI
+		# - download_retry_attempts: Displayed in OptionsPanel to show retry configuration
+		# - file_naming_mode: Used by OptionsPanel to track the current naming mode selection
+		self.size_filter_enabled: bool = False
+		self.min_size: int = 0
+		self.max_size: int = 0
+		self.download_retry_attempts: int = max_retries
+		self.file_naming_mode: int = 0
 		self.media_counter = 0
 		self.session = requests.Session()
 		
@@ -114,7 +126,7 @@ class Downloader:
 		self.load_download_cache()
 		
 
-	def init_db(self):
+	def init_db(self) -> None:
 		self.db_connection = sqlite3.connect(self.db_path, check_same_thread=False)
 		self.db_cursor = self.db_connection.cursor()
 		self.db_cursor.execute("""
@@ -140,12 +152,12 @@ class Downloader:
 		)
 		self.db_connection.commit()
 
-	def load_download_cache(self):
+	def load_download_cache(self) -> None:
 		# Legacy method kept for backward compatibility but no longer preloads entire DB
 		# Database lookups are now done on-demand using is_url_downloaded()
-		self.download_cache = {}  # Keep as empty dict for backward compatibility
+		self.download_cache: Dict[str, Any] = {}  # Keep as empty dict for backward compatibility
 
-	def is_url_downloaded(self, media_url):
+	def is_url_downloaded(self, media_url: str) -> bool:
 		"""Check if a URL has been downloaded using an indexed DB query instead of cache"""
 		with self.db_lock:
 			self.db_cursor.execute(
@@ -155,11 +167,11 @@ class Downloader:
 			return self.db_cursor.fetchone() is not None
 
 
-	def log(self, message):
+	def log(self, message: str) -> None:
 		if self.log_callback:
 			self.log_callback(self.tr(message) if self.tr else message)
 
-	def set_download_mode(self, mode, max_workers):
+	def set_download_mode(self, mode: str, max_workers: int) -> None:
 		
 		if mode == 'queue':
 			max_workers = 1  
@@ -177,17 +189,17 @@ class Downloader:
 
 		self.log(f"Updated download mode to {mode} with max_workers = {max_workers}")
 	
-	def set_retry_settings(self, max_retries, retry_interval):
+	def set_retry_settings(self, max_retries: int, retry_interval: float) -> None:
 		self.max_retries = max_retries
 		self.retry_interval = retry_interval 
 
-	def request_cancel(self):
+	def request_cancel(self) -> None:
 		self.cancel_requested.set()
 		self.log(self.tr("Download cancellation requested."))
 		for future in self.futures:
 			future.cancel()
 
-	def shutdown_executor(self):
+	def shutdown_executor(self) -> None:
 		if not self.shutdown_called:
 			self.shutdown_called = True
 			if self.executor:
@@ -205,7 +217,7 @@ class Downloader:
 			completion_msg = "All downloads completed or cancelled."
 			self.log(self.tr(completion_msg) if self.tr else completion_msg)
 
-	def safe_request(self, url, max_retries=None, headers=None):
+	def safe_request(self, url: str, max_retries: Optional[int] = None, headers: Optional[Dict[str, str]] = None) -> Optional[requests.Response]:
 		if max_retries is None:
 			max_retries = self.max_retries
 		if headers is None:
@@ -291,7 +303,7 @@ class Downloader:
 
 		return None
 
-	def _find_valid_subdomain(self, url, max_subdomains=10):
+	def _find_valid_subdomain(self, url: str, max_subdomains: int = 10) -> str:
 		parsed = urlparse(url)
 		original_path = parsed.path
 		
@@ -334,8 +346,8 @@ class Downloader:
 
 		return url
 
-	def fetch_user_posts(self, site, user_id, service, query=None, specific_post_id=None, initial_offset=0, log_fetching=True):
-		all_posts = []
+	def fetch_user_posts(self, site: str, user_id: str, service: str, query: Optional[str] = None, specific_post_id: Optional[str] = None, initial_offset: int = 0, log_fetching: bool = True) -> List[Dict[str, Any]]:
+		all_posts: List[Dict[str, Any]] = []
 		offset = initial_offset
 		user_id_encoded = quote_plus(user_id)
 		while True:
@@ -384,14 +396,14 @@ class Downloader:
 		return all_posts
 
 
-	def get_filename(self, media_url, post_id=None, post_name=None, attachment_index=1, post_time=None):
+	def get_filename(self, media_url: str, post_id: Optional[str] = None, post_name: Optional[str] = None, attachment_index: int = 1, post_time: Optional[str] = None) -> str:
 		base_name = os.path.basename(media_url).split('?')[0]
 		name_no_ext, extension = os.path.splitext(base_name)
 		if not hasattr(self, 'file_naming_mode'):
 			self.file_naming_mode = 0
 		mode = self.file_naming_mode
 
-		def sanitize(name):
+		def sanitize(name: str) -> str:
 			
 			sanitized = self.sanitize_filename(name)
 			return sanitized.strip()
@@ -433,10 +445,10 @@ class Downloader:
 
 
 
-	def process_post(self, post, site):
+	def process_post(self, post: Dict[str, Any], site: str) -> List[str]:
 		base = f"https://{site}/"
 
-		def _full(path):
+		def _full(path: Optional[str]) -> Optional[str]:
 			if not path:
 				return None
 			p = path if str(path).startswith('/') else f'/{path}'
@@ -456,10 +468,10 @@ class Downloader:
 
 		return media_urls
 
-	def sanitize_filename(self, filename):
+	def sanitize_filename(self, filename: str) -> str:
 		return re.sub(r'[<>:"/\\|?*]', '_', filename)
 
-	def get_media_folder(self, extension, user_id, post_id=None):
+	def get_media_folder(self, extension: str, user_id: str, post_id: Optional[str] = None) -> str:
 		if extension in self.video_extensions:
 			folder_name = "videos"
 		elif extension in self.image_extensions:
@@ -476,8 +488,8 @@ class Downloader:
 			media_folder = os.path.join(self.download_folder, user_id, folder_name)
 		return media_folder
 
-	def process_media_element(self, media_url, user_id, post_id=None,
-						  post_name=None, post_time=None, download_id=None):
+	def process_media_element(self, media_url: str, user_id: str, post_id: Optional[str] = None,
+						  post_name: Optional[str] = None, post_time: Optional[str] = None, download_id: Optional[str] = None) -> None:
 		
 		
 		if self.cancel_requested.is_set():
@@ -660,7 +672,7 @@ class Downloader:
 			self.failed_files.append(media_url)
 
 
-	def get_remote_file_size(self, media_url, filename):
+	def get_remote_file_size(self, media_url: str, filename: str) -> Tuple[str, str, Optional[int]]:
 		try:
 			response = requests.head(media_url, allow_redirects=True)
 			if response.status_code == 200:
@@ -673,7 +685,7 @@ class Downloader:
 			self.log(self.tr(f"Error getting size for {filename}: {e}"))
 			return media_url, filename, None
 
-	def download_media(self, site, user_id, service, query=None, download_all=False, initial_offset=0):
+	def download_media(self, site: str, user_id: str, service: str, query: Optional[str] = None, download_all: bool = False, initial_offset: int = 0) -> None:
 		try:
 			self.log(self.tr("Starting download process..."))
 
@@ -761,7 +773,7 @@ class Downloader:
 		finally:
 			self.shutdown_executor()
 
-	def download_single_post(self, site, post_id, service, user_id):
+	def download_single_post(self, site: str, post_id: str, service: str, user_id: str) -> None:
 		try:
 			post = self.fetch_user_posts(site, user_id, service, specific_post_id=post_id)
 			if not post:
@@ -790,7 +802,7 @@ class Downloader:
 		finally:
 			self.shutdown_executor()
 	
-	def fetch_single_post(self, site, post_id, service):
+	def fetch_single_post(self, site: str, post_id: str, service: str) -> Optional[Dict[str, Any]]:
 		api_url = f"https://{site}/api/v1/{service}/post/{post_id}"
 		self.log(self.tr(f"Fetching post from {api_url}"))
 		try:
@@ -802,14 +814,14 @@ class Downloader:
 			self.log(self.tr(f"Error fetching post: {e}"))
 			return None
 
-	def clear_database(self):
+	def clear_database(self) -> None:
 		
 		with self.db_lock:
 			self.db_cursor.execute("DELETE FROM downloads")
 			self.db_connection.commit()
 		self.log(self.tr("Database cleared."))
 	
-	def update_max_downloads(self, new_max):
+	def update_max_downloads(self, new_max: int) -> None:
 		
 		
 		if self.executor:

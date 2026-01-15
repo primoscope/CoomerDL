@@ -37,6 +37,7 @@ class BunkrDownloader(BaseDownloader):
             'Accept-Language': 'en-US,en;q=0.9',
         }
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
+        self.max_workers = max_workers
         self.max_downloads = max_workers
         self.translations = translations or {}
         

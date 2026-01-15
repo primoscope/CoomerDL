@@ -49,6 +49,7 @@ class EromeDownloader(BaseDownloader):
         self.download_images = download_images
         self.download_videos = download_videos
         self.language = language
+        self.max_workers = max_workers
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.is_profile_download = is_profile_download
         self.direct_download = direct_download

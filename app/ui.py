@@ -6,11 +6,12 @@ import queue
 import sys
 import re
 import os
+import time
 import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, scrolledtext
-from typing import Optional
+from typing import Optional, List, Dict, Any, Tuple, Callable
 from urllib.parse import ParseResult, parse_qs, urlparse
 import webbrowser
 import requests
@@ -72,9 +73,9 @@ def extract_ck_query(url: ParseResult) -> tuple[Optional[str], int]:
 
 # Application class
 class ImageDownloaderApp(ctk.CTk):
-    def __init__(self):
-        self.errors = []  
-        self._log_buffer = []
+    def __init__(self) -> None:
+        self.errors: List[str] = []
+        self._log_buffer: List[str] = []
         self.github_stars = 0
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("dark-blue")
@@ -209,7 +210,7 @@ class ImageDownloaderApp(ctk.CTk):
         threading.Thread(target=self.check_for_new_version, args=(True,)).start()
 
     # Application close event
-    def on_app_close(self):
+    def on_app_close(self) -> None:
         if self.is_download_active() and not self.active_downloader.cancel_requested:
             # Mostrar advertencia si hay una descarga activa
             messagebox.showwarning(
@@ -219,10 +220,10 @@ class ImageDownloaderApp(ctk.CTk):
         else:
             self.destroy()
 
-    def is_download_active(self):
+    def is_download_active(self) -> bool:
         return self.active_downloader is not None
     
-    def close_program(self):
+    def close_program(self) -> None:
         # Cierra todas las ventanas y termina el proceso principal
         self.destroy()
         # Matar el proceso actual (eliminar del administrador de tareas)
@@ -232,14 +233,14 @@ class ImageDownloaderApp(ctk.CTk):
         current_process.kill()
     
     # Save and load language preferences
-    def save_language_preference(self, language_code):
+    def save_language_preference(self, language_code: str) -> None:
         config = {'language': language_code}
         with open('resources/config/languages/save_language/language_config.json', 'w') as config_file:
             json.dump(config, config_file)
         self.load_translations(language_code)
         self.update_ui_texts()
     
-    def load_language_preference(self):
+    def load_language_preference(self) -> str:
         try:
             with open('resources/config/languages/save_language/language_config.json', 'r') as config_file:
                 config = json.load(config_file)
@@ -248,19 +249,19 @@ class ImageDownloaderApp(ctk.CTk):
             return 'en'
 
     # Load translations
-    def load_translations(self, lang):
+    def load_translations(self, lang: str) -> None:
         path = "resources/config/languages/translations.json"
         with open(path, 'r', encoding='utf-8') as file:
             all_translations = json.load(file)
             self.translations = {key: value.get(lang, key) for key, value in all_translations.items()}
     
-    def tr(self, text, **kwargs):
+    def tr(self, text: str, **kwargs: Any) -> str:
         translated_text = self.translations.get(text, text)
         if kwargs:
             translated_text = translated_text.format(**kwargs)
         return translated_text
     
-    def build_download_options(self):
+    def build_download_options(self) -> Any:
         """
         Build DownloadOptions from current settings.
         
@@ -313,7 +314,7 @@ class ImageDownloaderApp(ctk.CTk):
         
         return options
     
-    def apply_runtime_settings(self, new_settings: dict):
+    def apply_runtime_settings(self, new_settings: Dict[str, Any]) -> None:
         """
         Se llama cuando se guardan cambios en Settings.
         Aplica cambios en caliente (sin reiniciar la app).
@@ -361,7 +362,7 @@ class ImageDownloaderApp(ctk.CTk):
 
 
     # Window setup
-    def setup_window(self):
+    def setup_window(self) -> None:
         window_width, window_height = 1000, 600
         center_x = int((self.winfo_screenwidth() / 2) - (window_width / 2))
         center_y = int((self.winfo_screenheight() / 2) - (window_height / 2))
@@ -371,7 +372,7 @@ class ImageDownloaderApp(ctk.CTk):
             self.iconbitmap("resources/img/window.ico")
 
     # Initialize UI components
-    def initialize_ui(self):
+    def initialize_ui(self) -> None:
 
         # Crear la barra de menú personalizada
         self.menu_bar = ctk.CTkFrame(self, height=30, corner_radius=0)
@@ -452,7 +453,7 @@ class ImageDownloaderApp(ctk.CTk):
         self.update_ui_texts()
 
     # Update UI texts
-    def update_ui_texts(self):
+    def update_ui_texts(self) -> None:
 
         # Actualizar textos de los botones del menú
         for widget in self.menu_bar.winfo_children():
@@ -475,60 +476,60 @@ class ImageDownloaderApp(ctk.CTk):
         self.update_download_button.configure(text=self.tr("Download Now"))
 
     
-    def on_folder_selected(self, folder_path: str):
+    def on_folder_selected(self, folder_path: str) -> None:
         """Callback when folder is selected via InputPanel."""
         self.download_folder = folder_path
         self.save_download_folder(folder_path)
     
-    def open_download_folder(self, event=None):
+    def open_download_folder(self, event: Optional[Any] = None) -> None:
         # This method is now handled by InputPanel, but kept for backward compatibility
         pass
     
     # Property accessors for backward compatibility with existing code
     @property
-    def url_entry(self):
+    def url_entry(self) -> Any:
         """Access URL entry widget from InputPanel."""
         return self.input_panel.url_entry
     
     @property
-    def download_images_check(self):
+    def download_images_check(self) -> Any:
         """Access download images checkbox from OptionsPanel."""
         return self.options_panel.download_images_check
     
     @property
-    def download_videos_check(self):
+    def download_videos_check(self) -> Any:
         """Access download videos checkbox from OptionsPanel."""
         return self.options_panel.download_videos_check
     
     @property
-    def download_compressed_check(self):
+    def download_compressed_check(self) -> Any:
         """Access download compressed checkbox from OptionsPanel."""
         return self.options_panel.download_compressed_check
     
     @property
-    def download_documents_check(self):
+    def download_documents_check(self) -> Any:
         """Access download documents checkbox from OptionsPanel."""
         return self.options_panel.download_documents_check
     
     @property
-    def download_button(self):
+    def download_button(self) -> Any:
         """Access download button from ActionPanel."""
         return self.action_panel.download_button
     
     @property
-    def cancel_button(self):
+    def cancel_button(self) -> Any:
         """Access cancel button from ActionPanel."""
         return self.action_panel.cancel_button
     
     @property
-    def log_textbox(self):
+    def log_textbox(self) -> Any:
         """Access log textbox from LogPanel."""
         return self.log_panel
 
 
-    def on_click(self, event):
+    def on_click(self, event: Any) -> None:
         # Obtener la lista de widgets que no deben cerrar el menú al hacer clic
-        widgets_to_ignore = [self.menu_bar]
+        widgets_to_ignore: List[tk.Widget] = [self.menu_bar]
 
         # Añadir los frames de los menús desplegables si existen
         for frame in [self.archivo_menu_frame, self.ayuda_menu_frame, self.donaciones_menu_frame]:
@@ -540,14 +541,14 @@ class ImageDownloaderApp(ctk.CTk):
         if event.widget not in widgets_to_ignore:
             self.close_all_menus()
 
-    def get_all_children(self, widget):
+    def get_all_children(self, widget: tk.Widget) -> List[tk.Widget]:
         children = widget.winfo_children()
         all_children = list(children)
         for child in children:
             all_children.extend(self.get_all_children(child))
         return all_children
 
-    def create_custom_menubar(self):
+    def create_custom_menubar(self) -> None:
         # Botón Archivo
         archivo_button = ctk.CTkButton(
             self.menu_bar,
@@ -628,11 +629,11 @@ class ImageDownloaderApp(ctk.CTk):
             github_label.bind("<Leave>", lambda e: on_leave(e, github_frame))
             github_label.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/primoscope/CoomerDL"))
     
-    def show_donors_modal(self):
+    def show_donors_modal(self) -> None:
         donors_modal = DonorsModal(self, self.tr)
         donors_modal.focus_set()
 
-    def toggle_archivo_menu(self):
+    def toggle_archivo_menu(self) -> None:
         if self.archivo_menu_frame and self.archivo_menu_frame.winfo_exists():
             self.archivo_menu_frame.destroy()
         else:
@@ -644,7 +645,7 @@ class ImageDownloaderApp(ctk.CTk):
             ], x=0)
 
 
-    def create_menu_frame(self, options, x):
+    def create_menu_frame(self, options: List[Any], x: int) -> ctk.CTkFrame:
         # Crear el marco del menú con fondo oscuro y borde de sombra para resaltar
         menu_frame = ctk.CTkFrame(self, corner_radius=5, fg_color="gray25", border_color="black", border_width=1)
         menu_frame.place(x=x, y=30)
@@ -681,18 +682,18 @@ class ImageDownloaderApp(ctk.CTk):
 
         return menu_frame
 
-    def close_all_menus(self):
+    def close_all_menus(self) -> None:
         for menu_frame in [self.archivo_menu_frame, self.ayuda_menu_frame, self.donaciones_menu_frame]:
             if menu_frame and menu_frame.winfo_exists():
                 menu_frame.destroy()
     
     # Queue management methods
-    def on_queue_changed(self):
+    def on_queue_changed(self) -> None:
         """Called when the download queue changes."""
         # Update the queue button badge
         self.update_queue_badge()
     
-    def show_queue_manager(self):
+    def show_queue_manager(self) -> None:
         """Show the download queue manager dialog."""
         from app.dialogs.queue_dialog import QueueDialog
         queue_dialog = QueueDialog(
@@ -707,11 +708,11 @@ class ImageDownloaderApp(ctk.CTk):
         )
         queue_dialog.focus_set()
 
-    def stop_queue_processing(self):
+    def stop_queue_processing(self) -> None:
         """Stop Process All mode (does not cancel an active download)."""
         self._process_queue_all_active = False
 
-    def pause_all_queue(self):
+    def pause_all_queue(self) -> None:
         """Pause all pending items (does not pause an active download)."""
         from app.models.download_queue import QueueItemStatus
         self._process_queue_all_active = False
@@ -719,14 +720,14 @@ class ImageDownloaderApp(ctk.CTk):
             if item.status == QueueItemStatus.PENDING:
                 self.download_queue.update_status(item.id, QueueItemStatus.PAUSED)
 
-    def resume_all_queue(self):
+    def resume_all_queue(self) -> None:
         """Resume all paused items back to pending."""
         from app.models.download_queue import QueueItemStatus
         for item in self.download_queue.get_all():
             if item.status == QueueItemStatus.PAUSED:
                 self.download_queue.update_status(item.id, QueueItemStatus.PENDING)
     
-    def add_to_queue(self):
+    def add_to_queue(self) -> None:
         """Add URLs from input to the download queue."""
         # Get URLs from the input panel (supports batch input)
         urls = self.input_panel.get_urls()
@@ -768,7 +769,7 @@ class ImageDownloaderApp(ctk.CTk):
             # Update queue button badge if menu bar exists
             self.update_queue_badge()
 
-    def update_queue_badge(self):
+    def update_queue_badge(self) -> None:
         """Update the queue button to show pending count."""
         stats = self.download_queue.get_stats()
         pending_count = stats['pending'] + stats['downloading']
@@ -780,7 +781,7 @@ class ImageDownloaderApp(ctk.CTk):
             else:
                 self.queue_button.configure(text="📋 " + self.tr("Queue"))
     
-    def process_queue(self):
+    def process_queue(self) -> None:
         """Process pending items from the download queue."""
         # Get the next pending item
         item = self.download_queue.get_next_pending()
@@ -828,21 +829,21 @@ class ImageDownloaderApp(ctk.CTk):
             # Restore original folder (or reset if it was None)
             self.download_folder = original_folder
 
-    def process_queue_all(self):
+    def process_queue_all(self) -> None:
         """Process all pending queue items sequentially."""
         self._process_queue_all_active = True
         # Kick off first item
         self.process_queue()
 
     # Image processing
-    def create_photoimage(self, path, size=(32, 32)):
+    def create_photoimage(self, path: str, size: Tuple[int, int] = (32, 32)) -> ImageTk.PhotoImage:
         img = Image.open(path)
         img = img.resize(size, Image.Resampling.LANCZOS)
         photoimg = ImageTk.PhotoImage(img)
         return photoimg
 
     # Setup downloaders
-    def setup_erome_downloader(self, is_profile_download=False):
+    def setup_erome_downloader(self, is_profile_download: bool = False) -> None:
         self.erome_downloader = EromeDownloader(
             root=self,
             enable_widgets_callback=self.enable_widgets,
@@ -860,7 +861,7 @@ class ImageDownloaderApp(ctk.CTk):
             tr=self.tr
         )
 
-    def setup_simpcity_downloader(self):
+    def setup_simpcity_downloader(self) -> None:
         self.simpcity_downloader = SimpCity(
             download_folder=self.download_folder,
             log_callback=self.add_log_message_safe,
@@ -870,7 +871,7 @@ class ImageDownloaderApp(ctk.CTk):
             tr=self.tr
         )
 
-    def setup_bunkr_downloader(self):
+    def setup_bunkr_downloader(self) -> None:
         self.bunkr_downloader = BunkrDownloader(
             download_folder=self.download_folder,
             log_callback=self.add_log_message_safe,
@@ -884,7 +885,7 @@ class ImageDownloaderApp(ctk.CTk):
             max_workers=self.max_downloads
         )
 
-    def setup_general_downloader(self):
+    def setup_general_downloader(self) -> None:
         # Load network settings
         network_settings = self.settings.get('network', {})
         proxy_type = network_settings.get('proxy_type', 'none')
@@ -914,7 +915,7 @@ class ImageDownloaderApp(ctk.CTk):
         )
         self.general_downloader.file_naming_mode = self.settings.get('file_naming_mode', 0)
 
-    def setup_jpg5_downloader(self):
+    def setup_jpg5_downloader(self) -> None:
         # Get first URL from textbox for jpg5 (doesn't support batch yet)
         urls = self.input_panel.get_urls()
         url = urls[0] if urls else ""
@@ -930,12 +931,12 @@ class ImageDownloaderApp(ctk.CTk):
     # Folder selection
     
     # Función para cargar y redimensionar imágenes
-    def load_and_resize_image(self, path, size=(20, 20)):
+    def load_and_resize_image(self, path: str, size: Tuple[int, int] = (20, 20)) -> ctk.CTkImage:
         img = Image.open(path)
         return ctk.CTkImage(img, size=size)
     
     # Reemplaza las llamadas a los métodos de progreso con self.progress_manager
-    def update_progress(self, downloaded, total,file_id=None, file_path=None,speed=None, eta=None, status=None):
+    def update_progress(self, downloaded: int, total: int, file_id: Optional[str] = None, file_path: Optional[str] = None, speed: Optional[float] = None, eta: Optional[float] = None, status: Optional[str] = None) -> None:
         self.progress_manager.update_progress(downloaded, total,file_id, file_path,speed, eta, status=status)
 
         # Best-effort queue item progress (for per-file style downloaders)
@@ -947,10 +948,10 @@ class ImageDownloaderApp(ctk.CTk):
             except Exception:
                 pass
 
-    def remove_progress_bar(self, file_id):
+    def remove_progress_bar(self, file_id: str) -> None:
         self.progress_manager.remove_progress_bar(file_id)
 
-    def update_global_progress(self, completed_files, total_files):
+    def update_global_progress(self, completed_files: int, total_files: int) -> None:
         self.progress_manager.update_global_progress(completed_files, total_files)
 
         # Queue item progress (for multi-file jobs)
@@ -962,7 +963,7 @@ class ImageDownloaderApp(ctk.CTk):
             except Exception:
                 pass
 
-    def _throttled_update_queue_item_progress(self, progress: float):
+    def _throttled_update_queue_item_progress(self, progress: float) -> None:
         """Update queue item progress with throttling to avoid excessive disk writes."""
         try:
             now = time.time()
@@ -986,18 +987,18 @@ class ImageDownloaderApp(ctk.CTk):
         except Exception:
             pass
 
-    def toggle_progress_details(self):
+    def toggle_progress_details(self) -> None:
         self.progress_manager.toggle_progress_details()
 
-    def center_progress_details_frame(self):
+    def center_progress_details_frame(self) -> None:
         self.progress_manager.center_progress_details_frame()
 
     # Error logging
-    def log_error(self, error_message):
+    def log_error(self, error_message: str) -> None:
         self.errors.append(error_message)
         self.add_log_message_safe(f"Error: {error_message}")
 
-    def wrapped_download(self, download_method, *args):
+    def wrapped_download(self, download_method: Callable[..., Any], *args: Any) -> None:
         try:
             download_method(*args)
         finally:
@@ -1005,7 +1006,7 @@ class ImageDownloaderApp(ctk.CTk):
             self.enable_widgets()
             self.export_logs()
     
-    def wrapped_base_download(self, downloader, url):
+    def wrapped_base_download(self, downloader: Any, url: str) -> None:
         """Wrapper for BaseDownloader-compatible downloaders."""
         try:
             result = downloader.download(url)
@@ -1021,7 +1022,7 @@ class ImageDownloaderApp(ctk.CTk):
             self.export_logs()
 
     # Download management
-    def start_download(self):
+    def start_download(self) -> None:
         # Get URLs from the input panel (supports batch input)
         urls = self.input_panel.get_urls()
         
@@ -1060,7 +1061,7 @@ class ImageDownloaderApp(ctk.CTk):
             # Single URL - process normally
             self._process_single_url(urls[0])
     
-    def _process_single_url(self, url):
+    def _process_single_url(self, url: str) -> None:
         if not hasattr(self, 'download_folder') or not self.download_folder:
             messagebox.showerror(self.tr("Error"), self.tr("Por favor, selecciona una carpeta de descarga."))
             return
@@ -1243,19 +1244,19 @@ class ImageDownloaderApp(ctk.CTk):
 
         download_thread.start()
 
-    def start_ck_profile_download(self, site, service, user, query, download_all, initial_offset):
+    def start_ck_profile_download(self, site: str, service: str, user: str, query: Optional[str], download_all: bool, initial_offset: int) -> Any:
         download_info = self.active_downloader.download_media(site, user, service, query=query, download_all=download_all, initial_offset=initial_offset)
         if download_info:
             self.add_log_message_safe(f"Download info: {download_info}")
         return download_info
     
-    def start_ck_post_download(self, site, service, user, post):
+    def start_ck_post_download(self, site: str, service: str, user: str, post: str) -> Any:
         download_info = self.active_downloader.download_single_post(site, post, service, user)
         if download_info:
             self.add_log_message_safe(f"Download info: {download_info}")
         return download_info
 
-    def extract_user_id(self, url):
+    def extract_user_id(self, url: str) -> Optional[str]:
         self.add_log_message_safe(self.tr("Extrayendo ID del usuario del URL: {url}", url=url))
         match = re.search(r'/user/([^/?]+)', url)
         if match:
@@ -1267,7 +1268,7 @@ class ImageDownloaderApp(ctk.CTk):
             messagebox.showerror(self.tr("Error"), self.tr("No se pudo extraer el ID del usuario."))
             return None
 
-    def extract_post_id(self, url):
+    def extract_post_id(self, url: str) -> Optional[str]:
         match = re.search(r'/post/([^/?]+)', url)
         if match:
             post_id = match.group(1)
@@ -1278,7 +1279,7 @@ class ImageDownloaderApp(ctk.CTk):
             messagebox.showerror(self.tr("Error"), self.tr("No se pudo extraer el ID del post."))
             return None
 
-    def cancel_download(self):
+    def cancel_download(self) -> None:
         if self.active_downloader:
             self.active_downloader.request_cancel()
             self.active_downloader = None
@@ -1296,12 +1297,12 @@ class ImageDownloaderApp(ctk.CTk):
             self.add_log_message_safe(self.tr("No hay una descarga en curso para cancelar."))
         self.enable_widgets()
 
-    def clear_progress_bars(self):
+    def clear_progress_bars(self) -> None:
         for file_id in list(self.progress_bars.keys()):
             self.remove_progress_bar(file_id)
 
     # Log messages safely
-    def add_log_message_safe(self, message: str):
+    def add_log_message_safe(self, message: str) -> None:
         # Ensure structures exist
         if not hasattr(self, "errors") or self.errors is None:
             self.errors = []
@@ -1331,7 +1332,7 @@ class ImageDownloaderApp(ctk.CTk):
             self._log_buffer.append(message)
 
 
-    def limit_log_lines(self):
+    def limit_log_lines(self) -> None:
         log_lines = self.log_textbox.get("1.0", "end-1c").split("\n")
         if len(log_lines) > MAX_LOG_LINES:
             # Quitamos solo las líneas que sobran
@@ -1340,7 +1341,7 @@ class ImageDownloaderApp(ctk.CTk):
 
 
     # Export logs to a file
-    def export_logs(self):
+    def export_logs(self) -> None:
         log_folder = "resources/config/logs/"
         Path(log_folder).mkdir(parents=True, exist_ok=True)
         log_file_path = Path(log_folder) / f"log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
@@ -1393,7 +1394,7 @@ class ImageDownloaderApp(ctk.CTk):
 
 
     # Clipboard operations (updated for CTkTextbox)
-    def copy_to_clipboard(self):
+    def copy_to_clipboard(self) -> None:
         try:
             # CTkTextbox uses tk.SEL tag for selection
             selected_text = self.url_entry.get("sel.first", "sel.last")
@@ -1405,7 +1406,7 @@ class ImageDownloaderApp(ctk.CTk):
         except tk.TclError:
             self.add_log_message_safe(self.tr("No hay texto seleccionado para copiar."))
 
-    def paste_from_clipboard(self):
+    def paste_from_clipboard(self) -> None:
         try:
             clipboard_text = self.clipboard_get()
             if clipboard_text:
@@ -1419,7 +1420,7 @@ class ImageDownloaderApp(ctk.CTk):
         except tk.TclError as e:
             self.add_log_message_safe(self.tr(f"Error al pegar desde el portapapeles: {e}"))
 
-    def cut_to_clipboard(self):
+    def cut_to_clipboard(self) -> None:
         try:
             selected_text = self.url_entry.get("sel.first", "sel.last")
             if selected_text:
@@ -1433,19 +1434,19 @@ class ImageDownloaderApp(ctk.CTk):
 
 
     # Show context menu
-    def show_context_menu(self, event):
+    def show_context_menu(self, event: Any) -> None:
         self.context_menu.tk_popup(event.x_root, event.y_root)
         self.context_menu.grab_release()
 
     # Update queue
-    def check_update_queue(self):
+    def check_update_queue(self) -> None:
         while not self.update_queue.empty():
             task = self.update_queue.get_nowait()
             task()
         self.after(100, self.check_update_queue)
 
     # Enable widgets
-    def enable_widgets(self):
+    def enable_widgets(self) -> None:
         self.update_queue.put(lambda: self.download_button.configure(state="normal"))
         self.update_queue.put(lambda: self.cancel_button.configure(state="disabled"))
         
@@ -1472,7 +1473,7 @@ class ImageDownloaderApp(ctk.CTk):
                 # Schedule next item after UI has re-enabled
                 self.after(0, self._continue_queue_all)
 
-    def _continue_queue_all(self):
+    def _continue_queue_all(self) -> None:
         if not getattr(self, "_process_queue_all_active", False):
             return
         # If no more pending items, stop
@@ -1487,12 +1488,12 @@ class ImageDownloaderApp(ctk.CTk):
         self.process_queue()
 
     # Save and load download folder
-    def save_download_folder(self, folder_path):
+    def save_download_folder(self, folder_path: str) -> None:
         config = {'download_folder': folder_path}
         with open('resources/config/download_path/download_folder.json', 'w') as config_file:
             json.dump(config, config_file)
 
-    def load_download_folder(self):
+    def load_download_folder(self) -> str:
         config_path = 'resources/config/download_path/download_folder.json'
         config_dir = Path(config_path).parent
         if not config_dir.exists():
@@ -1508,7 +1509,7 @@ class ImageDownloaderApp(ctk.CTk):
             return ''
 
     # Update max downloads
-    def update_max_downloads(self, max_downloads):
+    def update_max_downloads(self, max_downloads: int) -> None:
         self.max_downloads = max_downloads
         if hasattr(self, 'general_downloader'):
             self.general_downloader.max_workers = max_downloads
@@ -1533,7 +1534,7 @@ class ImageDownloaderApp(ctk.CTk):
             self.add_log_message_safe(self.tr("Offline mode: GitHub stars could not be retrieved."))
             return 0
 
-    def load_icon(self, icon_path, icon_name):
+    def load_icon(self, icon_path: str, icon_name: str) -> Optional[Image.Image]:
         try:
             img = Image.open(icon_path)
             return img  # Devuelve la imagen de PIL
@@ -1542,23 +1543,23 @@ class ImageDownloaderApp(ctk.CTk):
             return None
 
     # Uso de la función genérica para cargar íconos específicos
-    def load_github_icon(self):
+    def load_github_icon(self) -> Optional[Image.Image]:
         return self.load_icon("resources/img/iconos/ui/social/github-logo-24.png", "GitHub")
 
-    def load_discord_icon(self):
+    def load_discord_icon(self) -> Optional[Image.Image]:
         return self.load_icon("resources/img/iconos/ui/social/discord-alt-logo-24.png", "Discord")
 
-    def load_patreon_icon(self):
+    def load_patreon_icon(self) -> Optional[Image.Image]:
         return self.load_icon("resources/img/iconos/ui/social/patreon-logo-24.png", "New Icon")
 
-    def parse_version_string(self, version_str):
+    def parse_version_string(self, version_str: str) -> Tuple[int, ...]:
       # Removes 'V' prefix and splits by '.'
       try:
           return tuple(int(p) for p in version_str[1:].split('.'))
       except (ValueError, IndexError):
           return (0, 0, 0) # Fallback for invalid format
 
-    def check_for_new_version(self, startup_check=False):
+    def check_for_new_version(self, startup_check: bool = False) -> None:
         repo_owner = "primoscope"
         repo_name = "CoomerDL"
         github_api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
@@ -1619,7 +1620,7 @@ class ImageDownloaderApp(ctk.CTk):
                     self.tr("An unexpected error occurred during update check.")
                 ))
 
-    def show_update_alert(self, latest_tag):
+    def show_update_alert(self, latest_tag: str) -> None:
         self.update_alert_label.configure(text=self.tr("New version ({latest_tag}) available!", latest_tag=latest_tag))
         self.update_alert_frame.pack(side="top", fill="x")
         # Re-pack other elements to ensure they are below the alert
@@ -1634,7 +1635,7 @@ class ImageDownloaderApp(ctk.CTk):
         self.progress_panel.pack_forget()
         self.progress_panel.pack(pady=(0, 10), fill='x', padx=20)
 
-    def open_latest_release(self):
+    def open_latest_release(self) -> None:
         if hasattr(self, 'latest_release_url'):
             webbrowser.open(self.latest_release_url)
         else:
