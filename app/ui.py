@@ -31,11 +31,7 @@ except ImportError:
 from app.settings_window import SettingsWindow
 #from app.user_panel import UserPanel
 from app.about_window import AboutWindow
-from downloader.bunkr import BunkrDownloader
 from downloader.downloader import Downloader
-from downloader.erome import EromeDownloader
-from downloader.simpcity import SimpCity
-from downloader.jpg5 import Jpg5Downloader
 from app.progress_manager import ProgressManager
 from app.donors import DonorsModal
 from app.window.input_panel import InputPanel
@@ -44,32 +40,10 @@ from app.window.action_panel import ActionPanel
 from app.window.log_panel import LogPanel
 from app.window.progress_panel import ProgressPanel
 from app.window.status_bar import StatusBar
+from app.controllers.download_controller import DownloadController
 
 VERSION = "V0.8.12"
 MAX_LOG_LINES = 1000  # Set to reasonable default to prevent crashes
-
-def extract_ck_parameters(url: ParseResult) -> tuple[Optional[str], Optional[str], Optional[str]]:
-    """
-    Get the service, user and post id from the url if they exist
-    """
-    match = re.search(r"/(?P<service>[^/?]+)(/user/(?P<user>[^/?]+)(/post/(?P<post>[^/?]+))?)?", url.path)
-    if match:
-        [site, service, post] = match.group("service", "user", "post")
-        return site, service, post
-    else:
-        return None, None, None
-
-def extract_ck_query(url: ParseResult) -> tuple[Optional[str], int]:
-    """
-    Try to obtain the query and offset from the url if they exist
-    """
-
-    # This is kinda contrived but query parameters are awful to get right
-    query = parse_qs(url.query)
-    q = query.get("q")[0] if query.get("q") is not None and len(query.get("q")) > 0 else "0"
-    o = query.get("o")[0] if query.get("o") is not None and len(query.get("o")) > 0 else "0"
-
-    return q, int(o) if str.isdigit(o) else 0
 
 # Application class
 class ImageDownloaderApp(ctk.CTk):
@@ -842,92 +816,6 @@ class ImageDownloaderApp(ctk.CTk):
         photoimg = ImageTk.PhotoImage(img)
         return photoimg
 
-    # Setup downloaders
-    def setup_erome_downloader(self, is_profile_download: bool = False) -> None:
-        self.erome_downloader = EromeDownloader(
-            root=self,
-            enable_widgets_callback=self.enable_widgets,
-            headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, como Gecko) Chrome/58.0.3029.110 Safari/537.36',
-                'Referer': 'https://www.erome.com/'
-            },
-            log_callback=self.add_log_message_safe,
-            update_progress_callback=self.update_progress,
-            update_global_progress_callback=self.update_global_progress,
-            download_images=self.download_images_check.get(),
-            download_videos=self.download_videos_check.get(),
-            is_profile_download=is_profile_download,
-            max_workers=self.max_downloads,
-            tr=self.tr
-        )
-
-    def setup_simpcity_downloader(self) -> None:
-        self.simpcity_downloader = SimpCity(
-            download_folder=self.download_folder,
-            log_callback=self.add_log_message_safe,
-            enable_widgets_callback=self.enable_widgets,
-            update_progress_callback=self.update_progress,
-            update_global_progress_callback=self.update_global_progress,
-            tr=self.tr
-        )
-
-    def setup_bunkr_downloader(self) -> None:
-        self.bunkr_downloader = BunkrDownloader(
-            download_folder=self.download_folder,
-            log_callback=self.add_log_message_safe,
-            enable_widgets_callback=self.enable_widgets,
-            update_progress_callback=self.update_progress,
-            update_global_progress_callback=self.update_global_progress,
-            headers={
-                'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-                'Referer': 'https://bunkr.site/',
-            },
-            max_workers=self.max_downloads
-        )
-
-    def setup_general_downloader(self) -> None:
-        # Load network settings
-        network_settings = self.settings.get('network', {})
-        proxy_type = network_settings.get('proxy_type', 'none')
-        proxy_url = network_settings.get('proxy_url', '')
-        user_agent = network_settings.get('user_agent', None)
-        
-        self.general_downloader = Downloader(
-            download_folder=self.download_folder,
-            log_callback=self.add_log_message_safe,
-            enable_widgets_callback=self.enable_widgets,
-            update_progress_callback=self.update_progress,
-            update_global_progress_callback=self.update_global_progress,
-            headers={
-                'User-Agent': user_agent or 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-                'Referer': 'https://coomer.st/',
-                "Accept": "text/css"
-            },
-            download_images=self.download_images_check.get(),
-            download_videos=self.download_videos_check.get(),
-            download_compressed=self.download_compressed_check.get(),
-            tr=self.tr,
-            max_workers=self.max_downloads,
-            folder_structure=self.settings.get('folder_structure', 'default'),
-            proxy_type=proxy_type,
-            proxy_url=proxy_url,
-            user_agent=user_agent
-        )
-        self.general_downloader.file_naming_mode = self.settings.get('file_naming_mode', 0)
-
-    def setup_jpg5_downloader(self) -> None:
-        # Get first URL from textbox for jpg5 (doesn't support batch yet)
-        urls = self.input_panel.get_urls()
-        url = urls[0] if urls else ""
-        self.active_downloader = Jpg5Downloader(
-            url=url,
-            carpeta_destino=self.download_folder,
-            log_callback=self.add_log_message_safe,
-            tr=self.tr,
-            progress_manager=self.progress_manager,
-            max_workers=self.max_downloads
-        )
-
     # Folder selection
     
     # Función para cargar y redimensionar imágenes
@@ -998,28 +886,25 @@ class ImageDownloaderApp(ctk.CTk):
         self.errors.append(error_message)
         self.add_log_message_safe(f"Error: {error_message}")
 
-    def wrapped_download(self, download_method: Callable[..., Any], *args: Any) -> None:
-        try:
-            download_method(*args)
-        finally:
-            self.active_downloader = None
-            self.enable_widgets()
-            self.export_logs()
-    
-    def wrapped_base_download(self, downloader: Any, url: str) -> None:
-        """Wrapper for BaseDownloader-compatible downloaders."""
-        try:
-            result = downloader.download(url)
-            if result.success:
-                self.add_log_message_safe(self.tr(f"Descarga completada: {result.completed_files} archivos"))
-            else:
-                self.add_log_message_safe(self.tr(f"Descarga fallida: {result.error_message}"))
-        except Exception as e:
-            self.add_log_message_safe(self.tr(f"Error durante la descarga: {e}"))
-        finally:
-            self.active_downloader = None
-            self.enable_widgets()
-            self.export_logs()
+    def _create_download_controller(self) -> DownloadController:
+        """Create and configure a DownloadController instance."""
+        return DownloadController(
+            download_folder=self.download_folder,
+            settings=self.settings,
+            max_downloads=self.max_downloads,
+            log_callback=self.add_log_message_safe,
+            update_progress_callback=self.update_progress,
+            update_global_progress_callback=self.update_global_progress,
+            enable_widgets_callback=self.enable_widgets,
+            export_logs_callback=self.export_logs,
+            get_download_images=lambda: self.download_images_check.get(),
+            get_download_videos=lambda: self.download_videos_check.get(),
+            get_download_compressed=lambda: self.download_compressed_check.get(),
+            get_download_documents=lambda: self.download_documents_check.get(),
+            tr=self.tr,
+            progress_manager=self.progress_manager,
+            root=self
+        )
 
     # Download management
     def start_download(self) -> None:
@@ -1062,199 +947,40 @@ class ImageDownloaderApp(ctk.CTk):
             self._process_single_url(urls[0])
     
     def _process_single_url(self, url: str) -> None:
+        """Process a single URL using the DownloadController."""
         if not hasattr(self, 'download_folder') or not self.download_folder:
             messagebox.showerror(self.tr("Error"), self.tr("Por favor, selecciona una carpeta de descarga."))
             return
 
-        self.download_button.configure(state="disabled")
-        self.cancel_button.configure(state="normal")
+        # Set download start time and reset errors
         self.download_start_time = datetime.datetime.now()
         self.errors = []
-        download_all = True
-
-        parsed_url = urlparse(url)
         
-        if "erome.com" in url:
-            self.add_log_message_safe(self.tr("Descargando Erome"))
-            is_profile_download = "/a/" not in url
-            self.setup_erome_downloader(is_profile_download=is_profile_download)
-            self.active_downloader = self.erome_downloader
-            if "/a/" in url:
-                self.add_log_message_safe(self.tr("URL del álbum"))
-                download_thread = threading.Thread(target=self.wrapped_download, args=(self.active_downloader.process_album_page, url, self.download_folder, self.download_images_check.get(), self.download_videos_check.get()))
-            else:
-                self.add_log_message_safe(self.tr("URL del perfil"))
-                download_thread = threading.Thread(target=self.wrapped_download, args=(self.active_downloader.process_profile_page, url, self.download_folder, self.download_images_check.get(), self.download_videos_check.get()))
+        # Create controller and process URL
+        controller = self._create_download_controller()
         
-        elif re.search(r"https?://([a-z0-9-]+\.)?bunkr\.[a-z]{2,}", url):
-            self.add_log_message_safe(self.tr("Descargando Bunkr"))
-            self.setup_bunkr_downloader()
-            self.active_downloader = self.bunkr_downloader
-            # Si la URL contiene "/v/", "/i/" o "/f/", la tratamos como un post individual.
-            if any(sub in url for sub in ["/v/", "/i/", "/f/"]):
-                self.add_log_message_safe(self.tr("URL del post"))
-                download_thread = threading.Thread(target=self.wrapped_download, args=(self.bunkr_downloader.descargar_post_bunkr, url))
-            else:
-                self.add_log_message_safe(self.tr("URL del perfil"))
-                download_thread = threading.Thread(target=self.wrapped_download, args=(self.bunkr_downloader.descargar_perfil_bunkr, url))
+        download_thread = controller.process_url(
+            url,
+            on_download_button_callback=lambda state: self.download_button.configure(state=state),
+            on_cancel_button_callback=lambda state: self.cancel_button.configure(state=state)
+        )
         
-        elif parsed_url.netloc in ["coomer.st", "kemono.cr"]:
-            self.add_log_message_safe(self.tr("Iniciando descarga..."))
-            self.setup_general_downloader()
-            self.active_downloader = self.general_downloader
-
-            site = f"{parsed_url.netloc}"
-            service, user, post = extract_ck_parameters(parsed_url)
-            if service is None or user is None:
-                if service is None:
-                    self.add_log_message_safe(self.tr("No se pudo extraer el servicio."))
-                    messagebox.showerror(self.tr("Error"), self.tr("No se pudo extraer el servicio."))
-                else:
-                    self.add_log_message_safe(self.tr("No se pudo extraer el ID del usuario."))
-                    messagebox.showerror(self.tr("Error"), self.tr("No se pudo extraer el ID del usuario."))
-
-                self.add_log_message_safe(self.tr("URL no válida"))
-                self.download_button.configure(state="normal")
-                self.cancel_button.configure(state="disabled")
-                return
-
-            self.add_log_message_safe(self.tr("Servicio extraído: {service} del sitio: {site}", service=service, site=site))
-
-            if post is not None:
-                self.add_log_message_safe(self.tr("Descargando post único..."))
-                download_thread = threading.Thread(target=self.wrapped_download, args=(self.start_ck_post_download, site, service, user, post))
-            else:
-                query, offset = extract_ck_query(parsed_url)
-                self.add_log_message_safe(self.tr("Descargando todo el contenido del usuario..."))
-                download_thread = threading.Thread(target=self.wrapped_download, args=(self.start_ck_profile_download, site, service, user, query, download_all, offset))
-        
-        elif "simpcity.cr" in url:
-            self.add_log_message_safe(self.tr("Descargando SimpCity"))
-            # Try using DownloaderFactory for simpcity
-            from downloader.factory import DownloaderFactory
-            from downloader.base import DownloadOptions
-            
-            # Create options from UI checkboxes
-            options = DownloadOptions(
-                download_images=self.download_images_check.get(),
-                download_videos=self.download_videos_check.get(),
-                download_compressed=self.download_compressed_check.get()
+        if download_thread is None:
+            # Controller couldn't process this URL (invalid or unsupported)
+            messagebox.showerror(
+                self.tr("Error"),
+                self.tr("This URL is not supported. Supported sites include:\n"
+                       "- YouTube, Vimeo, Twitter/X, TikTok, Instagram\n"
+                       "- Coomer, Kemono, Erome, Bunkr, SimpCity, Jpg5\n"
+                       "- 1000+ other sites via yt-dlp")
             )
-            
-            # Try to get downloader from factory
-            downloader = DownloaderFactory.get_downloader(
-                url=url,
-                download_folder=self.download_folder,
-                options=options,
-                log_callback=self.add_log_message_safe,
-                progress_callback=self.update_progress,
-                global_progress_callback=self.update_global_progress,
-                enable_widgets_callback=self.enable_widgets,
-                tr=self.tr
-            )
-            
-            if downloader:
-                # Successfully got a downloader
-                downloader_name = downloader.__class__.__name__
-                self.add_log_message_safe(self.tr(f"Using {downloader_name} for this URL"))
-                self.active_downloader = downloader
-                download_thread = threading.Thread(
-                    target=self.wrapped_base_download, 
-                    args=(downloader, url)
-                )
-            else:
-                # Fallback to legacy method if factory doesn't work
-                self.setup_simpcity_downloader()
-                self.active_downloader = self.simpcity_downloader
-                download_thread = threading.Thread(
-                    target=self.wrapped_download, 
-                    args=(self.active_downloader.download_images_from_simpcity, url)
-                )
+            return
         
-        elif "jpg5.su" in url:
-            self.add_log_message_safe(self.tr("Descargando desde Jpg5"))
-            self.setup_jpg5_downloader()
-            
-            # Usar wrapped_download para manejar la descarga
-            download_thread = threading.Thread(target=self.wrapped_download, args=(self.active_downloader.descargar_imagenes,))
+        # Store the active downloader for cancellation support
+        self.active_downloader = controller.get_active_downloader()
         
-        else:
-            # Universal fallback using DownloaderFactory for YouTube, Twitter, TikTok, etc.
-            self.add_log_message_safe(self.tr("Detecting downloader for URL..."))
-            from downloader.factory import DownloaderFactory
-            from downloader.base import DownloadOptions
-            from downloader.ytdlp_adapter import YtDlpOptions
-            
-            # Create DownloadOptions from UI checkboxes
-            options = DownloadOptions(
-                download_images=self.download_images_check.get(),
-                download_videos=self.download_videos_check.get(),
-                download_compressed=self.download_compressed_check.get(),
-                download_documents=self.download_documents_check.get(),  # Use actual checkbox
-                max_retries=self.settings.get('max_retries', 3),
-                retry_interval=self.settings.get('retry_interval', 2.0)
-            )
-            
-            # Create YtDlpOptions from settings
-            ytdlp_options = YtDlpOptions(
-                format_selector=self.settings.get('ytdlp_format', 'best'),
-                merge_output_format=self.settings.get('ytdlp_container', 'mp4'),
-                embed_thumbnail=self.settings.get('ytdlp_embed_thumbnail', True),
-                embed_metadata=self.settings.get('ytdlp_embed_metadata', True),
-                download_subtitles=self.settings.get('ytdlp_download_subtitles', False),
-                subtitle_languages=self.settings.get('ytdlp_subtitle_languages', 'en'),
-                cookies_from_browser=self.settings.get('ytdlp_cookies_browser', None) if self.settings.get('ytdlp_cookies_browser') != "None" else None
-            )
-            
-            # Try to get downloader from factory
-            downloader = DownloaderFactory.get_downloader(
-                url=url,
-                download_folder=self.download_folder,
-                options=options,
-                ytdlp_options=ytdlp_options,
-                log_callback=self.add_log_message_safe,
-                progress_callback=self.update_progress,
-                global_progress_callback=self.update_global_progress,
-                enable_widgets_callback=self.enable_widgets,
-                tr=self.tr
-            )
-            
-            if downloader:
-                # Successfully got a downloader
-                downloader_name = downloader.__class__.__name__
-                self.add_log_message_safe(self.tr(f"Using {downloader_name} for this URL"))
-                self.active_downloader = downloader
-                download_thread = threading.Thread(
-                    target=self.wrapped_base_download, 
-                    args=(downloader, url)
-                )
-            else:
-                # No downloader available
-                self.add_log_message_safe(self.tr("No compatible downloader found for this URL"))
-                messagebox.showerror(
-                    self.tr("Error"),
-                    self.tr("This URL is not supported. Supported sites include:\n"
-                           "- YouTube, Vimeo, Twitter/X, TikTok, Instagram\n"
-                           "- Coomer, Kemono, Erome, Bunkr, SimpCity, Jpg5\n"
-                           "- 1000+ other sites via yt-dlp")
-                )
-                self.download_button.configure(state="normal")
-                self.cancel_button.configure(state="disabled")
-                return
-
+        # Start the download thread
         download_thread.start()
-
-    def start_ck_profile_download(self, site: str, service: str, user: str, query: Optional[str], download_all: bool, initial_offset: int) -> Any:
-        download_info = self.active_downloader.download_media(site, user, service, query=query, download_all=download_all, initial_offset=initial_offset)
-        if download_info:
-            self.add_log_message_safe(f"Download info: {download_info}")
-        return download_info
-    
-    def start_ck_post_download(self, site: str, service: str, user: str, post: str) -> Any:
-        download_info = self.active_downloader.download_single_post(site, post, service, user)
-        if download_info:
-            self.add_log_message_safe(f"Download info: {download_info}")
-        return download_info
 
     def extract_user_id(self, url: str) -> Optional[str]:
         self.add_log_message_safe(self.tr("Extrayendo ID del usuario del URL: {url}", url=url))
