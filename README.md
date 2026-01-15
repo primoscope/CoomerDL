@@ -291,9 +291,8 @@ Check for common issues:
 Contributions are welcome! This project is optimized for both human developers and AI coding agents.
 
 **Documentation for Developers:**
-- [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md) - Technical roadmap with task breakdowns
-- [TASKS.md](TASKS.md) - Detailed task definitions with acceptance criteria
-- [SPECIFICATIONS.md](SPECIFICATIONS.md) - Code specifications for new features
+- [docs/planning/ROADMAP.md](docs/planning/ROADMAP.md) - Current project status and roadmap
+- [docs/archive/planning/SPECIFICATIONS.md](docs/archive/planning/SPECIFICATIONS.md) - Technical specifications (Archived)
 - [tests/CONTRACTS.md](tests/CONTRACTS.md) - System behavior contracts
 
 ### Running Tests

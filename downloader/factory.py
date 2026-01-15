@@ -222,6 +222,12 @@ except ImportError as e:
     logger.warning(f"Failed to import reddit downloader: {e}")
     _import_errors.append(("reddit", str(e)))
 
+try:
+    from downloader import jpg5
+except ImportError as e:
+    logger.warning(f"Failed to import jpg5 downloader: {e}")
+    _import_errors.append(("jpg5", str(e)))
+
 # Log summary if any imports failed
 if _import_errors:
     logger.warning(f"Failed to import {len(_import_errors)} downloader(s): {', '.join([name for name, _ in _import_errors])}")

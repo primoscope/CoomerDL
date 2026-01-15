@@ -608,6 +608,10 @@ class BaseDownloader(ABC):
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             
             # Download file in chunks with throttling
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded_size = 0
+            filename = os.path.basename(filepath)
+
             with open(filepath, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=chunk_size):
                     if self.is_cancelled():
@@ -618,13 +622,18 @@ class BaseDownloader(ABC):
                         except:
                             pass
                         return False
-                    
+
                     if chunk:
                         f.write(chunk)
+                        downloaded_size += len(chunk)
+
+                        # Report progress
+                        self.report_progress(downloaded_size, total_size, filename=filename, status="Downloading")
+
                         # Apply bandwidth throttle if configured
                         if throttle:
                             throttle.throttle(len(chunk))
-            
+
             return True
             
         except Exception as e:

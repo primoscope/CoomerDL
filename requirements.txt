@@ -1,17 +1,17 @@
 # Desktop UI dependencies (legacy)
-customtkinter
-beautifulsoup4
-urllib3
-requests
-pillow
-psutil
-markdown2
-tkinterweb
-cloudscraper
-selenium
-yt-dlp
-gallery-dl
-tkinterdnd2
+customtkinter>=5.2.0
+beautifulsoup4>=4.12.0
+urllib3>=2.0.0
+requests>=2.31.0
+pillow>=10.0.0
+psutil>=5.9.0
+markdown2>=2.4.0
+tkinterweb>=3.23
+cloudscraper>=1.2.71
+selenium>=4.10.0
+yt-dlp>=2023.10.0
+gallery-dl>=1.26.0
+tkinterdnd2>=0.3.0
 
 # Web backend dependencies
 fastapi>=0.104.0
