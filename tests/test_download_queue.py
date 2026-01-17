@@ -54,6 +54,25 @@ class TestDownloadQueueAddRemove:
         assert len(all_items) == 2
         assert item1 in all_items
         assert item2 in all_items
+
+    def test_add_batch(self, queue):
+        """Test adding multiple items in batch."""
+        items = [
+            {'url': "https://example.com/1", 'download_folder': "/downloads"},
+            {'url': "https://example.com/2", 'download_folder': "/downloads"},
+            {'url': "https://example.com/3", 'download_folder': "/downloads", 'priority': QueuePriority.HIGH},
+        ]
+
+        added_items = queue.add_batch(items)
+
+        assert len(added_items) == 3
+
+        all_items = queue.get_all()
+        assert len(all_items) == 3
+
+        # Verify ordering (High first)
+        assert all_items[0].url == "https://example.com/3"
+        assert all_items[0].priority == QueuePriority.HIGH
     
     def test_add_item_with_priority(self, queue):
         """Test adding item with custom priority."""

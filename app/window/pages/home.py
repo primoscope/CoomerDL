@@ -246,17 +246,19 @@ class HomePage(ctk.CTkFrame):
         priority = priority_map.get(self.priority_combo.get(), QueuePriority.NORMAL) if self.app.advanced_mode else QueuePriority.NORMAL
 
         # Add to Queue via App
-        count = 0
+        batch_items = []
         for url in valid_urls:
-            self.app.download_queue.add(
-                url=url,
-                download_folder=folder,
-                priority=priority
+            batch_items.append({
+                'url': url,
+                'download_folder': folder,
+                'priority': priority
                 # Note: Advanced options (format, container, ffmpeg args) are collected
                 # but not yet passed to the queue. This functionality will be implemented
                 # in a future update when queue metadata support is added.
-            )
-            count += 1
+            })
+
+        self.app.download_queue.add_batch(batch_items)
+        count = len(batch_items)
 
         messagebox.showinfo("Success", f"Added {count} items to queue.")
         self.url_textbox.delete("1.0", "end")

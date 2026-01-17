@@ -165,6 +165,35 @@ class DownloadQueue:
             self._sort()
             self._notify_change()
             return item
+
+    def add_batch(
+        self,
+        items: List[dict]
+    ) -> List[QueueItem]:
+        """
+        Add multiple URLs to the queue in a batch.
+
+        Args:
+            items: List of dictionaries containing 'url', 'download_folder', and optionally 'priority'
+
+        Returns:
+            List of created queue items
+        """
+        with self._lock:
+            new_items = []
+            for item_data in items:
+                item = QueueItem(
+                    id=str(uuid.uuid4()),
+                    url=item_data['url'],
+                    download_folder=item_data['download_folder'],
+                    priority=item_data.get('priority', QueuePriority.NORMAL),
+                )
+                self._items.append(item)
+                new_items.append(item)
+
+            self._sort()
+            self._notify_change()
+            return new_items
     
     def remove(self, item_id: str) -> bool:
         """
