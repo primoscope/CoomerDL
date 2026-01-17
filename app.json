@@ -24,7 +24,6 @@
     "memory": "4Gi",
     "cpu": "2",
     "max-instances": 10,
-    "min-instances": 0,
     "port": 8080,
     "http2": false
   },
