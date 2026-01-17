@@ -53,6 +53,20 @@ def run_headless_server():
         print(f"Failed to start headless server: {e}")
 
 def main():
+    # 0. Check for CLI usage
+    # If args are provided, try running in CLI mode
+    # Import inside function to avoid heavy imports if not needed
+    try:
+        from app.cli import run_cli
+        if run_cli():
+            # run_cli returns True if it handled the execution
+            return
+    except ImportError as e:
+        print(f"Warning: Could not load CLI module: {e}")
+    except Exception as e:
+        # Fallthrough to GUI/Headless if CLI fails or just returns False (no args)
+        pass
+
     # 1. Check for Tkinter availability
     tkinter_available = False
     try:

@@ -7,7 +7,11 @@ import json
 from typing import Optional, Dict, Any, Callable
 
 # Import core components (same as ImageDownloaderApp)
-from app.settings_window import SettingsWindow
+try:
+    from app.settings_window import SettingsWindow
+except (ImportError, OSError):
+    SettingsWindow = None # type: ignore
+
 from downloader.downloader import Downloader
 from app.models.download_queue import DownloadQueue
 

@@ -18,6 +18,19 @@ class DownloadStatus(str, Enum):
     SKIPPED = "skipped"
 
 
+class YtDlpOptionsSchema(BaseModel):
+    """Configuration options specific to yt-dlp downloads."""
+    format_selector: str = 'best'  # 'best', 'bestvideo+bestaudio/best', 'bestaudio'
+    merge_output_format: str = 'mp4'  # mp4, mkv, webm
+    embed_thumbnail: bool = True
+    embed_metadata: bool = True
+    download_subtitles: bool = False
+    subtitle_languages: str = 'en'  # comma-separated language codes
+    cookies_from_browser: Optional[str] = None  # 'chrome', 'firefox', etc.
+    ffmpeg_location: Optional[str] = None
+    rate_limit: Optional[str] = None  # e.g., '1M' for 1MB/s
+
+
 class DownloadOptionsSchema(BaseModel):
     """Download options schema."""
     download_images: bool = True
@@ -39,6 +52,7 @@ class DownloadOptionsSchema(BaseModel):
     bandwidth_limit_kbps: int = 0
     connection_timeout: int = 30
     read_timeout: int = 60
+    ytdlp_options: Optional[YtDlpOptionsSchema] = None
 
 
 class DownloadRequest(BaseModel):
@@ -90,6 +104,7 @@ class QueueItemSchema(BaseModel):
     status: DownloadStatus
     priority: int = 0
     position: int = 0
+    progress: float = 0.0
     options: Optional[DownloadOptionsSchema] = None
     created_at: datetime
     updated_at: datetime

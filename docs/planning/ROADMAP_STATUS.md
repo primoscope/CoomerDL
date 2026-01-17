@@ -52,9 +52,19 @@
 
 ## ✅ Phase 6: UI MODERNIZATION
 
-### ARCH-001: Complete UI Modularization ✅
-**Status**: ALREADY COMPLETE  
+### ARCH-001: Complete UI Modularization ✅ (Enhanced 2026-01-15)
+**Status**: ENHANCED - Download Controller Extracted
 **Files**: `app/window/` directory already exists  
+
+**Recent Enhancement (2026-01-15)**:
+- ✅ Created `app/controllers/download_controller.py` (554 lines)
+- ✅ Extracted URL routing logic (6 platform handlers)
+- ✅ Extracted downloader setup methods (5 methods)
+- ✅ Extracted download wrapper methods (2 methods)
+- ✅ Extracted URL parsing utilities
+- ✅ Reduced ui.py from 1652 to 1378 lines (-274 lines, -16.6%)
+- ✅ All download functionality preserved (Erome, Bunkr, Coomer/Kemono, SimpCity, Jpg5, yt-dlp)
+
 **Structure**:
 ```
 app/window/
@@ -108,10 +118,18 @@ app/window/
 **Verification**: ✅ Python syntax validated, imports verified
 
 ### FEATURE-008: Add Scheduled Downloads ✅
-**Status**: COMPLETE  
+**Status**: COMPLETE (UI Integration Added 2026-01-15)
 **Files Created**:
 - ✅ `downloader/scheduler.py` (441 lines) - Complete scheduler implementation
 - ✅ `app/dialogs/schedule_dialog.py` (358 lines) - Full UI dialog
+
+**UI Integration** (2026-01-15):
+- ✅ Schedule button added to main menu bar (⏰ icon)
+- ✅ Scheduler initialized on app startup
+- ✅ `show_scheduler()` method opens ScheduleDialog
+- ✅ `handle_scheduled_download()` executes scheduled jobs
+- ✅ Scheduler cleanup on app close
+- ✅ Full integration with main UI workflow
 
 **Features Implemented**:
 ```python

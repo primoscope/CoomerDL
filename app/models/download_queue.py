@@ -39,6 +39,7 @@ class QueueItem:
     status: QueueItemStatus = QueueItemStatus.PENDING
     priority: QueuePriority = QueuePriority.NORMAL
     progress: float = 0.0  # 0.0 to 1.0
+    options: Optional[dict] = None
     error_message: Optional[str] = None
     added_at: str = field(default_factory=lambda: datetime.now().isoformat())
     started_at: Optional[str] = None
@@ -53,6 +54,7 @@ class QueueItem:
             'status': self.status.value,
             'priority': self.priority.value,
             'progress': self.progress,
+            'options': self.options,
             'error_message': self.error_message,
             'added_at': self.added_at,
             'started_at': self.started_at,
@@ -69,6 +71,7 @@ class QueueItem:
             status=QueueItemStatus(data['status']),
             priority=QueuePriority(data['priority']),
             progress=data.get('progress', 0.0),
+            options=data.get('options'),
             error_message=data.get('error_message'),
             added_at=data.get('added_at', datetime.now().isoformat()),
             started_at=data.get('started_at'),
@@ -136,7 +139,8 @@ class DownloadQueue:
         self,
         url: str,
         download_folder: str,
-        priority: QueuePriority = QueuePriority.NORMAL
+        priority: QueuePriority = QueuePriority.NORMAL,
+        options: Optional[dict] = None
     ) -> QueueItem:
         """
         Add a URL to the queue.
@@ -155,6 +159,7 @@ class DownloadQueue:
                 url=url,
                 download_folder=download_folder,
                 priority=priority,
+                options=options,
             )
             self._items.append(item)
             self._sort()

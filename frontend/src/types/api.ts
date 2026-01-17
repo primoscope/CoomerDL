@@ -12,6 +12,18 @@ export enum DownloadStatus {
   SKIPPED = 'skipped',
 }
 
+export interface YtDlpOptions {
+  format_selector: string
+  merge_output_format: string
+  embed_thumbnail: boolean
+  embed_metadata: boolean
+  download_subtitles: boolean
+  subtitle_languages: string
+  cookies_from_browser?: string
+  ffmpeg_location?: string
+  rate_limit?: string
+}
+
 export interface DownloadOptions {
   download_images: boolean
   download_videos: boolean
@@ -32,6 +44,19 @@ export interface DownloadOptions {
   bandwidth_limit_kbps: number
   connection_timeout: number
   read_timeout: number
+  ytdlp_options?: YtDlpOptions
+}
+
+export interface QueueItem {
+  id: string
+  url: string
+  status: DownloadStatus
+  priority: number
+  position: number
+  progress: number
+  options?: Partial<DownloadOptions>
+  created_at: string
+  updated_at: string
 }
 
 export interface DownloadRequest {

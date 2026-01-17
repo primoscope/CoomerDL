@@ -314,6 +314,12 @@ After:  [Multi-line Textarea]
 
 **Problem**: Monolithic UI file mixing UI, logic, and state management.
 
+**Status Update (2026-01-15)**: 🚧 In Progress (70%)
+- ✅ UI components already extracted to `app/window/` (input_panel, options_panel, action_panel, log_panel, progress_panel, status_bar, menu_bar)
+- ✅ Download controller extracted to `app/controllers/download_controller.py` (554 lines)
+- ✅ ui.py reduced from 1652 to 1378 lines (-274 lines, -16.6% reduction)
+- ⏳ Remaining: Extract event_bus.py and app_state.py to reach target <500 lines
+
 **Target Structure**:
 ```
 app/

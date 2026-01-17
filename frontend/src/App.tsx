@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Download, Activity } from 'lucide-react'
-import InputPanel from './components/InputPanel'
-import ProgressPanel from './components/ProgressPanel'
-import LogPanel from './components/LogPanel'
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom'
+import { Download, Activity, List, Home } from 'lucide-react'
+import HomePage from './pages/HomePage'
+import QueuePage from './pages/QueuePage'
 import { healthApi } from './services/api'
 import { progressWS, logsWS } from './services/websocket'
 import './styles/index.css'
@@ -85,55 +85,88 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <header style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-      }}>
-        <div style={{ 
-          maxWidth: '1400px', 
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
+    <Router>
+      <div className="app-container">
+        <header style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          padding: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
         }}>
-          <Download size={32} />
-          <div>
-            <h1 style={{ margin: 0, fontSize: '24px' }}>CoomerDL</h1>
-            <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
-              Universal Media Downloader
-            </p>
+          <div style={{
+            maxWidth: '1400px',
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Download size={32} />
+              <div>
+                <h1 style={{ margin: 0, fontSize: '24px' }}>CoomerDL</h1>
+                <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
+                  Universal Media Downloader
+                </p>
+              </div>
+            </div>
+
+            <nav style={{ display: 'flex', gap: '20px' }}>
+              <NavLink
+                to="/"
+                className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'white', textDecoration: 'none', padding: '8px 16px', borderRadius: '20px', transition: 'background 0.2s' }}
+              >
+                <Home size={18} />
+                <span>Home</span>
+              </NavLink>
+              <NavLink
+                to="/queue"
+                className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'white', textDecoration: 'none', padding: '8px 16px', borderRadius: '20px', transition: 'background 0.2s' }}
+              >
+                <List size={18} />
+                <span>Queue</span>
+              </NavLink>
+            </nav>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="main-content">
-        <InputPanel />
-        <ProgressPanel />
-        <LogPanel />
-      </main>
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/queue" element={<QueuePage />} />
+          </Routes>
+        </main>
 
-      <footer style={{
-        padding: '20px',
-        textAlign: 'center',
-        borderTop: '1px solid var(--border-color)',
-        color: 'var(--text-secondary)',
-        fontSize: '14px'
-      }}>
-        <p>CoomerDL v2.0.0 - Web Edition</p>
-        <p style={{ marginTop: '5px' }}>
-          <a 
-            href="https://github.com/primoscope/CoomerDL" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ color: 'var(--primary-color)', textDecoration: 'none' }}
-          >
-            GitHub Repository
-          </a>
-        </p>
-      </footer>
-    </div>
+        <footer style={{
+          padding: '20px',
+          textAlign: 'center',
+          borderTop: '1px solid var(--border-color)',
+          color: 'var(--text-secondary)',
+          fontSize: '14px'
+        }}>
+          <p>CoomerDL v2.0.0 - Web Edition</p>
+          <p style={{ marginTop: '5px' }}>
+            <a
+              href="https://github.com/primoscope/CoomerDL"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'var(--primary-color)', textDecoration: 'none' }}
+            >
+              GitHub Repository
+            </a>
+          </p>
+        </footer>
+      </div>
+      <style>{`
+        .nav-link:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        .nav-link.active {
+          background: rgba(255, 255, 255, 0.2);
+          font-weight: 500;
+        }
+      `}</style>
+    </Router>
   )
 }
 

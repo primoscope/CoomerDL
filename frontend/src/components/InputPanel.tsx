@@ -1,15 +1,18 @@
 import React, { useState } from 'react'
-import { Download, Loader2 } from 'lucide-react'
-import { downloadsApi } from '@/services/api'
+import { Download, Loader2, ListPlus } from 'lucide-react'
+import { downloadsApi, queueApi } from '@/services/api'
 import type { DownloadOptions } from '@/types/api'
+import AdvancedSettings from './AdvancedSettings'
 
 const InputPanel: React.FC = () => {
   const [urls, setUrls] = useState('')
   const [isDownloading, setIsDownloading] = useState(false)
-  const [downloadImages, setDownloadImages] = useState(true)
-  const [downloadVideos, setDownloadVideos] = useState(true)
-  const [downloadCompressed, setDownloadCompressed] = useState(true)
-  const [downloadDocuments, setDownloadDocuments] = useState(true)
+  const [options, setOptions] = useState<Partial<DownloadOptions>>({
+    download_images: true,
+    download_videos: true,
+    download_compressed: true,
+    download_documents: true,
+  })
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
   const handleDownload = async () => {
@@ -24,13 +27,6 @@ const InputPanel: React.FC = () => {
     setMessage(null)
 
     try {
-      const options: Partial<DownloadOptions> = {
-        download_images: downloadImages,
-        download_videos: downloadVideos,
-        download_compressed: downloadCompressed,
-        download_documents: downloadDocuments,
-      }
-
       const responses = await downloadsApi.startDownload({
         urls: urlList,
         options,
@@ -62,6 +58,43 @@ const InputPanel: React.FC = () => {
     }
   }
 
+  const handleAddToQueue = async () => {
+    const urlList = urls.split('\n').filter(url => url.trim())
+
+    if (urlList.length === 0) {
+      setMessage({ text: 'Please enter at least one URL', type: 'error' })
+      return
+    }
+
+    setIsDownloading(true)
+    setMessage(null)
+
+    try {
+      await queueApi.addItem({
+        urls: urlList,
+        options,
+      })
+
+      setMessage({
+        text: `Added ${urlList.length} items to queue successfully!`,
+        type: 'success'
+      })
+      setUrls('')
+    } catch (error) {
+      console.error('Queue error:', error)
+      setMessage({
+        text: 'Failed to add items to queue.',
+        type: 'error'
+      })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const toggleOption = (key: keyof DownloadOptions) => {
+    setOptions(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
   return (
     <div className="card">
       <h2 style={{ marginBottom: '16px', fontSize: '20px' }}>Download Media</h2>
@@ -84,8 +117,8 @@ const InputPanel: React.FC = () => {
             <input
               type="checkbox"
               className="checkbox"
-              checked={downloadImages}
-              onChange={(e) => setDownloadImages(e.target.checked)}
+              checked={options.download_images}
+              onChange={() => toggleOption('download_images')}
               disabled={isDownloading}
             />
             <span>Images</span>
@@ -94,8 +127,8 @@ const InputPanel: React.FC = () => {
             <input
               type="checkbox"
               className="checkbox"
-              checked={downloadVideos}
-              onChange={(e) => setDownloadVideos(e.target.checked)}
+              checked={options.download_videos}
+              onChange={() => toggleOption('download_videos')}
               disabled={isDownloading}
             />
             <span>Videos</span>
@@ -104,8 +137,8 @@ const InputPanel: React.FC = () => {
             <input
               type="checkbox"
               className="checkbox"
-              checked={downloadCompressed}
-              onChange={(e) => setDownloadCompressed(e.target.checked)}
+              checked={options.download_compressed}
+              onChange={() => toggleOption('download_compressed')}
               disabled={isDownloading}
             />
             <span>Archives</span>
@@ -114,14 +147,20 @@ const InputPanel: React.FC = () => {
             <input
               type="checkbox"
               className="checkbox"
-              checked={downloadDocuments}
-              onChange={(e) => setDownloadDocuments(e.target.checked)}
+              checked={options.download_documents}
+              onChange={() => toggleOption('download_documents')}
               disabled={isDownloading}
             />
             <span>Documents</span>
           </label>
         </div>
       </div>
+
+      <AdvancedSettings
+        options={options}
+        onChange={setOptions}
+        disabled={isDownloading}
+      />
 
       {message && (
         <div style={{
@@ -136,24 +175,43 @@ const InputPanel: React.FC = () => {
         </div>
       )}
 
-      <button
-        className="button"
-        onClick={handleDownload}
-        disabled={isDownloading || !urls.trim()}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-      >
-        {isDownloading ? (
-          <>
-            <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
-            Starting Downloads...
-          </>
-        ) : (
-          <>
-            <Download size={20} />
-            Start Download
-          </>
-        )}
-      </button>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <button
+          className="button"
+          onClick={handleDownload}
+          disabled={isDownloading || !urls.trim()}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+        >
+          {isDownloading ? (
+            <>
+              <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
+              Starting...
+            </>
+          ) : (
+            <>
+              <Download size={20} />
+              Start Download
+            </>
+          )}
+        </button>
+
+        <button
+          className="button"
+          onClick={handleAddToQueue}
+          disabled={isDownloading || !urls.trim()}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid var(--border-color)'
+          }}
+        >
+          <ListPlus size={20} />
+          Add to Queue
+        </button>
+      </div>
     </div>
   )
 }

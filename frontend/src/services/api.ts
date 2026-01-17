@@ -6,6 +6,8 @@ import type {
   DownloadRequest,
   DownloadResponse,
   DownloadStatusResponse,
+  QueueItem,
+  DownloadOptions,
 } from '@/types/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
@@ -75,6 +77,48 @@ export const downloadsApi = {
     const response = await apiClient.get('/downloads/active')
     return response.data
   },
+}
+
+export const queueApi = {
+  getItems: async (): Promise<QueueItem[]> => {
+    const response = await apiClient.get('/queue/')
+    return response.data
+  },
+
+  addItem: async (request: { urls: string[], options?: Partial<DownloadOptions>, priority?: number }): Promise<QueueItem[]> => {
+    const response = await apiClient.post('/queue/add', request)
+    return response.data
+  },
+
+  pauseItem: async (itemId: string): Promise<{ message: string }> => {
+    const response = await apiClient.post(`/queue/pause/${itemId}`)
+    return response.data
+  },
+
+  resumeItem: async (itemId: string): Promise<{ message: string }> => {
+    const response = await apiClient.post(`/queue/resume/${itemId}`)
+    return response.data
+  },
+
+  removeItem: async (itemId: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/queue/${itemId}`)
+    return response.data
+  },
+
+  clearCompleted: async (): Promise<{ message: string }> => {
+    const response = await apiClient.post('/queue/clear')
+    return response.data
+  },
+
+  moveUp: async (itemId: string): Promise<{ message: string }> => {
+    const response = await apiClient.post(`/queue/reorder/up/${itemId}`)
+    return response.data
+  },
+
+  moveDown: async (itemId: string): Promise<{ message: string }> => {
+    const response = await apiClient.post(`/queue/reorder/down/${itemId}`)
+    return response.data
+  }
 }
 
 export const healthApi = {

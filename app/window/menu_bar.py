@@ -25,6 +25,7 @@ class MenuBar(ctk.CTkFrame):
         on_about: Optional[Callable] = None,
         on_donors: Optional[Callable] = None,
         on_queue: Optional[Callable] = None,
+        on_schedule: Optional[Callable] = None,
         github_stars: int = 0,
         github_icon: Optional[Image.Image] = None,
         discord_icon: Optional[Image.Image] = None,
@@ -40,6 +41,7 @@ class MenuBar(ctk.CTkFrame):
             on_about: Callback for about button
             on_donors: Callback for donors/patreons button
             on_queue: Callback for queue manager button
+            on_schedule: Callback for scheduler button
             github_stars: Number of GitHub stars to display
             github_icon: GitHub icon image
             discord_icon: Discord icon image
@@ -52,6 +54,7 @@ class MenuBar(ctk.CTkFrame):
         self.on_about = on_about
         self.on_donors = on_donors
         self.on_queue = on_queue
+        self.on_schedule = on_schedule
         self.github_stars = github_stars
         self.github_icon = github_icon
         self.discord_icon = discord_icon
@@ -116,6 +119,19 @@ class MenuBar(ctk.CTkFrame):
             self.queue_button.bind("<Button-1>", lambda e: "break")
         else:
             self.queue_button = None
+        
+        # Schedule button (NEW)
+        if self.on_schedule:
+            schedule_button = ctk.CTkButton(
+                self,
+                text="⏰ " + self.tr("Schedule"),
+                width=80,
+                fg_color="transparent",
+                hover_color="gray25",
+                command=self.on_schedule
+            )
+            schedule_button.pack(side="left", padx=2)
+            schedule_button.bind("<Button-1>", lambda e: "break")
         
         # Right side icons
         self._create_social_icons()

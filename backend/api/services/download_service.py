@@ -5,12 +5,13 @@ Provides async interface for the FastAPI backend.
 import asyncio
 import uuid
 import logging
-from typing import Optional, Dict, Callable
+from typing import Optional, Dict, Callable, Tuple
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from downloader.factory import DownloaderFactory
 from downloader.base import DownloadOptions as DownloaderOptions, DownloadResult
+from downloader.ytdlp_adapter import YtDlpOptions
 from backend.api.models.schemas import DownloadOptionsSchema, DownloadStatus
 
 logger = logging.getLogger(__name__)
@@ -26,12 +27,12 @@ class DownloadService:
     """Service for managing downloads."""
     
     @staticmethod
-    def _convert_options(schema: Optional[DownloadOptionsSchema]) -> DownloaderOptions:
+    def _convert_options(schema: Optional[DownloadOptionsSchema]) -> Tuple[DownloaderOptions, Optional[YtDlpOptions]]:
         """Convert API schema to downloader options."""
         if not schema:
-            return DownloaderOptions()
+            return DownloaderOptions(), None
         
-        return DownloaderOptions(
+        dl_options = DownloaderOptions(
             download_images=schema.download_images,
             download_videos=schema.download_videos,
             download_compressed=schema.download_compressed,
@@ -52,6 +53,22 @@ class DownloadService:
             connection_timeout=schema.connection_timeout,
             read_timeout=schema.read_timeout,
         )
+
+        yt_options = None
+        if schema.ytdlp_options:
+            yt_options = YtDlpOptions(
+                format_selector=schema.ytdlp_options.format_selector,
+                merge_output_format=schema.ytdlp_options.merge_output_format,
+                embed_thumbnail=schema.ytdlp_options.embed_thumbnail,
+                embed_metadata=schema.ytdlp_options.embed_metadata,
+                download_subtitles=schema.ytdlp_options.download_subtitles,
+                subtitle_languages=schema.ytdlp_options.subtitle_languages,
+                cookies_from_browser=schema.ytdlp_options.cookies_from_browser,
+                ffmpeg_location=schema.ytdlp_options.ffmpeg_location,
+                rate_limit=schema.ytdlp_options.rate_limit,
+            )
+
+        return dl_options, yt_options
     
     @staticmethod
     async def start_download(
@@ -94,13 +111,14 @@ class DownloadService:
         }
         
         # Convert options
-        downloader_options = DownloadService._convert_options(options)
+        downloader_options, yt_options = DownloadService._convert_options(options)
         
         # Create downloader
         downloader = DownloaderFactory.get_downloader(
             url=url,
             download_folder=download_folder,
             options=downloader_options,
+            ytdlp_options=yt_options,
             log_callback=log_callback,
             progress_callback=progress_callback,
         )

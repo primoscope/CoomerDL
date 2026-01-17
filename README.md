@@ -149,6 +149,71 @@ CoomerDL is available in two versions:
 
 > 💡 **Linux users**: You may need to install tkinter: `sudo apt install python3-tk`
 
+### Headless / Server Installation (Linux)
+
+If you are running on a server without a display (headless), you can run the backend API only.
+
+1.  **Install system dependencies** (skip python3-tk if you don't need the GUI):
+    ```bash
+    sudo apt update
+    sudo apt install ffmpeg python3-pip python3-venv
+    ```
+
+2.  **Clone and Setup**:
+    ```bash
+    git clone https://github.com/primoscope/CoomerDL.git
+    cd CoomerDL
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    ```
+    *(Note: Some GUI-related packages might fail to build or warn on headless systems. This is usually fine for backend-only usage.)*
+
+3.  **Run Backend**:
+    To run **only** the backend API (without attempting to start the GUI):
+    ```bash
+    export HEADLESS=true
+    python main.py
+    ```
+    The API will be available at `http://localhost:8080`.
+
+### CLI Usage (Command Line Interface)
+
+You can use CoomerDL purely from the command line for automation or scripts.
+
+**Basic Usage:**
+```bash
+python main.py "https://example.com/video"
+```
+
+**Batch Download from File:**
+```bash
+python main.py --batch-file urls.txt
+```
+
+**Advanced Options:**
+```bash
+python main.py "https://example.com/video" \
+  --output "my_downloads" \
+  --no-images \
+  --min-size 10M \
+  --date-from 2023-01-01 \
+  --max-retries 5
+```
+
+**All CLI Options:**
+| Option | Description |
+|--------|-------------|
+| `urls` | List of URLs to download |
+| `--batch-file`, `-i` | File containing URLs (one per line) |
+| `--output`, `-o` | Output directory (default: downloads) |
+| `--no-images` | Skip downloading images |
+| `--no-videos` | Skip downloading videos |
+| `--min-size` | Minimum file size (e.g. 5M, 100K) |
+| `--date-from` | Download only after date (YYYY-MM-DD) |
+| `--proxy` | Proxy URL (http://user:pass@host:port) |
+| `--headless` | Force backend server mode |
+
 ---
 
 ## 🎮 How to Use

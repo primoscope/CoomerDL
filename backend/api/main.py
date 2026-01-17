@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, FileResponse
 import os
 
 from backend.config.settings import settings
+from backend.api.services.queue_worker import QueueWorker
 
 # Configure logging
 logging.basicConfig(
@@ -49,11 +50,15 @@ async def startup_event():
         os.makedirs(settings.local_download_folder, exist_ok=True)
         logger.info(f"Local download folder: {settings.local_download_folder}")
 
+    # Start queue worker
+    QueueWorker.start()
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Run on application shutdown."""
     logger.info("Shutting down API server")
+    QueueWorker.stop()
 
 
 @app.get("/health")
@@ -67,10 +72,11 @@ async def health_check():
 
 
 # Import and include routers
-from backend.api.routes import downloads
+from backend.api.routes import downloads, queue
 from backend.api.websocket import progress
 
 app.include_router(downloads.router, prefix="/api/downloads", tags=["downloads"])
+app.include_router(queue.router, prefix="/api/queue", tags=["queue"])
 app.include_router(progress.router, prefix="/ws", tags=["websocket"])
 
 
