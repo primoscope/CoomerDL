@@ -1,7 +1,6 @@
 /**
  * WebSocket service for real-time updates
  */
-import type { ProgressUpdate, LogMessage, WebSocketMessage } from '@/types/api'
 
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || 
   (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + 
