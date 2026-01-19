@@ -1,8 +1,6 @@
 /**
  * WebSocket service for real-time updates
  */
-import type { ProgressUpdate, LogMessage, WebSocketMessage } from '@/types/api'
-
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || 
   (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + 
   '//' + window.location.host + '/ws'
@@ -12,7 +10,7 @@ export class WebSocketService {
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
   private reconnectDelay = 3000
-  private listeners: Map<string, Set<(data: any) => void>> = new Map()
+  private listeners: Map<string, Set<(data: unknown) => void>> = new Map()
   private heartbeatInterval: NodeJS.Timeout | null = null
 
   constructor(private endpoint: string) {}
@@ -85,28 +83,28 @@ export class WebSocketService {
     }
   }
 
-  on(event: string, callback: (data: any) => void) {
+  on(event: string, callback: (data: unknown) => void) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set())
     }
     this.listeners.get(event)!.add(callback)
   }
 
-  off(event: string, callback: (data: any) => void) {
+  off(event: string, callback: (data: unknown) => void) {
     const listeners = this.listeners.get(event)
     if (listeners) {
       listeners.delete(callback)
     }
   }
 
-  private notifyListeners(event: string, data: any) {
+  private notifyListeners(event: string, data: unknown) {
     const listeners = this.listeners.get(event)
     if (listeners) {
       listeners.forEach((callback) => callback(data))
     }
   }
 
-  send(data: any) {
+  send(data: unknown) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(typeof data === 'string' ? data : JSON.stringify(data))
     } else {

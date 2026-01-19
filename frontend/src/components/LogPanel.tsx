@@ -11,12 +11,15 @@ const LogPanel: React.FC = () => {
 
   useEffect(() => {
     // Listen for log messages via WebSocket
-    const handleLogMessage = (data: any) => {
-      if (data.type === 'log') {
+    const handleLogMessage = (data: unknown) => {
+      // Type assertion for WebSocket message
+      const msg = data as { type?: string, timestamp?: string, level?: string, message?: string }
+
+      if (msg.type === 'log' && msg.timestamp && msg.level && msg.message) {
         const logMessage: LogMessage = {
-          timestamp: data.timestamp,
-          level: data.level,
-          message: data.message,
+          timestamp: msg.timestamp,
+          level: msg.level,
+          message: msg.message,
         }
         setLogs(prev => [...prev, logMessage])
       }

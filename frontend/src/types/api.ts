@@ -105,5 +105,5 @@ export interface LogMessage {
 export interface WebSocketMessage {
   type: 'progress' | 'log'
   timestamp: string
-  [key: string]: any
+  [key: string]: unknown
 }
