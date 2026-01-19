@@ -28,7 +28,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({ options, onChange, 
     })
   }
 
-  const handleChange = (field: keyof DownloadOptions, value: any) => {
+  const handleChange = (field: keyof DownloadOptions, value: string | number | boolean) => {
     onChange({ ...options, [field]: value })
   }
 
