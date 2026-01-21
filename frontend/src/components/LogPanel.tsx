@@ -1,10 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { Terminal, Trash2 } from 'lucide-react'
 import { logsWS } from '@/services/websocket'
 import type { LogMessage } from '@/types/api'
 
+// Extended interface for UI-specific properties
+interface UILogMessage extends LogMessage {
+  id: string
+  formattedTime: string
+}
+
+const MAX_LOGS = 1000
+
 const LogPanel: React.FC = () => {
-  const [logs, setLogs] = useState<LogMessage[]>([])
+  const [logs, setLogs] = useState<UILogMessage[]>([])
   const [autoScroll, setAutoScroll] = useState(true)
   const [filter, setFilter] = useState<string>('all')
   const logContainerRef = useRef<HTMLDivElement>(null)
@@ -13,12 +21,23 @@ const LogPanel: React.FC = () => {
     // Listen for log messages via WebSocket
     const handleLogMessage = (data: any) => {
       if (data.type === 'log') {
-        const logMessage: LogMessage = {
+        const logMessage: UILogMessage = {
           timestamp: data.timestamp,
           level: data.level,
           message: data.message,
+          // Generate stable ID for React keys and pre-format time
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          formattedTime: new Date(data.timestamp).toLocaleTimeString()
         }
-        setLogs(prev => [...prev, logMessage])
+
+        setLogs(prev => {
+          const newLogs = [...prev, logMessage]
+          // Limit log history to prevent memory leaks and DOM bloat
+          if (newLogs.length > MAX_LOGS) {
+            return newLogs.slice(newLogs.length - MAX_LOGS)
+          }
+          return newLogs
+        })
       }
     }
 
@@ -50,9 +69,11 @@ const LogPanel: React.FC = () => {
     }
   }
 
-  const filteredLogs = filter === 'all' 
-    ? logs 
-    : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  const filteredLogs = useMemo(() => {
+    return filter === 'all'
+      ? logs
+      : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  }, [logs, filter])
 
   return (
     <div className="card">
@@ -122,10 +143,10 @@ const LogPanel: React.FC = () => {
             No logs to display
           </div>
         ) : (
-          filteredLogs.map((log, index) => (
-            <div key={index} style={{ marginBottom: '4px' }}>
+          filteredLogs.map((log) => (
+            <div key={log.id} style={{ marginBottom: '4px' }}>
               <span style={{ color: '#666' }}>
-                {new Date(log.timestamp).toLocaleTimeString()}
+                {log.formattedTime}
               </span>
               {' '}
               <span style={{ 
