@@ -1,7 +1,7 @@
 /**
  * WebSocket service for real-time updates
  */
-import type { ProgressUpdate, LogMessage, WebSocketMessage } from '@/types/api'
+import type { WebSocketMessage } from '@/types/api'
 
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || 
   (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + 
@@ -34,7 +34,7 @@ export class WebSocketService {
 
         this.ws.onmessage = (event) => {
           try {
-            const data = JSON.parse(event.data)
+            const data: WebSocketMessage = JSON.parse(event.data)
             this.notifyListeners(data.type || 'message', data)
           } catch (error) {
             console.error('Error parsing WebSocket message:', error)
