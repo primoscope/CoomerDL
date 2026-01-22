@@ -1,10 +1,17 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { Terminal, Trash2 } from 'lucide-react'
 import { logsWS } from '@/services/websocket'
 import type { LogMessage } from '@/types/api'
 
+// Extended LogMessage with unique ID
+interface LogItem extends LogMessage {
+  id: string
+}
+
+const MAX_LOGS = 1000
+
 const LogPanel: React.FC = () => {
-  const [logs, setLogs] = useState<LogMessage[]>([])
+  const [logs, setLogs] = useState<LogItem[]>([])
   const [autoScroll, setAutoScroll] = useState(true)
   const [filter, setFilter] = useState<string>('all')
   const logContainerRef = useRef<HTMLDivElement>(null)
@@ -13,12 +20,21 @@ const LogPanel: React.FC = () => {
     // Listen for log messages via WebSocket
     const handleLogMessage = (data: any) => {
       if (data.type === 'log') {
-        const logMessage: LogMessage = {
+        const logMessage: LogItem = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: data.timestamp,
           level: data.level,
           message: data.message,
         }
-        setLogs(prev => [...prev, logMessage])
+
+        setLogs(prev => {
+          // Optimization: Limit the number of logs to prevent memory issues
+          const newLogs = [...prev, logMessage]
+          if (newLogs.length > MAX_LOGS) {
+            return newLogs.slice(newLogs.length - MAX_LOGS)
+          }
+          return newLogs
+        })
       }
     }
 
@@ -50,9 +66,12 @@ const LogPanel: React.FC = () => {
     }
   }
 
-  const filteredLogs = filter === 'all' 
-    ? logs 
-    : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  // Optimization: Memoize filtered logs to prevent unnecessary recalculations
+  const filteredLogs = useMemo(() => {
+    return filter === 'all'
+      ? logs
+      : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  }, [logs, filter])
 
   return (
     <div className="card">
@@ -122,8 +141,8 @@ const LogPanel: React.FC = () => {
             No logs to display
           </div>
         ) : (
-          filteredLogs.map((log, index) => (
-            <div key={index} style={{ marginBottom: '4px' }}>
+          filteredLogs.map((log) => (
+            <div key={log.id} style={{ marginBottom: '4px' }}>
               <span style={{ color: '#666' }}>
                 {new Date(log.timestamp).toLocaleTimeString()}
               </span>
