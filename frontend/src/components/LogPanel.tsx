@@ -1,10 +1,49 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { Terminal, Trash2 } from 'lucide-react'
 import { logsWS } from '@/services/websocket'
 import type { LogMessage } from '@/types/api'
 
+// Extend LogMessage to include a unique ID for rendering performance
+interface LogItemData extends LogMessage {
+  id: string
+}
+
+const MAX_LOGS = 1000
+
+const getLogColor = (level: string): string => {
+  switch (level.toUpperCase()) {
+    case 'ERROR': return '#f44336'
+    case 'WARNING': return '#ff9800'
+    case 'INFO': return '#2196F3'
+    case 'SUCCESS': return '#4caf50'
+    default: return '#999'
+  }
+}
+
+// Memoized LogItem component to prevent unnecessary re-renders
+const LogItem = React.memo(({ log, color }: { log: LogItemData, color: string }) => (
+  <div style={{ marginBottom: '4px' }}>
+    <span style={{ color: '#666' }}>
+      {new Date(log.timestamp).toLocaleTimeString()}
+    </span>
+    {' '}
+    <span style={{
+      color: color,
+      fontWeight: 'bold',
+      marginRight: '8px'
+    }}>
+      [{log.level.toUpperCase()}]
+    </span>
+    <span style={{ color: '#e0e0e0' }}>
+      {log.message}
+    </span>
+  </div>
+))
+
+LogItem.displayName = 'LogItem'
+
 const LogPanel: React.FC = () => {
-  const [logs, setLogs] = useState<LogMessage[]>([])
+  const [logs, setLogs] = useState<LogItemData[]>([])
   const [autoScroll, setAutoScroll] = useState(true)
   const [filter, setFilter] = useState<string>('all')
   const logContainerRef = useRef<HTMLDivElement>(null)
@@ -13,12 +52,22 @@ const LogPanel: React.FC = () => {
     // Listen for log messages via WebSocket
     const handleLogMessage = (data: any) => {
       if (data.type === 'log') {
-        const logMessage: LogMessage = {
+        const logMessage: LogItemData = {
+          // Generate a unique ID to ensure stable keys and avoid re-renders of existing items
+          id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
           timestamp: data.timestamp,
           level: data.level,
           message: data.message,
         }
-        setLogs(prev => [...prev, logMessage])
+
+        setLogs(prev => {
+          // Append new log and keep only the last MAX_LOGS
+          const newLogs = [...prev, logMessage]
+          if (newLogs.length > MAX_LOGS) {
+            return newLogs.slice(newLogs.length - MAX_LOGS)
+          }
+          return newLogs
+        })
       }
     }
 
@@ -40,19 +89,12 @@ const LogPanel: React.FC = () => {
     setLogs([])
   }
 
-  const getLogColor = (level: string): string => {
-    switch (level.toUpperCase()) {
-      case 'ERROR': return '#f44336'
-      case 'WARNING': return '#ff9800'
-      case 'INFO': return '#2196F3'
-      case 'SUCCESS': return '#4caf50'
-      default: return '#999'
-    }
-  }
-
-  const filteredLogs = filter === 'all' 
-    ? logs 
-    : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  const filteredLogs = useMemo(() =>
+    filter === 'all'
+      ? logs
+      : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase()),
+    [logs, filter]
+  )
 
   return (
     <div className="card">
@@ -122,23 +164,12 @@ const LogPanel: React.FC = () => {
             No logs to display
           </div>
         ) : (
-          filteredLogs.map((log, index) => (
-            <div key={index} style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#666' }}>
-                {new Date(log.timestamp).toLocaleTimeString()}
-              </span>
-              {' '}
-              <span style={{ 
-                color: getLogColor(log.level),
-                fontWeight: 'bold',
-                marginRight: '8px'
-              }}>
-                [{log.level.toUpperCase()}]
-              </span>
-              <span style={{ color: '#e0e0e0' }}>
-                {log.message}
-              </span>
-            </div>
+          filteredLogs.map((log) => (
+            <LogItem
+              key={log.id}
+              log={log}
+              color={getLogColor(log.level)}
+            />
           ))
         )}
       </div>
