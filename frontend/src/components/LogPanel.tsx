@@ -1,10 +1,52 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, memo } from 'react'
 import { Terminal, Trash2 } from 'lucide-react'
 import { logsWS } from '@/services/websocket'
 import type { LogMessage } from '@/types/api'
 
+// Extended interface with unique ID
+interface LogMessageWithId extends LogMessage {
+  id: string
+}
+
+// Memoized Log Item Component
+// Bolt Optimization: Using memo prevents re-rendering of existing log items when new logs are added
+const LogItem = memo(({ log }: { log: LogMessageWithId }) => {
+  const getLogColor = (level: string): string => {
+    switch (level.toUpperCase()) {
+      case 'ERROR': return '#f44336'
+      case 'WARNING': return '#ff9800'
+      case 'INFO': return '#2196F3'
+      case 'SUCCESS': return '#4caf50'
+      default: return '#999'
+    }
+  }
+
+  return (
+    <div style={{ marginBottom: '4px' }}>
+      <span style={{ color: '#666' }}>
+        {new Date(log.timestamp).toLocaleTimeString()}
+      </span>
+      {' '}
+      <span style={{
+        color: getLogColor(log.level),
+        fontWeight: 'bold',
+        marginRight: '8px'
+      }}>
+        [{log.level.toUpperCase()}]
+      </span>
+      <span style={{ color: '#e0e0e0' }}>
+        {log.message}
+      </span>
+    </div>
+  )
+})
+
+LogItem.displayName = 'LogItem'
+
+const MAX_LOGS = 1000
+
 const LogPanel: React.FC = () => {
-  const [logs, setLogs] = useState<LogMessage[]>([])
+  const [logs, setLogs] = useState<LogMessageWithId[]>([])
   const [autoScroll, setAutoScroll] = useState(true)
   const [filter, setFilter] = useState<string>('all')
   const logContainerRef = useRef<HTMLDivElement>(null)
@@ -13,12 +55,21 @@ const LogPanel: React.FC = () => {
     // Listen for log messages via WebSocket
     const handleLogMessage = (data: any) => {
       if (data.type === 'log') {
-        const logMessage: LogMessage = {
+        const logMessage: LogMessageWithId = {
+          id: `${data.timestamp}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: data.timestamp,
           level: data.level,
           message: data.message,
         }
-        setLogs(prev => [...prev, logMessage])
+
+        // Bolt Optimization: Limit logs to MAX_LOGS to prevent memory leaks
+        setLogs(prev => {
+          const newLogs = [...prev, logMessage]
+          if (newLogs.length > MAX_LOGS) {
+            return newLogs.slice(newLogs.length - MAX_LOGS)
+          }
+          return newLogs
+        })
       }
     }
 
@@ -38,16 +89,6 @@ const LogPanel: React.FC = () => {
 
   const clearLogs = () => {
     setLogs([])
-  }
-
-  const getLogColor = (level: string): string => {
-    switch (level.toUpperCase()) {
-      case 'ERROR': return '#f44336'
-      case 'WARNING': return '#ff9800'
-      case 'INFO': return '#2196F3'
-      case 'SUCCESS': return '#4caf50'
-      default: return '#999'
-    }
   }
 
   const filteredLogs = filter === 'all' 
@@ -122,23 +163,8 @@ const LogPanel: React.FC = () => {
             No logs to display
           </div>
         ) : (
-          filteredLogs.map((log, index) => (
-            <div key={index} style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#666' }}>
-                {new Date(log.timestamp).toLocaleTimeString()}
-              </span>
-              {' '}
-              <span style={{ 
-                color: getLogColor(log.level),
-                fontWeight: 'bold',
-                marginRight: '8px'
-              }}>
-                [{log.level.toUpperCase()}]
-              </span>
-              <span style={{ color: '#e0e0e0' }}>
-                {log.message}
-              </span>
-            </div>
+          filteredLogs.map((log) => (
+            <LogItem key={log.id} log={log} />
           ))
         )}
       </div>
