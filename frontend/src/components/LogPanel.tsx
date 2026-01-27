@@ -1,24 +1,72 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { Terminal, Trash2 } from 'lucide-react'
 import { logsWS } from '@/services/websocket'
 import type { LogMessage } from '@/types/api'
 
+// Extend LogMessage to include a unique ID for React keys
+interface LogItemWithId extends LogMessage {
+  id: string
+}
+
+// Helper to get color outside component to avoid recreation
+const getLogColor = (level: string): string => {
+  switch (level.toUpperCase()) {
+    case 'ERROR': return '#f44336'
+    case 'WARNING': return '#ff9800'
+    case 'INFO': return '#2196F3'
+    case 'SUCCESS': return '#4caf50'
+    default: return '#999'
+  }
+}
+
+// Memoized LogRow component to prevent re-renders of existing logs
+const LogRow = React.memo(({ log }: { log: LogItemWithId }) => (
+  <div style={{ marginBottom: '4px' }}>
+    <span style={{ color: '#666' }}>
+      {new Date(log.timestamp).toLocaleTimeString()}
+    </span>
+    {' '}
+    <span style={{
+      color: getLogColor(log.level),
+      fontWeight: 'bold',
+      marginRight: '8px'
+    }}>
+      [{log.level.toUpperCase()}]
+    </span>
+    <span style={{ color: '#e0e0e0' }}>
+      {log.message}
+    </span>
+  </div>
+))
+
 const LogPanel: React.FC = () => {
-  const [logs, setLogs] = useState<LogMessage[]>([])
+  const [logs, setLogs] = useState<LogItemWithId[]>([])
   const [autoScroll, setAutoScroll] = useState(true)
   const [filter, setFilter] = useState<string>('all')
   const logContainerRef = useRef<HTMLDivElement>(null)
+
+  // Use a ref to generate unique IDs
+  const idCounter = useRef(0)
 
   useEffect(() => {
     // Listen for log messages via WebSocket
     const handleLogMessage = (data: any) => {
       if (data.type === 'log') {
-        const logMessage: LogMessage = {
+        const logMessage: LogItemWithId = {
           timestamp: data.timestamp,
           level: data.level,
           message: data.message,
+          id: `${Date.now()}-${idCounter.current++}`
         }
-        setLogs(prev => [...prev, logMessage])
+
+        // Limit logs to 1000 items to prevent memory issues
+        setLogs(prev => {
+          const newLogs = [...prev, logMessage]
+          if (newLogs.length > 1000) {
+             return newLogs.slice(-1000)
+          }
+          return newLogs
+        })
       }
     }
 
@@ -40,19 +88,12 @@ const LogPanel: React.FC = () => {
     setLogs([])
   }
 
-  const getLogColor = (level: string): string => {
-    switch (level.toUpperCase()) {
-      case 'ERROR': return '#f44336'
-      case 'WARNING': return '#ff9800'
-      case 'INFO': return '#2196F3'
-      case 'SUCCESS': return '#4caf50'
-      default: return '#999'
-    }
-  }
-
-  const filteredLogs = filter === 'all' 
-    ? logs 
-    : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  // Memoize filtered logs to avoid expensive filtering on every render
+  const filteredLogs = useMemo(() => {
+    return filter === 'all'
+      ? logs
+      : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  }, [logs, filter])
 
   return (
     <div className="card">
@@ -122,23 +163,8 @@ const LogPanel: React.FC = () => {
             No logs to display
           </div>
         ) : (
-          filteredLogs.map((log, index) => (
-            <div key={index} style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#666' }}>
-                {new Date(log.timestamp).toLocaleTimeString()}
-              </span>
-              {' '}
-              <span style={{ 
-                color: getLogColor(log.level),
-                fontWeight: 'bold',
-                marginRight: '8px'
-              }}>
-                [{log.level.toUpperCase()}]
-              </span>
-              <span style={{ color: '#e0e0e0' }}>
-                {log.message}
-              </span>
-            </div>
+          filteredLogs.map((log) => (
+            <LogRow key={log.id} log={log} />
           ))
         )}
       </div>
