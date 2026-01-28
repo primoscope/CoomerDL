@@ -1,7 +1,40 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { Terminal, Trash2 } from 'lucide-react'
 import { logsWS } from '@/services/websocket'
 import type { LogMessage } from '@/types/api'
+
+// Helper for log colors
+const getLogColor = (level: string): string => {
+  switch (level.toUpperCase()) {
+    case 'ERROR': return '#f44336'
+    case 'WARNING': return '#ff9800'
+    case 'INFO': return '#2196F3'
+    case 'SUCCESS': return '#4caf50'
+    default: return '#999'
+  }
+}
+
+// Memoized LogItem component to prevent unnecessary re-renders
+const LogItem = React.memo(({ log }: { log: LogMessage }) => (
+  <div style={{ marginBottom: '4px' }}>
+    <span style={{ color: '#666' }}>
+      {new Date(log.timestamp).toLocaleTimeString()}
+    </span>
+    {' '}
+    <span style={{
+      color: getLogColor(log.level),
+      fontWeight: 'bold',
+      marginRight: '8px'
+    }}>
+      [{log.level.toUpperCase()}]
+    </span>
+    <span style={{ color: '#e0e0e0' }}>
+      {log.message}
+    </span>
+  </div>
+))
+
+LogItem.displayName = 'LogItem'
 
 const LogPanel: React.FC = () => {
   const [logs, setLogs] = useState<LogMessage[]>([])
@@ -18,7 +51,14 @@ const LogPanel: React.FC = () => {
           level: data.level,
           message: data.message,
         }
-        setLogs(prev => [...prev, logMessage])
+        // Limit logs to last 1000 items to prevent memory issues
+        setLogs(prev => {
+          const newLogs = [...prev, logMessage]
+          if (newLogs.length > 1000) {
+            return newLogs.slice(-1000)
+          }
+          return newLogs
+        })
       }
     }
 
@@ -40,19 +80,12 @@ const LogPanel: React.FC = () => {
     setLogs([])
   }
 
-  const getLogColor = (level: string): string => {
-    switch (level.toUpperCase()) {
-      case 'ERROR': return '#f44336'
-      case 'WARNING': return '#ff9800'
-      case 'INFO': return '#2196F3'
-      case 'SUCCESS': return '#4caf50'
-      default: return '#999'
-    }
-  }
-
-  const filteredLogs = filter === 'all' 
-    ? logs 
-    : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  // Memoize filtered logs to prevent recalculation on every render
+  const filteredLogs = useMemo(() => {
+    return filter === 'all'
+      ? logs
+      : logs.filter(log => log.level.toLowerCase() === filter.toLowerCase())
+  }, [logs, filter])
 
   return (
     <div className="card">
@@ -123,22 +156,13 @@ const LogPanel: React.FC = () => {
           </div>
         ) : (
           filteredLogs.map((log, index) => (
-            <div key={index} style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#666' }}>
-                {new Date(log.timestamp).toLocaleTimeString()}
-              </span>
-              {' '}
-              <span style={{ 
-                color: getLogColor(log.level),
-                fontWeight: 'bold',
-                marginRight: '8px'
-              }}>
-                [{log.level.toUpperCase()}]
-              </span>
-              <span style={{ color: '#e0e0e0' }}>
-                {log.message}
-              </span>
-            </div>
+            // Using timestamp as part of key for better stability if possible,
+            // but relying on index is risky if logs are filtered.
+            // Ideally logs should have unique IDs.
+            // For now, since it's an append-only list (mostly), index is acceptable but fragile.
+            // Let's try to make a unique key if possible. LogMessage doesn't have ID.
+            // Using index + timestamp combination.
+            <LogItem key={`${index}-${log.timestamp}`} log={log} />
           ))
         )}
       </div>
